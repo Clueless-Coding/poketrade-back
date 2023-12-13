@@ -1,0 +1,47 @@
+import { HttpException, HttpStatus, Injectable, UseGuards } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
+import { LoginOutputDTO } from 'src/api/dtos/auth/login.output.dto';
+import { RegisterInputDTO } from 'src/api/dtos/auth/register.input.dto';
+import { RegisterOutputDTO } from 'src/api/dtos/auth/register.output.dto';
+import { LocalAuthGuard } from 'src/api/guards/local-auth.guard';
+import { JWT, UserTokenPayload } from 'src/common/types';
+import { UserEntity } from 'src/infra/postgres/entities/user.entity';
+import { UsersUseCase } from './users.use-case';
+import * as bcrypt from 'bcrypt';
+
+@Injectable()
+export class AuthUseCase {
+  public constructor(
+    private readonly jwtService: JwtService,
+    private readonly usersUseCase: UsersUseCase,
+  ) {}
+
+  private async generateAccessToken(user: UserEntity): Promise<JWT> {
+    const userTokenPayload: UserTokenPayload = {
+      id: user.id,
+    };
+
+    return this.jwtService.signAsync(userTokenPayload) as Promise<JWT>;
+  }
+
+  public async login(user: UserEntity): Promise<LoginOutputDTO> {
+    const accessToken = await this.generateAccessToken(user);
+
+    return { accessToken };
+  }
+
+  public async register(dto: RegisterInputDTO): Promise<RegisterOutputDTO> {
+    if (dto.password !== dto.confirmPassword) {
+      throw new HttpException('Passwords does not match', HttpStatus.BAD_REQUEST);
+    }
+
+    const user = await this.usersUseCase.createUser({
+      name: dto.username,
+      hashedPassword: await bcrypt.hash(dto.password, 10),
+    });
+
+    const accessToken = await this.generateAccessToken(user);
+
+    return { accessToken };
+  }
+}
