@@ -1,30 +1,28 @@
 import { AutoMap } from '@automapper/classes';
-import { Column, Entity, PrimaryColumn } from 'typeorm';
+import { ApiProperty } from '@nestjs/swagger';
 
-@Entity('pokemons')
-export class PokemonEntity {
+export class PokemonOutputDTO {
+  @ApiProperty()
   @AutoMap()
-  @PrimaryColumn({ type: 'integer' })
   public readonly id: number;
 
+  @ApiProperty()
   @AutoMap()
-  @Column({ type: 'text' })
   public readonly name: string;
 
+  @ApiProperty()
   @AutoMap()
-  @Column({ type: 'integer' })
   public readonly worth: number;
 
+  @ApiProperty()
   @AutoMap()
-  @Column({ type: 'integer' })
   public readonly height: number;
 
+  @ApiProperty()
   @AutoMap()
-  @Column({ type: 'integer' })
   public readonly weight: number;
 
-  // NOTE: URL
+  @ApiProperty()
   @AutoMap()
-  @Column({ type: 'text' })
   public readonly image: string;
 }
