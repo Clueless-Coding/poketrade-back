@@ -24,5 +24,11 @@ export class UserEntity extends BaseEntity {
     joinColumn: { name: 'user_id' },
     inverseJoinColumn: { name: 'pokemon_id' },
   })
-  public readonly pokemons: PokemonEntity[];
+  public readonly pokemons?: PokemonEntity[];
 }
+
+export type UserEntityRelations = keyof Pick<UserEntity, 'pokemons'>;
+
+export type UserModel<T extends UserEntityRelations = never> =
+  & Omit<UserEntity, UserEntityRelations>
+  & Required<Pick<UserEntity, T>>;

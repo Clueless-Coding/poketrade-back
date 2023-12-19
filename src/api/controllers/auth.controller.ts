@@ -2,7 +2,7 @@ import { Body, Controller, Post, UseGuards } from '@nestjs/common';
 import { AuthUseCase } from 'src/core/use-cases/auth.use-case';
 import { LocalAuthGuard } from '../guards/local-auth.guard';
 import { User } from '../decorators/user.decorator';
-import { UserEntity } from 'src/infra/postgres/entities/user.entity';
+import { UserModel } from 'src/infra/postgres/entities/user.entity';
 import { LoginOutputDTO } from '../dtos/auth/login.output.dto';
 import { LoginInputDTO } from '../dtos/auth/login.input.dto';
 import { RegisterInputDTO } from '../dtos/auth/register.input.dto';
@@ -20,7 +20,7 @@ export class AuthController {
   @UseGuards(LocalAuthGuard)
   public async login(
     @Body() _dto: LoginInputDTO,
-    @User() user: UserEntity,
+    @User() user: UserModel,
   ) {
     return this.authUseCase.login(user);
   }

@@ -5,7 +5,7 @@ import { RegisterInputDTO } from 'src/api/dtos/auth/register.input.dto';
 import { RegisterOutputDTO } from 'src/api/dtos/auth/register.output.dto';
 import { LocalAuthGuard } from 'src/api/guards/local-auth.guard';
 import { JWT, UserTokenPayload } from 'src/common/types';
-import { UserEntity } from 'src/infra/postgres/entities/user.entity';
+import { UserModel } from 'src/infra/postgres/entities/user.entity';
 import { UsersUseCase } from './users.use-case';
 import * as bcrypt from 'bcrypt';
 
@@ -16,7 +16,7 @@ export class AuthUseCase {
     private readonly usersUseCase: UsersUseCase,
   ) {}
 
-  private async generateAccessToken(user: UserEntity): Promise<JWT> {
+  private async generateAccessToken(user: UserModel): Promise<JWT> {
     const userTokenPayload: UserTokenPayload = {
       id: user.id,
     };
@@ -24,7 +24,7 @@ export class AuthUseCase {
     return this.jwtService.signAsync(userTokenPayload) as Promise<JWT>;
   }
 
-  public async login(user: UserEntity): Promise<LoginOutputDTO> {
+  public async login(user: UserModel): Promise<LoginOutputDTO> {
     const accessToken = await this.generateAccessToken(user);
 
     return { accessToken };
