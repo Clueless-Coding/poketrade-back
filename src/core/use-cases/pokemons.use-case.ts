@@ -1,6 +1,7 @@
 import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
 import { PokemonsService } from "../services/pokemons.service";
 import { PokemonEntity } from "src/infra/postgres/entities/pokemon.entity";
+import { randomChoice } from "src/common/helpers/random-choice.helper";
 
 @Injectable()
 export class PokemonsUseCase {
@@ -9,13 +10,15 @@ export class PokemonsUseCase {
   public async getRandom(): Promise<PokemonEntity> {
     const pokemons = await this.pokemonsService.find();
 
-    if (!pokemons.length) {
+    const pokemon = randomChoice(pokemons);
+
+    if (!pokemon) {
       throw new HttpException(
         'There are no pokemons in the database. Please notify the developer about it :)',
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
 
-    return pokemons[Math.floor(pokemons.length * Math.random())];
+    return pokemon;
   }
 }

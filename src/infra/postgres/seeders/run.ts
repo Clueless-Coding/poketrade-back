@@ -1,10 +1,7 @@
 import { seeder } from "nestjs-seeder";
 import { PokemonsSeeder } from "./pokemons.seeder";
-import { PostgresModule } from "../postgres.module";
-import { PokemonEntity } from "../entities/pokemon.entity";
+import { PokemonsModule } from "src/infra/ioc/pokemons.module";
 
 seeder({
-  imports: [
-    PostgresModule.forFeature([PokemonEntity]),
-  ],
+  imports: [PokemonsModule],
 }).run([PokemonsSeeder]);
