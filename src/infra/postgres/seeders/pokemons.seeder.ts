@@ -7,7 +7,8 @@ import { Seeder } from "nestjs-seeder";
 @Injectable()
 export class PokemonsSeeder implements Seeder {
   constructor(
-    @InjectRepository(PokemonEntity) private readonly pokemonsRepository: Repository<PokemonEntity>,
+    @InjectRepository(PokemonEntity)
+    private readonly pokemonsRepository: Repository<PokemonEntity>,
   ) {}
 
   async seed() {

@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { DynamicModule, Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { EnvVariables } from '../config/validation';
@@ -20,5 +20,10 @@ import { validate } from '../config/validation';
   ],
 })
 export class PostgresModule {
-  public static forFeature = TypeOrmModule.forFeature;
+  public static forFeature(...args: Parameters<typeof TypeOrmModule.forFeature>): DynamicModule {
+    return {
+      ...TypeOrmModule.forFeature(...args),
+      module: PostgresModule,
+    };
+  }
 }
