@@ -1,7 +1,7 @@
 import { Column, Entity, JoinTable, ManyToMany } from 'typeorm';
 import { BaseEntity } from '../other/base.entity';
 import { AutoMap } from '@automapper/classes';
-import { PokemonEntity } from './pokemon.entity';
+import { PokemonEntity, PokemonModel } from './pokemon.entity';
 
 @Entity('packs')
 export class PackEntity extends BaseEntity {
@@ -29,7 +29,7 @@ export class PackEntity extends BaseEntity {
     joinColumn: { name: 'pack_id' },
     inverseJoinColumn: { name: 'pokemon_id' },
   })
-  public readonly pokemons?: PokemonEntity[];
+  public readonly pokemons?: PokemonModel[];
 }
 
 export type PackEntityRelations = keyof Pick<PackEntity, 'pokemons'>;

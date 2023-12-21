@@ -7,7 +7,7 @@ import { LoginOutputDTO } from '../dtos/auth/login.output.dto';
 import { LoginInputDTO } from '../dtos/auth/login.input.dto';
 import { RegisterInputDTO } from '../dtos/auth/register.input.dto';
 import { RegisterOutputDTO } from '../dtos/auth/register.output.dto';
-import { ApiBody, ApiCreatedResponse, ApiOkResponse, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
 
 @ApiTags('Authorization')
 @Controller('auth')

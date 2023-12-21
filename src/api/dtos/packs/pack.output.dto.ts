@@ -1,7 +1,6 @@
 import { AutoMap } from "@automapper/classes";
 import { ApiProperty } from "@nestjs/swagger";
 import { UUIDv4 } from "src/common/types";
-import { PokemonOutputDTO } from "../pokemons/pokemon.output.dto";
 
 export class PackOutputDTO {
   @ApiProperty()
@@ -24,8 +23,4 @@ export class PackOutputDTO {
   @ApiProperty()
   @AutoMap()
   public readonly image: string;
-
-  @ApiProperty({ type: PokemonOutputDTO, isArray: true })
-  @AutoMap(() => [PokemonOutputDTO])
-  public readonly pokemons: PokemonOutputDTO[];
 }

@@ -73,7 +73,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/UserOutputDTO"
+                  "$ref": "#/components/schemas/UserWithPokemonsOutputDTO"
                 }
               }
             }
@@ -81,6 +81,30 @@
         },
         "tags": [
           "Users"
+        ]
+      }
+    },
+    "/api/packs": {
+      "get": {
+        "operationId": "PacksController_getPacks",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PackOutputDTO"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Packs"
         ]
       }
     },
@@ -99,7 +123,14 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PackWithPokemonsOutputDTO"
+                }
+              }
+            }
           }
         },
         "tags": [
@@ -122,7 +153,14 @@
         ],
         "responses": {
           "201": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OpenPackOutputDTO"
+                }
+              }
+            }
           }
         },
         "tags": [
@@ -235,7 +273,7 @@
           "image"
         ]
       },
-      "UserOutputDTO": {
+      "UserWithPokemonsOutputDTO": {
         "type": "object",
         "properties": {
           "id": {
@@ -259,6 +297,105 @@
           "name",
           "balance",
           "pokemons"
+        ]
+      },
+      "PackOutputDTO": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "price": {
+            "type": "number"
+          },
+          "image": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "description",
+          "price",
+          "image"
+        ]
+      },
+      "PackWithPokemonsOutputDTO": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "price": {
+            "type": "number"
+          },
+          "image": {
+            "type": "string"
+          },
+          "pokemons": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PokemonOutputDTO"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "description",
+          "price",
+          "image",
+          "pokemons"
+        ]
+      },
+      "UserOutputDTO": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "balance": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "balance"
+        ]
+      },
+      "OpenPackOutputDTO": {
+        "type": "object",
+        "properties": {
+          "user": {
+            "$ref": "#/components/schemas/UserOutputDTO"
+          },
+          "pokemon": {
+            "$ref": "#/components/schemas/PokemonOutputDTO"
+          },
+          "isDuplicate": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "user",
+          "pokemon",
+          "isDuplicate"
         ]
       }
     }

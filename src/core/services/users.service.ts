@@ -21,8 +21,8 @@ export class UsersService {
   }
 
   public async findOne<T extends UserEntityRelations = never>(
-    where: FindOptionsWhere<UserEntity>,
-    relations: Array<T> = [],
+    where?: FindOptionsWhere<UserEntity>,
+    relations?: Array<T>,
   ): Promise<Nullable<UserModel<T>>> {
 
     return this.usersRepository.findOne({

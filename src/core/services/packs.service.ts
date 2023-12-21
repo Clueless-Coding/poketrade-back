@@ -11,9 +11,19 @@ export class PacksService {
     private readonly packsRepository: Repository<PackEntity>,
   ) {}
 
+  public async find<T extends PackEntityRelations = never>(
+    where?: FindOptionsWhere<PackEntity>,
+    relations?: Array<T>,
+  ): Promise<Array<PackModel<T>>> {
+    return this.packsRepository.find({
+      where,
+      relations,
+    }) as Promise<Array<PackModel<T>>>;
+  }
+
   public async findOne<T extends PackEntityRelations = never>(
-    where: FindOptionsWhere<PackEntity>,
-    relations: Array<T> = [],
+    where?: FindOptionsWhere<PackEntity>,
+    relations?: Array<T>,
   ): Promise<Nullable<PackModel<T>>> {
 
     return this.packsRepository.findOne({

@@ -5,7 +5,6 @@ import { PokemonModel } from 'src/infra/postgres/entities/pokemon.entity';
 import { CreateUserInputDTO } from 'src/api/dtos/users/create-user.input.dto';
 import { UpdateUserInputDTO } from 'src/api/dtos/users/update-user.input.dto';
 import { FindOptionsWhere } from 'typeorm';
-import { Nullable } from 'src/common/types';
 
 @Injectable()
 export class UsersUseCase {
@@ -13,8 +12,8 @@ export class UsersUseCase {
 
   public async findUser<T extends UserEntityRelations = never>(
     // TODO: change where to dto and parse it inside this function
-    where: FindOptionsWhere<UserEntity>,
-    relations: Array<T> = [],
+    where?: FindOptionsWhere<UserEntity>,
+    relations?: Array<T>,
   ): Promise<UserModel<T>> {
     const user = await this.usersService.findOne(where, relations);
 
@@ -40,7 +39,10 @@ export class UsersUseCase {
     return this.usersService.updateOne(user, dto);
   }
 
-  public async addPokemonToCollection(user: UserModel<'pokemons'>, pokemon: PokemonModel) {
+  public async addPokemonToCollection(
+    user: UserModel<'pokemons'>,
+    pokemon: PokemonModel
+  ): Promise<{ user: UserModel<'pokemons'>; isDuplicate: boolean }> {
     const isDuplicate = user.pokemons.some((x) => x.id === pokemon.id);
 
     if (!isDuplicate) {

@@ -5,7 +5,7 @@ import { UsersUseCase } from './users.use-case';
 import { UUIDv4 } from 'src/common/types';
 import { PacksService } from '../services/packs.service';
 import { DataSource, FindOptionsWhere } from 'typeorm';
-import { PackEntity, PackEntityRelations, PackModel } from 'src/infra/postgres/entities/pack.entity';
+import { PackEntity, PackModel } from 'src/infra/postgres/entities/pack.entity';
 import { randomChoice } from 'src/common/helpers/random-choice.helper';
 import { TransactionFor } from 'nest-transact';
 import { ModuleRef } from '@nestjs/core';
@@ -22,10 +22,12 @@ export class PacksUseCase extends TransactionFor<PacksUseCase> {
     super(moduleRef);
   }
 
-  public async getPack(
-    where: FindOptionsWhere<PackEntity>,
-  ): Promise<PackModel<'pokemons'>> {
-    const pack = await this.packsService.findOne(where, ['pokemons']);
+  public async getPacks(): Promise<Array<PackModel>> {
+    return this.packsService.find();
+  }
+
+  public async getPack(id: UUIDv4): Promise<PackModel<'pokemons'>> {
+    const pack = await this.packsService.findOne({ id }, ['pokemons']);
 
     if (!pack) {
       throw new HttpException('Pack not found', HttpStatus.NOT_FOUND);
@@ -48,7 +50,7 @@ export class PacksUseCase extends TransactionFor<PacksUseCase> {
   }
 
   private async _openPack(user: UserModel, id: UUIDv4) {
-    const pack = await this.getPack({ id });
+    const pack = await this.getPack(id);
     const pokemon = await this.getRandomPokemonFromPack(pack);
 
     if (user.balance < pack.price) {
@@ -57,15 +59,14 @@ export class PacksUseCase extends TransactionFor<PacksUseCase> {
 
     user = await this.usersUseCase.updateUser(user, { balance: user.balance - pack.price });
 
-    let isDuplicate;
-    ({ user, isDuplicate } = await this.usersUseCase.addPokemonToCollection(
+    const { user: userWithPokemons, isDuplicate } = await this.usersUseCase.addPokemonToCollection(
       // TODO: Get rid of this preload, and try to update pokemons of the user
       // without needing `pokemons` field in `UserModel`
       await this.usersUseCase.preload(user, ['pokemons']),
       pokemon,
-    ));
+    );
 
-    return { user, pokemon, isDuplicate };
+    return { user: userWithPokemons, pokemon, isDuplicate };
   }
 
   public async openPack(user: UserModel, id: UUIDv4, dataSource: DataSource) {

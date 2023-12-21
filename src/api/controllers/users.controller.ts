@@ -4,9 +4,9 @@ import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 import { UserEntity, UserModel } from 'src/infra/postgres/entities/user.entity';
 import { User } from '../decorators/user.decorator';
 import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
-import { UserOutputDTO } from '../dtos/users/user.output.dto';
 import { Mapper } from '@automapper/core';
 import { InjectMapper } from '@automapper/nestjs';
+import { UserWithPokemonsOutputDTO } from '../dtos/users/user-with-pokemons.output.dto';
 
 @ApiTags('Users')
 @Controller('users')
@@ -18,7 +18,7 @@ export class UsersController {
     private readonly usersUseCase: UsersUseCase
   ) {}
 
-  @ApiOkResponse({ type: UserOutputDTO })
+  @ApiOkResponse({ type: UserWithPokemonsOutputDTO })
   @Get('me')
   @UseGuards(JwtAuthGuard)
   public async getMe(@User() user: UserModel) {
@@ -26,6 +26,6 @@ export class UsersController {
     // That returns all pokemons of the user with pagination
     const userWithPokemons = await this.usersUseCase.preload(user, ['pokemons']);
 
-    return this.mapper.map(userWithPokemons, UserEntity, UserOutputDTO)
+    return this.mapper.map(userWithPokemons, UserEntity, UserWithPokemonsOutputDTO)
   }
 }

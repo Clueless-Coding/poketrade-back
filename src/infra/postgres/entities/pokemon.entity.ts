@@ -32,6 +32,6 @@ export class PokemonEntity {
 // NOTE: If PokemonEntity will have relations add it here
 export type PokemonEntityRelations = keyof Pick<PokemonEntity, never>;
 
-export type PokemonModel<T extends PokemonEntityRelations = PokemonEntityRelations> =
+export type PokemonModel<T extends PokemonEntityRelations = never> =
   & Omit<PokemonEntity, PokemonEntityRelations>
   & Required<Pick<PokemonEntity, T>>;
