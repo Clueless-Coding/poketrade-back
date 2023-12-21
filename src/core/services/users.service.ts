@@ -17,10 +17,10 @@ export class UsersService {
     user: UserModel,
     relations: Array<T> = [],
   ): Promise<UserModel<T>> {
-    return this.findOneBy({ id: user.id }, relations).then(user => user!);
+    return this.findOne({ id: user.id }, relations).then(user => user!);
   }
 
-  public async findOneBy<T extends UserEntityRelations = never>(
+  public async findOne<T extends UserEntityRelations = never>(
     where: FindOptionsWhere<UserEntity>,
     relations: Array<T> = [],
   ): Promise<Nullable<UserModel<T>>> {

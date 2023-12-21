@@ -16,6 +16,7 @@ import { AutomapperModule } from '@automapper/nestjs';
 import { classes } from '@automapper/classes';
 import { UserProfile } from './profiles/user.profile';
 import { PokemonProfile } from './profiles/pokemon.profile';
+import { PackProfile } from './profiles/pack.profile';
 
 @Module({
   imports: [
@@ -45,6 +46,7 @@ import { PokemonProfile } from './profiles/pokemon.profile';
     // profiles
     UserProfile,
     PokemonProfile,
+    PackProfile,
   ],
   controllers: [
     AuthController,
