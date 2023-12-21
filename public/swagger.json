@@ -81,6 +81,11 @@
         },
         "tags": [
           "Users"
+        ],
+        "security": [
+          {
+            "AccessToken": []
+          }
         ]
       }
     },
@@ -105,6 +110,11 @@
         },
         "tags": [
           "Packs"
+        ],
+        "security": [
+          {
+            "AccessToken": []
+          }
         ]
       }
     },
@@ -131,10 +141,18 @@
                 }
               }
             }
+          },
+          "404": {
+            "description": ""
           }
         },
         "tags": [
           "Packs"
+        ],
+        "security": [
+          {
+            "AccessToken": []
+          }
         ]
       }
     },
@@ -161,10 +179,18 @@
                 }
               }
             }
+          },
+          "404": {
+            "description": ""
           }
         },
         "tags": [
           "Packs"
+        ],
+        "security": [
+          {
+            "AccessToken": []
+          }
         ]
       }
     }

@@ -3,7 +3,7 @@ import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 import { User } from '../decorators/user.decorator';
 import { UserEntity, UserModel } from 'src/infra/postgres/entities/user.entity';
 import { PacksUseCase } from 'src/core/use-cases/packs.use-case';
-import { ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
+import { ApiCreatedResponse, ApiNotFoundResponse, ApiOkResponse, ApiSecurity, ApiTags } from '@nestjs/swagger';
 import { UUIDv4 } from 'src/common/types';
 import { Mapper } from '@automapper/core';
 import { PackEntity } from 'src/infra/postgres/entities/pack.entity';
@@ -15,7 +15,6 @@ import { UserOutputDTO } from '../dtos/users/user.output.dto';
 import { PokemonEntity } from 'src/infra/postgres/entities/pokemon.entity';
 import { PokemonOutputDTO } from '../dtos/pokemons/pokemon.output.dto';
 import { PackWithPokemonsOutputDTO } from '../dtos/packs/pack-with-pokemons.output.dto';
-import { UserWithPokemonsOutputDTO } from '../dtos/users/user-with-pokemons.output.dto';
 
 @ApiTags('Packs')
 @Controller('packs')
@@ -29,6 +28,7 @@ export class PacksController {
   ) {}
 
   @ApiOkResponse({ type: [PackOutputDTO] })
+  @ApiSecurity('AccessToken')
   @Get()
   @UseGuards(JwtAuthGuard)
   public async getPacks(): Promise<Array<PackOutputDTO>> {
@@ -38,6 +38,8 @@ export class PacksController {
   }
 
   @ApiOkResponse({ type: PackWithPokemonsOutputDTO })
+  @ApiNotFoundResponse()
+  @ApiSecurity('AccessToken')
   @Get(':id')
   @UseGuards(JwtAuthGuard)
   public async getPack(
@@ -51,6 +53,8 @@ export class PacksController {
   // TODO: Get rid of isDuplicate functionality.
   // TODO: openPack should return OpenedPackEntity ({ openedAt: Date, user: UserEntity, pack: PackEntity, pokemon: PokemonEntity })
   @ApiCreatedResponse({ type: OpenPackOutputDTO })
+  @ApiNotFoundResponse()
+  @ApiSecurity('AccessToken')
   @Post(':id/open')
   @UseGuards(JwtAuthGuard)
   public async openPack(

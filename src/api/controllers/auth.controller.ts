@@ -1,4 +1,4 @@
-import { Body, Controller, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, HttpCode, HttpStatus, Post, UseGuards } from '@nestjs/common';
 import { AuthUseCase } from 'src/core/use-cases/auth.use-case';
 import { LocalAuthGuard } from '../guards/local-auth.guard';
 import { User } from '../decorators/user.decorator';
@@ -17,6 +17,7 @@ export class AuthController {
   // TODO: For some reason body validation doesn't work. Fix it.
   @ApiOkResponse({ type: LoginOutputDTO })
   @Post('login')
+  @HttpCode(HttpStatus.OK)
   @UseGuards(LocalAuthGuard)
   public async login(
     @Body() _dto: LoginInputDTO,
