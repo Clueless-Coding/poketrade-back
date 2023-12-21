@@ -3,7 +3,7 @@ import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 import { User } from '../decorators/user.decorator';
 import { UserEntity, UserModel } from 'src/infra/postgres/entities/user.entity';
 import { PacksUseCase } from 'src/core/use-cases/packs.use-case';
-import { ApiCreatedResponse, ApiNotFoundResponse, ApiOkResponse, ApiSecurity, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiCreatedResponse, ApiNotFoundResponse, ApiOkResponse, ApiSecurity, ApiTags } from '@nestjs/swagger';
 import { UUIDv4 } from 'src/common/types';
 import { Mapper } from '@automapper/core';
 import { PackEntity } from 'src/infra/postgres/entities/pack.entity';
@@ -28,7 +28,7 @@ export class PacksController {
   ) {}
 
   @ApiOkResponse({ type: [PackOutputDTO] })
-  @ApiSecurity('AccessToken')
+  @ApiBearerAuth()
   @Get()
   @UseGuards(JwtAuthGuard)
   public async getPacks(): Promise<Array<PackOutputDTO>> {
@@ -39,7 +39,7 @@ export class PacksController {
 
   @ApiOkResponse({ type: PackWithPokemonsOutputDTO })
   @ApiNotFoundResponse()
-  @ApiSecurity('AccessToken')
+  @ApiBearerAuth()
   @Get(':id')
   @UseGuards(JwtAuthGuard)
   public async getPack(
@@ -54,7 +54,7 @@ export class PacksController {
   // TODO: openPack should return OpenedPackEntity ({ openedAt: Date, user: UserEntity, pack: PackEntity, pokemon: PokemonEntity })
   @ApiCreatedResponse({ type: OpenPackOutputDTO })
   @ApiNotFoundResponse()
-  @ApiSecurity('AccessToken')
+  @ApiBearerAuth()
   @Post(':id/open')
   @UseGuards(JwtAuthGuard)
   public async openPack(
