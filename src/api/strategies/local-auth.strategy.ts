@@ -12,7 +12,7 @@ export class LocalAuthStrategy extends PassportStrategy(Strategy) {
   }
 
   public async validate(username: string, password: string) {
-    const user = await this.usersService.findOneBy({ name: username });
+    const user = await this.usersService.findOne({ name: username });
 
     if (!user) {
       throw new HttpException('User not found', HttpStatus.UNAUTHORIZED);

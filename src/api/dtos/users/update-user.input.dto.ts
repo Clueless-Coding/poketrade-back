@@ -6,6 +6,7 @@ import { PokemonEntity } from 'src/infra/postgres/entities/pokemon.entity';
 export class UpdateUserInputDTO extends PartialType(CreateUserInputDTO) {
   @IsArray()
   @IsOptional()
+  // TODO: change it to its own dto?
   public readonly pokemons?: PokemonEntity[];
 
   @IsInt()

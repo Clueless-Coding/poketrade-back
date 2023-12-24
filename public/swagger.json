@@ -73,7 +73,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/UserOutputDTO"
+                  "$ref": "#/components/schemas/UserWithPokemonsOutputDTO"
                 }
               }
             }
@@ -81,20 +81,116 @@
         },
         "tags": [
           "Users"
+        ],
+        "security": [
+          {
+            "AccessToken": []
+          }
         ]
       }
     },
-    "/api/packs/open": {
-      "post": {
-        "operationId": "PacksController_openPack",
+    "/api/packs": {
+      "get": {
+        "operationId": "PacksController_getPacks",
         "parameters": [],
         "responses": {
-          "201": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PackOutputDTO"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Packs"
+        ],
+        "security": [
+          {
+            "AccessToken": []
+          }
+        ]
+      }
+    },
+    "/api/packs/{id}": {
+      "get": {
+        "operationId": "PacksController_getPack",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PackWithPokemonsOutputDTO"
+                }
+              }
+            }
+          },
+          "404": {
             "description": ""
           }
         },
         "tags": [
           "Packs"
+        ],
+        "security": [
+          {
+            "AccessToken": []
+          }
+        ]
+      }
+    },
+    "/api/packs/{id}/open": {
+      "post": {
+        "operationId": "PacksController_openPack",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OpenPackOutputDTO"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Packs"
+        ],
+        "security": [
+          {
+            "AccessToken": []
+          }
         ]
       }
     }
@@ -203,7 +299,7 @@
           "image"
         ]
       },
-      "UserOutputDTO": {
+      "UserWithPokemonsOutputDTO": {
         "type": "object",
         "properties": {
           "id": {
@@ -227,6 +323,105 @@
           "name",
           "balance",
           "pokemons"
+        ]
+      },
+      "PackOutputDTO": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "price": {
+            "type": "number"
+          },
+          "image": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "description",
+          "price",
+          "image"
+        ]
+      },
+      "PackWithPokemonsOutputDTO": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "price": {
+            "type": "number"
+          },
+          "image": {
+            "type": "string"
+          },
+          "pokemons": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PokemonOutputDTO"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "description",
+          "price",
+          "image",
+          "pokemons"
+        ]
+      },
+      "UserOutputDTO": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "balance": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "balance"
+        ]
+      },
+      "OpenPackOutputDTO": {
+        "type": "object",
+        "properties": {
+          "user": {
+            "$ref": "#/components/schemas/UserOutputDTO"
+          },
+          "pokemon": {
+            "$ref": "#/components/schemas/PokemonOutputDTO"
+          },
+          "isDuplicate": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "user",
+          "pokemon",
+          "isDuplicate"
         ]
       }
     }

@@ -1,6 +1,6 @@
 import { Column, Entity, JoinTable, ManyToMany } from 'typeorm';
 import { BaseEntity } from '../other/base.entity';
-import { PokemonEntity } from './pokemon.entity';
+import { PokemonEntity, PokemonModel } from './pokemon.entity';
 import { AutoMap } from '@automapper/classes';
 
 @Entity('users')
@@ -24,5 +24,11 @@ export class UserEntity extends BaseEntity {
     joinColumn: { name: 'user_id' },
     inverseJoinColumn: { name: 'pokemon_id' },
   })
-  public readonly pokemons: PokemonEntity[];
+  public readonly pokemons?: PokemonModel[];
 }
+
+export type UserEntityRelations = keyof Pick<UserEntity, 'pokemons'>;
+
+export type UserModel<T extends UserEntityRelations = never> =
+  & Omit<UserEntity, UserEntityRelations>
+  & Required<Pick<UserEntity, T>>;

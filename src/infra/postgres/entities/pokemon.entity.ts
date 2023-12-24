@@ -28,3 +28,10 @@ export class PokemonEntity {
   @Column({ type: 'text' })
   public readonly image: string;
 }
+
+// NOTE: If PokemonEntity will have relations add it here
+export type PokemonEntityRelations = keyof Pick<PokemonEntity, never>;
+
+export type PokemonModel<T extends PokemonEntityRelations = never> =
+  & Omit<PokemonEntity, PokemonEntityRelations>
+  & Required<Pick<PokemonEntity, T>>;
