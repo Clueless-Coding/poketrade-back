@@ -84,7 +84,7 @@
         ],
         "security": [
           {
-            "AccessToken": []
+            "bearer": []
           }
         ]
       }
@@ -113,7 +113,7 @@
         ],
         "security": [
           {
-            "AccessToken": []
+            "bearer": []
           }
         ]
       }
@@ -151,7 +151,7 @@
         ],
         "security": [
           {
-            "AccessToken": []
+            "bearer": []
           }
         ]
       }
@@ -189,7 +189,7 @@
         ],
         "security": [
           {
-            "AccessToken": []
+            "bearer": []
           }
         ]
       }
@@ -205,10 +205,10 @@
   "servers": [],
   "components": {
     "securitySchemes": {
-      "AccessToken": {
-        "type": "apiKey",
-        "in": "header",
-        "name": "x-access-token"
+      "bearer": {
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "type": "http"
       }
     },
     "schemas": {
