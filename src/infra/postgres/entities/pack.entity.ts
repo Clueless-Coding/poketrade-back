@@ -1,13 +1,13 @@
 import { Column, Entity, FindOptionsRelations, JoinTable, ManyToMany } from 'typeorm';
-import { BaseEntity } from '../other/base.entity';
 import { AutoMap } from '@automapper/classes';
 import { PokemonEntity } from './pokemon.entity';
 import { CreateModel, GetEntityRelations, From } from '../other/types';
+import { BaseWithDateEntity } from '../other/base-with-date.entity';
 
 @Entity('packs')
 export class PackEntity<
   T extends FindOptionsRelations<PackEntity<T>> = {},
-> extends BaseEntity {
+> extends BaseWithDateEntity {
   @AutoMap()
   @Column({ type: 'text' })
   public readonly name: string;
