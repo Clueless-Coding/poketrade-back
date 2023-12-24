@@ -1,3 +1,4 @@
+import { OpenedPackEntity, OpenedPackModel } from "src/infra/postgres/entities/opened-pack.entity";
 import { PackEntity, PackModel } from "src/infra/postgres/entities/pack.entity";
 import { PokemonEntity, PokemonModel } from "src/infra/postgres/entities/pokemon.entity";
 import { UserEntity, UserModel } from "src/infra/postgres/entities/user.entity";
@@ -7,6 +8,7 @@ type EntityToModel<Entity, Relations> =
   Entity extends UserEntity<Relations> ? UserModel<Relations>
   : Entity extends PokemonEntity<Relations> ? PokemonModel<Relations>
   : Entity extends PackEntity<Relations> ? PackModel<Relations>
+  : Entity extends OpenedPackEntity<Relations> ? OpenedPackModel<Relations>
   : never;
 
 

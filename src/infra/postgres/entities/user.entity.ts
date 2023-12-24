@@ -2,6 +2,7 @@ import { Column, Entity, JoinTable, ManyToMany, OneToMany, FindOptionsRelations 
 import { BaseEntity } from '../other/base.entity';
 import { PokemonEntity } from './pokemon.entity';
 import { AutoMap } from '@automapper/classes';
+import { OpenedPackEntity } from './opened-pack.entity';
 import { GetEntityRelations, CreateModel, From } from '../other/types';
 
 @Entity('users')
@@ -28,6 +29,9 @@ export class UserEntity<
     inverseJoinColumn: { name: 'pokemon_id' },
   })
   public readonly pokemons: Array<PokemonEntity<From<T['pokemons']>>>;
+
+  @OneToMany(() => OpenedPackEntity, (openedPack) => openedPack.user)
+  public readonly openedPacks: Array<OpenedPackEntity<From<T['openedPacks']>>>;
 }
 
 type UserEntityRelations = GetEntityRelations<UserEntity, 'pokemons' | 'openedPacks'>;
