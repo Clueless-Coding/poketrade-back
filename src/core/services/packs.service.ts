@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Nullable } from 'src/common/types';
-import { PackEntity, PackEntityRelations, PackModel } from 'src/infra/postgres/entities/pack.entity';
-import { FindOptionsWhere, Repository } from 'typeorm';
+import { PackEntity, PackModel } from 'src/infra/postgres/entities/pack.entity';
+import { FindOptionsRelations, FindOptionsWhere, Repository } from 'typeorm';
 
 @Injectable()
 export class PacksService {
@@ -11,9 +11,11 @@ export class PacksService {
     private readonly packsRepository: Repository<PackEntity>,
   ) {}
 
-  public async find<T extends PackEntityRelations = never>(
-    where?: FindOptionsWhere<PackEntity>,
-    relations?: Array<T>,
+  public async find<
+    T extends FindOptionsRelations<PackEntity> = {},
+  >(
+    where?: FindOptionsWhere<PackEntity<T>>,
+    relations?: T,
   ): Promise<Array<PackModel<T>>> {
     return this.packsRepository.find({
       where,
@@ -21,9 +23,11 @@ export class PacksService {
     }) as Promise<Array<PackModel<T>>>;
   }
 
-  public async findOne<T extends PackEntityRelations = never>(
-    where?: FindOptionsWhere<PackEntity>,
-    relations?: Array<T>,
+  public async findOne<
+    T extends FindOptionsRelations<PackEntity> = {},
+  >(
+    where?: FindOptionsWhere<PackEntity<T>>,
+    relations?: T,
   ): Promise<Nullable<PackModel<T>>> {
 
     return this.packsRepository.findOne({

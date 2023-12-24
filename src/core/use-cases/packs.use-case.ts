@@ -4,8 +4,8 @@ import { PokemonsUseCase } from './pokemons.use-case';
 import { UsersUseCase } from './users.use-case';
 import { UUIDv4 } from 'src/common/types';
 import { PacksService } from '../services/packs.service';
-import { DataSource, FindOptionsWhere } from 'typeorm';
-import { PackEntity, PackModel } from 'src/infra/postgres/entities/pack.entity';
+import { DataSource } from 'typeorm';
+import { PackModel } from 'src/infra/postgres/entities/pack.entity';
 import { randomChoice } from 'src/common/helpers/random-choice.helper';
 import { TransactionFor } from 'nest-transact';
 import { ModuleRef } from '@nestjs/core';
@@ -26,8 +26,8 @@ export class PacksUseCase extends TransactionFor<PacksUseCase> {
     return this.packsService.find();
   }
 
-  public async getPack(id: UUIDv4): Promise<PackModel<'pokemons'>> {
-    const pack = await this.packsService.findOne({ id }, ['pokemons']);
+  public async getPack(id: UUIDv4): Promise<PackModel<{ pokemons: true }>> {
+    const pack = await this.packsService.findOne({ id }, { pokemons: true });
 
     if (!pack) {
       throw new HttpException('Pack not found', HttpStatus.NOT_FOUND);
@@ -36,7 +36,7 @@ export class PacksUseCase extends TransactionFor<PacksUseCase> {
     return pack;
   }
 
-  private async getRandomPokemonFromPack(pack: PackModel<'pokemons'>) {
+  private async getRandomPokemonFromPack(pack: PackModel<{ pokemons: true }>) {
     const pokemon = randomChoice(pack.pokemons);
 
     if (!pokemon) {
@@ -62,7 +62,7 @@ export class PacksUseCase extends TransactionFor<PacksUseCase> {
     const { user: userWithPokemons, isDuplicate } = await this.usersUseCase.addPokemonToCollection(
       // TODO: Get rid of this preload, and try to update pokemons of the user
       // without needing `pokemons` field in `UserModel`
-      await this.usersUseCase.preload(user, ['pokemons']),
+      await this.usersUseCase.preload(user, { pokemons: true }),
       pokemon,
     );
 

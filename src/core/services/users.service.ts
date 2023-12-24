@@ -3,8 +3,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { CreateUserInputDTO } from 'src/api/dtos/users/create-user.input.dto';
 import { UpdateUserInputDTO } from 'src/api/dtos/users/update-user.input.dto';
 import { Nullable } from 'src/common/types';
-import { UserEntity, UserModel, UserEntityRelations } from 'src/infra/postgres/entities/user.entity';
-import { FindOptionsWhere, Repository } from 'typeorm';
+import { UserEntity, UserModel } from 'src/infra/postgres/entities/user.entity';
+import { FindOptionsRelations, FindOptionsWhere, Repository } from 'typeorm';
 
 @Injectable()
 export class UsersService {
@@ -13,16 +13,20 @@ export class UsersService {
     private readonly usersRepository: Repository<UserEntity>,
   ) {}
 
-  public async preload<T extends UserEntityRelations = never>(
+  public async preload<
+    T extends FindOptionsRelations<UserEntity> = {},
+  >(
     user: UserModel,
-    relations: Array<T> = [],
+    relations?: T,
   ): Promise<UserModel<T>> {
     return this.findOne({ id: user.id }, relations).then(user => user!);
   }
 
-  public async findOne<T extends UserEntityRelations = never>(
-    where?: FindOptionsWhere<UserEntity>,
-    relations?: Array<T>,
+  public async findOne<
+    T extends FindOptionsRelations<UserEntity> = {},
+  >(
+    where?: FindOptionsWhere<UserEntity<T>>,
+    relations?: T,
   ): Promise<Nullable<UserModel<T>>> {
 
     return this.usersRepository.findOne({
@@ -34,10 +38,15 @@ export class UsersService {
   public async createOne(dto: CreateUserInputDTO): Promise<UserModel> {
     const user = this.usersRepository.create(dto);
 
-    return this.usersRepository.save(user);
+    return this.usersRepository.save(user) as Promise<UserModel>;
   }
 
-  public async updateOne<T extends UserEntityRelations>(user: UserModel<T>, dto: UpdateUserInputDTO): Promise<UserModel<T>> {
+  public async updateOne<
+    T extends FindOptionsRelations<UserEntity> = {},
+  >(
+    user: UserModel<T>,
+    dto: UpdateUserInputDTO
+  ): Promise<UserModel<T>> {
     const updatedUser = this.usersRepository.merge(user, dto);
 
     return this.usersRepository.save(updatedUser) as Promise<UserModel<T>>;

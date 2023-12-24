@@ -1,10 +1,13 @@
-import { Column, Entity, JoinTable, ManyToMany } from 'typeorm';
+import { Column, Entity, JoinTable, ManyToMany, OneToMany, FindOptionsRelations } from 'typeorm';
 import { BaseEntity } from '../other/base.entity';
-import { PokemonEntity, PokemonModel } from './pokemon.entity';
+import { PokemonEntity } from './pokemon.entity';
 import { AutoMap } from '@automapper/classes';
+import { GetEntityRelations, CreateModel, From } from '../other/types';
 
 @Entity('users')
-export class UserEntity extends BaseEntity {
+export class UserEntity<
+  T extends FindOptionsRelations<UserEntity<T>> = {},
+> extends BaseEntity {
   @AutoMap()
   @Column({ type: 'text', unique: true })
   public readonly name: string;
@@ -24,11 +27,11 @@ export class UserEntity extends BaseEntity {
     joinColumn: { name: 'user_id' },
     inverseJoinColumn: { name: 'pokemon_id' },
   })
-  public readonly pokemons?: PokemonModel[];
+  public readonly pokemons: Array<PokemonEntity<From<T['pokemons']>>>;
 }
 
-export type UserEntityRelations = keyof Pick<UserEntity, 'pokemons'>;
+type UserEntityRelations = GetEntityRelations<UserEntity, 'pokemons' | 'openedPacks'>;
 
-export type UserModel<T extends UserEntityRelations = never> =
-  & Omit<UserEntity, UserEntityRelations>
-  & Required<Pick<UserEntity, T>>;
+export type UserModel<
+  T extends FindOptionsRelations<UserEntity<T>> = {},
+> = CreateModel<UserEntity<T>, UserEntityRelations, T>;

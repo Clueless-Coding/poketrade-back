@@ -1,8 +1,11 @@
 import { AutoMap } from '@automapper/classes';
-import { Column, Entity, PrimaryColumn } from 'typeorm';
+import { CreateModel, GetEntityRelations } from '../other/types';
+import { Column, Entity, FindOptionsRelations, PrimaryColumn } from 'typeorm';
 
 @Entity('pokemons')
-export class PokemonEntity {
+export class PokemonEntity<
+  T extends FindOptionsRelations<PokemonEntity<T>> = {},
+> {
   @AutoMap()
   @PrimaryColumn({ type: 'integer' })
   public readonly id: number;
@@ -30,8 +33,8 @@ export class PokemonEntity {
 }
 
 // NOTE: If PokemonEntity will have relations add it here
-export type PokemonEntityRelations = keyof Pick<PokemonEntity, never>;
+type PokemonEntityRelations = GetEntityRelations<PokemonEntity, never>;
 
-export type PokemonModel<T extends PokemonEntityRelations = never> =
-  & Omit<PokemonEntity, PokemonEntityRelations>
-  & Required<Pick<PokemonEntity, T>>;
+export type PokemonModel<
+  T extends FindOptionsRelations<PokemonEntity<T>> = {}
+> = CreateModel<PokemonEntity<T>, PokemonEntityRelations, T>;

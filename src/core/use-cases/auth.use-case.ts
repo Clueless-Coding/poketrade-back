@@ -1,9 +1,8 @@
-import { HttpException, HttpStatus, Injectable, UseGuards } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { LoginOutputDTO } from 'src/api/dtos/auth/login.output.dto';
 import { RegisterInputDTO } from 'src/api/dtos/auth/register.input.dto';
 import { RegisterOutputDTO } from 'src/api/dtos/auth/register.output.dto';
-import { LocalAuthGuard } from 'src/api/guards/local-auth.guard';
 import { JWT, UserTokenPayload } from 'src/common/types';
 import { UserModel } from 'src/infra/postgres/entities/user.entity';
 import { UsersUseCase } from './users.use-case';

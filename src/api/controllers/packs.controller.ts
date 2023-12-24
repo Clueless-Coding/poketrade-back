@@ -44,7 +44,7 @@ export class PacksController {
   @UseGuards(JwtAuthGuard)
   public async getPack(
     @Param('id', new ParseUUIDPipe({ version: '4' })) id: UUIDv4,
-  ): Promise<PackOutputDTO> {
+  ): Promise<PackWithPokemonsOutputDTO> {
     const pack = await this.packsUseCase.getPack(id);
 
     return this.mapper.map(pack, PackEntity, PackWithPokemonsOutputDTO);

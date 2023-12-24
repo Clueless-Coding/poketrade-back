@@ -25,8 +25,8 @@ export class UsersController {
   public async getMe(@User() user: UserModel) {
     // TODO: Get rid of this preload and create a separate route for example: me/pokemons.
     // That returns all pokemons of the user with pagination
-    const userWithPokemons = await this.usersUseCase.preload(user, ['pokemons']);
+    const userWithPokemons = await this.usersUseCase.preload(user, { pokemons: true });
 
-    return this.mapper.map(userWithPokemons, UserEntity, UserWithPokemonsOutputDTO)
+    return this.mapper.map(userWithPokemons, UserEntity, UserWithPokemonsOutputDTO);
   }
 }
