@@ -9,6 +9,7 @@ import { PackModel } from 'src/infra/postgres/entities/pack.entity';
 import { randomChoice } from 'src/common/helpers/random-choice.helper';
 import { TransactionFor } from 'nest-transact';
 import { ModuleRef } from '@nestjs/core';
+import { OpenedPacksUseCase } from './opened-packs.use-case';
 
 @Injectable()
 export class PacksUseCase extends TransactionFor<PacksUseCase> {
@@ -16,6 +17,7 @@ export class PacksUseCase extends TransactionFor<PacksUseCase> {
     private readonly packsService: PacksService,
     private readonly pokemonsUseCase: PokemonsUseCase,
     private readonly usersUseCase: UsersUseCase,
+    private readonly openedPacksUseCase: OpenedPacksUseCase,
 
     moduleRef: ModuleRef,
   ) {
@@ -36,7 +38,7 @@ export class PacksUseCase extends TransactionFor<PacksUseCase> {
     return pack;
   }
 
-  private async getRandomPokemonFromPack(pack: PackModel<{ pokemons: true }>) {
+  private getRandomPokemonFromPack(pack: PackModel<{ pokemons: true }>) {
     const pokemon = randomChoice(pack.pokemons);
 
     if (!pokemon) {
@@ -51,11 +53,12 @@ export class PacksUseCase extends TransactionFor<PacksUseCase> {
 
   private async _openPack(user: UserModel, id: UUIDv4) {
     const pack = await this.getPack(id);
-    const pokemon = await this.getRandomPokemonFromPack(pack);
 
     if (user.balance < pack.price) {
       throw new HttpException('Insufficient balance', HttpStatus.CONFLICT);
     }
+
+    const pokemon = this.getRandomPokemonFromPack(pack);
 
     user = await this.usersUseCase.updateUser(user, { balance: user.balance - pack.price });
 
@@ -65,6 +68,8 @@ export class PacksUseCase extends TransactionFor<PacksUseCase> {
       await this.usersUseCase.preload(user, { pokemons: true }),
       pokemon,
     );
+
+    const openedPack = await this.openedPacksUseCase.openPack(userWithPokemons, pack, pokemon);
 
     return { user: userWithPokemons, pokemon, isDuplicate };
   }

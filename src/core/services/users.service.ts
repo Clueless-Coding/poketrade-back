@@ -38,7 +38,7 @@ export class UsersService {
   public async createOne(dto: CreateUserInputDTO): Promise<UserModel> {
     const user = this.usersRepository.create(dto);
 
-    return this.usersRepository.save(user) as Promise<UserModel>;
+    return this.usersRepository.save(user);
   }
 
   public async updateOne<
