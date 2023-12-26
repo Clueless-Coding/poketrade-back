@@ -1,16 +1,10 @@
 import { PartialType } from '@nestjs/swagger';
 import { CreateUserInputDTO } from './create-user.input.dto';
-import { IsArray, IsInt, IsOptional, IsPositive } from 'class-validator';
-import { PokemonEntity } from 'src/infra/postgres/entities/pokemon.entity';
+import { IsOptional } from 'class-validator';
+import { IsPositiveInt } from 'src/common/decorators/is-positive-int.decorator';
 
 export class UpdateUserInputDTO extends PartialType(CreateUserInputDTO) {
-  @IsArray()
-  @IsOptional()
-  // TODO: change it to its own dto?
-  public readonly pokemons?: Array<PokemonEntity>;
-
-  @IsInt()
-  @IsPositive()
+  @IsPositiveInt()
   @IsOptional()
   public readonly balance?: number;
 }

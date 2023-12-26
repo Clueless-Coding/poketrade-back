@@ -1,11 +1,9 @@
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsNotEmptyString } from 'src/common/decorators/is-not-empty-string.decorator';
 
 export class CreateUserInputDTO {
-  @IsString()
-  @IsNotEmpty()
+  @IsNotEmptyString()
   public readonly name: string;
 
-  @IsString()
-  @IsNotEmpty()
+  @IsNotEmptyString()
   public readonly hashedPassword: string;
 }
