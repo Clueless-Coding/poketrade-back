@@ -73,7 +73,91 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/UserWithInventoryOutputDTO"
+                  "$ref": "#/components/schemas/UserOutputDTO"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Users"
+        ],
+        "security": [
+          {
+            "AccessToken": []
+          }
+        ]
+      }
+    },
+    "/api/users/me/inventory": {
+      "get": {
+        "operationId": "UsersController_getMeInventory",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 10,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/UserInventoryEntryOutputDTO"
+                      }
+                    },
+                    "meta": {
+                      "type": "object",
+                      "properties": {
+                        "totalItems": {
+                          "type": "number"
+                        },
+                        "itemCount": {
+                          "type": "number"
+                        },
+                        "itemsPerPage": {
+                          "type": "number"
+                        },
+                        "totalPages": {
+                          "type": "number"
+                        },
+                        "currentPage": {
+                          "type": "number"
+                        }
+                      },
+                      "required": [
+                        "totalItems",
+                        "itemCount",
+                        "itemsPerPage",
+                        "totalPages",
+                        "currentPage"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "items",
+                    "meta"
+                  ]
                 }
               }
             }
@@ -271,6 +355,25 @@
           "accessToken"
         ]
       },
+      "UserOutputDTO": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "balance": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "balance"
+        ]
+      },
       "PokemonOutputDTO": {
         "type": "object",
         "properties": {
@@ -320,32 +423,6 @@
           "id",
           "receivedAt",
           "pokemon"
-        ]
-      },
-      "UserWithInventoryOutputDTO": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string"
-          },
-          "name": {
-            "type": "string"
-          },
-          "balance": {
-            "type": "number"
-          },
-          "inventory": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/UserInventoryEntryOutputDTO"
-            }
-          }
-        },
-        "required": [
-          "id",
-          "name",
-          "balance",
-          "inventory"
         ]
       },
       "PackOutputDTO": {
@@ -407,25 +484,6 @@
           "price",
           "image",
           "pokemons"
-        ]
-      },
-      "UserOutputDTO": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string"
-          },
-          "name": {
-            "type": "string"
-          },
-          "balance": {
-            "type": "number"
-          }
-        },
-        "required": [
-          "id",
-          "name",
-          "balance"
         ]
       },
       "OpenedPackOutputDTO": {

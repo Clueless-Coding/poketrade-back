@@ -5,6 +5,7 @@ import { PokemonModel } from 'src/infra/postgres/entities/pokemon.entity';
 import { CreateUserInventoryEntryEntityFields, UserInventoryEntryEntity, UserInventoryEntryModel } from 'src/infra/postgres/entities/user-inventory-entry.entity';
 import { UserEntity, UserModel, CreateUserEntityFields, UpdateUserEntityFields } from 'src/infra/postgres/entities/user.entity';
 import { FindOptionsRelations, FindOptionsWhere, Repository } from 'typeorm';
+import { paginate, Pagination, IPaginationOptions } from 'nestjs-typeorm-paginate';
 
 @Injectable()
 export class UsersService {
@@ -36,6 +37,20 @@ export class UsersService {
       where,
       relations,
     }) as Promise<Nullable<UserModel<T>>>;
+  }
+
+  public async findOneInventory<
+    T extends FindOptionsRelations<UserInventoryEntryEntity> = {},
+  >(
+    paginationOptions: IPaginationOptions,
+    where?: FindOptionsWhere<UserInventoryEntryEntity<T>>,
+    relations?: T,
+  ): Promise<Pagination<UserInventoryEntryModel<T>>> {
+    return paginate(
+      this.userInventoryEntriesRepository,
+      paginationOptions,
+      { where, relations },
+    ) as Promise<Pagination<UserInventoryEntryModel<T>>>;
   }
 
   public async createOne(fields: CreateUserEntityFields): Promise<UserModel> {

@@ -4,27 +4,45 @@ import { UserEntity, UserModel } from 'src/infra/postgres/entities/user.entity';
 import { PokemonModel } from 'src/infra/postgres/entities/pokemon.entity';
 import { CreateUserInputDTO } from 'src/api/dtos/users/create-user.input.dto';
 import { UpdateUserInputDTO } from 'src/api/dtos/users/update-user.input.dto';
-import { FindOptionsRelations, FindOptionsWhere } from 'typeorm';
+import { FindOptionsRelations } from 'typeorm';
 import { UserInventoryEntryModel } from 'src/infra/postgres/entities/user-inventory-entry.entity';
+import { IPaginationOptions, Pagination } from 'nestjs-typeorm-paginate';
+import { UUIDv4 } from 'src/common/types';
 
 @Injectable()
 export class UsersUseCase {
   public constructor(private readonly usersService: UsersService) {}
 
-  public async findUser<
-    T extends FindOptionsRelations<UserEntity> = {},
-  >(
-    // TODO: change where to dto and parse it inside this function
-    where?: FindOptionsWhere<UserEntity<T>>,
-    relations?: T,
-  ): Promise<UserModel<T>> {
-    const user = await this.usersService.findOne(where, relations);
+  public async findUserById(
+    id: UUIDv4,
+  ): Promise<UserModel> {
+    const user = await this.usersService.findOne({ id });
 
     if (!user) {
       throw new HttpException('User not found', HttpStatus.NOT_FOUND);
     }
 
     return user;
+  }
+
+  public async findUserInventoryById(
+    id: UUIDv4,
+    paginationOptions: IPaginationOptions
+  ): Promise<Pagination<UserInventoryEntryModel<{ pokemon: true }>>> {
+    const user = await this.findUserById(id);
+
+    return this.getUserInventory(user, paginationOptions);
+  }
+
+  public async getUserInventory(
+    user: UserModel,
+    paginationOptions: IPaginationOptions,
+  ): Promise<Pagination<UserInventoryEntryModel<{ pokemon: true }>>> {
+    return this.usersService.findOneInventory(
+      paginationOptions,
+      { user: { id: user.id } },
+      { pokemon: true },
+    );
   }
 
   public async preload<

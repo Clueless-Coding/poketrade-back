@@ -56,6 +56,9 @@ dependencies:
   nestjs-seeder:
     specifier: 0.3.2
     version: 0.3.2(@faker-js/faker@8.3.1)
+  nestjs-typeorm-paginate:
+    specifier: ^4.0.4
+    version: 4.0.4(@nestjs/common@9.0.8)(typeorm@0.3.17)
   passport:
     specifier: 0.7.0
     version: 0.7.0
@@ -3098,6 +3101,16 @@ packages:
       '@faker-js/faker': ^8.0.0
     dependencies:
       '@faker-js/faker': 8.3.1
+    dev: false
+
+  /nestjs-typeorm-paginate@4.0.4(@nestjs/common@9.0.8)(typeorm@0.3.17):
+    resolution: {integrity: sha512-arinWDc78wPV/EYWMmLYyeMSE5Lae1FHWD/2QpOdTmHaOVqK4PYf19EqZBqT9gbbPugkNW9JAMz3G2WmvSgR/A==}
+    peerDependencies:
+      '@nestjs/common': ^6.1.1 || ^5.6.2 || ^7.0.0 || ^8.0.0 || ^9.0.0 || ^10.0.0
+      typeorm: ^0.3.0
+    dependencies:
+      '@nestjs/common': 9.0.8(class-transformer@0.5.1)(class-validator@0.14.0)(reflect-metadata@0.1.13)(rxjs@7.8.1)
+      typeorm: 0.3.17(pg@8.11.3)(ts-node@10.9.2)
     dev: false
 
   /node-addon-api@5.1.0:
