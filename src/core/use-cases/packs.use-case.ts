@@ -1,6 +1,5 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { UserModel } from 'src/infra/postgres/entities/user.entity';
-import { PokemonsUseCase } from './pokemons.use-case';
 import { UsersUseCase } from './users.use-case';
 import { UUIDv4 } from 'src/common/types';
 import { PacksService } from '../services/packs.service';
