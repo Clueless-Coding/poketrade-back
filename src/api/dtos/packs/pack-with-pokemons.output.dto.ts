@@ -6,5 +6,5 @@ import { PackOutputDTO } from './pack.output.dto';
 export class PackWithPokemonsOutputDTO extends PackOutputDTO {
   @ApiProperty({ type: PokemonOutputDTO, isArray: true })
   @AutoMap(() => [PokemonOutputDTO])
-  public readonly pokemons: PokemonOutputDTO[];
+  public readonly pokemons: Array<PokemonOutputDTO>;
 }

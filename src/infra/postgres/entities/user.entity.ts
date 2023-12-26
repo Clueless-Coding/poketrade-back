@@ -21,11 +21,11 @@ export class UserEntity<
   @Column({ type: 'integer', default: 0 })
   public readonly balance: number;
 
-  @AutoMap(() => UserInventoryEntryEntity)
+  @AutoMap(() => [UserInventoryEntryEntity])
   @OneToMany(() => UserInventoryEntryEntity, (inventoryEntry) => inventoryEntry.user)
   public readonly inventory: Array<UserInventoryEntryEntity<From<T['inventory']>>>;
 
-  @AutoMap(() => OpenedPackEntity)
+  @AutoMap(() => [OpenedPackEntity])
   @OneToMany(() => OpenedPackEntity, (openedPack) => openedPack.user)
   public readonly openedPacks: Array<OpenedPackEntity<From<T['openedPacks']>>>;
 }

@@ -7,7 +7,7 @@ export class UpdateUserInputDTO extends PartialType(CreateUserInputDTO) {
   @IsArray()
   @IsOptional()
   // TODO: change it to its own dto?
-  public readonly pokemons?: PokemonEntity[];
+  public readonly pokemons?: Array<PokemonEntity>;
 
   @IsInt()
   @IsPositive()

@@ -25,7 +25,7 @@ export class PackEntity<
   @Column({ type: 'text' })
   public readonly image: string;
 
-  @AutoMap(() => PokemonEntity)
+  @AutoMap(() => [PokemonEntity])
   @ManyToMany(() => PokemonEntity)
   @JoinTable({
     name: 'pack_pokemons',
