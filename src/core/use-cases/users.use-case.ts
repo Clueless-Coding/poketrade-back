@@ -5,7 +5,7 @@ import { PokemonModel } from 'src/infra/postgres/entities/pokemon.entity';
 import { CreateUserInputDTO } from 'src/api/dtos/users/create-user.input.dto';
 import { UpdateUserInputDTO } from 'src/api/dtos/users/update-user.input.dto';
 import { FindOptionsRelations, FindOptionsWhere } from 'typeorm';
-import { UserPokemonModel } from 'src/infra/postgres/entities/user-pokemon.entity';
+import { UserInventoryEntryModel } from 'src/infra/postgres/entities/user-inventory-entry.entity';
 
 @Injectable()
 export class UsersUseCase {
@@ -49,10 +49,10 @@ export class UsersUseCase {
     return this.usersService.updateOne(user, dto);
   }
 
-  public async addPokemon(
+  public async addPokemonToInventory(
     user: UserModel,
     pokemon: PokemonModel
-  ): Promise<UserPokemonModel<{ user: true, pokemon: true }>> {
-    return this.usersService.addPokemon(user, pokemon);
+  ): Promise<UserInventoryEntryModel<{ user: true, pokemon: true }>> {
+    return this.usersService.addPokemonToInventory(user, pokemon);
   }
 }

@@ -73,7 +73,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/UserWithPokemonsOutputDTO"
+                  "$ref": "#/components/schemas/UserWithInventoryOutputDTO"
                 }
               }
             }
@@ -302,7 +302,27 @@
           "image"
         ]
       },
-      "UserWithPokemonsOutputDTO": {
+      "UserInventoryEntryOutputDTO": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "receivedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "pokemon": {
+            "$ref": "#/components/schemas/PokemonOutputDTO"
+          }
+        },
+        "required": [
+          "id",
+          "receivedAt",
+          "pokemon"
+        ]
+      },
+      "UserWithInventoryOutputDTO": {
         "type": "object",
         "properties": {
           "id": {
@@ -314,10 +334,10 @@
           "balance": {
             "type": "number"
           },
-          "pokemons": {
+          "inventory": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/PokemonOutputDTO"
+              "$ref": "#/components/schemas/UserInventoryEntryOutputDTO"
             }
           }
         },
@@ -325,7 +345,7 @@
           "id",
           "name",
           "balance",
-          "pokemons"
+          "inventory"
         ]
       },
       "PackOutputDTO": {

@@ -2,7 +2,7 @@ import { OpenedPackEntity, OpenedPackModel } from "src/infra/postgres/entities/o
 import { PackEntity, PackModel } from "src/infra/postgres/entities/pack.entity";
 import { PokemonEntity, PokemonModel } from "src/infra/postgres/entities/pokemon.entity";
 import { UserEntity, UserModel } from "src/infra/postgres/entities/user.entity";
-import { UserPokemonEntity, UserPokemonModel } from "../entities/user-pokemon.entity";
+import { UserInventoryEntryEntity, UserInventoryEntryModel } from "../entities/user-inventory-entry.entity";
 
 // NOTE: Add new Entities here
 type EntityToModel<Entity, Relations> =
@@ -10,7 +10,7 @@ type EntityToModel<Entity, Relations> =
   : Entity extends PokemonEntity<Relations> ? PokemonModel<Relations>
   : Entity extends PackEntity<Relations> ? PackModel<Relations>
   : Entity extends OpenedPackEntity<Relations> ? OpenedPackModel<Relations>
-  : Entity extends UserPokemonEntity<Relations> ? UserPokemonModel<Relations>
+  : Entity extends UserInventoryEntryEntity<Relations> ? UserInventoryEntryModel<Relations>
   : never;
 
 

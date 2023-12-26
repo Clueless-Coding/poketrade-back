@@ -61,7 +61,7 @@ export class PacksUseCase extends TransactionFor<PacksUseCase> {
 
     user = await this.usersUseCase.updateUser(user, { balance: user.balance - pack.price });
 
-    const userPokemon = await this.usersUseCase.addPokemon(
+    const userPokemon = await this.usersUseCase.addPokemonToInventory(
       user,
       pokemon,
     );

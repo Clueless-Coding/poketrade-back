@@ -6,7 +6,7 @@ import { User } from '../decorators/user.decorator';
 import { ApiOkResponse, ApiSecurity, ApiTags } from '@nestjs/swagger';
 import { Mapper } from '@automapper/core';
 import { InjectMapper } from '@automapper/nestjs';
-import { UserWithPokemonsOutputDTO } from '../dtos/users/user-with-pokemons.output.dto';
+import { UserWithInventoryOutputDTO } from '../dtos/users/user-with-inventory.output.dto';
 
 @ApiTags('Users')
 @Controller('users')
@@ -18,15 +18,15 @@ export class UsersController {
     private readonly usersUseCase: UsersUseCase
   ) {}
 
-  @ApiOkResponse({ type: UserWithPokemonsOutputDTO })
+  @ApiOkResponse({ type: UserWithInventoryOutputDTO })
   @ApiSecurity('AccessToken')
   @Get('me')
   @UseGuards(JwtAuthGuard)
   public async getMe(@User() user: UserModel) {
     // TODO: Get rid of this preload and create a separate route for example: me/pokemons.
     // That returns all pokemons of the user with pagination
-    const userWithPokemons = await this.usersUseCase.preload(user, { pokemons: true });
+    const userWithInventory = await this.usersUseCase.preload(user, { inventory: { pokemon: true } });
 
-    return this.mapper.map(userWithPokemons, UserEntity, UserWithPokemonsOutputDTO);
+    return this.mapper.map(userWithInventory, UserEntity, UserWithInventoryOutputDTO);
   }
 }
