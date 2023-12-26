@@ -1,7 +1,7 @@
 import { Column, Entity, FindOptionsRelations, JoinTable, ManyToMany } from 'typeorm';
 import { AutoMap } from '@automapper/classes';
 import { PokemonEntity } from './pokemon.entity';
-import { CreateModel, GetEntityRelations, From } from '../other/types';
+import { CreateModel, GetEntityRelations, From, CreateEntityFields, UpdateEntityFields } from '../other/types';
 import { BaseWithDateEntity } from '../other/base-with-date.entity';
 
 @Entity('packs')
@@ -36,6 +36,14 @@ export class PackEntity<
 }
 
 type PackEntityRelations = GetEntityRelations<PackEntity, 'pokemons'>;
+
+export type CreatePackEntityFields = CreateEntityFields<
+  PackEntity,
+  PackEntityRelations,
+  keyof PackEntity
+>;
+
+export type UpdatePackEntityFields = Partial<CreatePackEntityFields>;
 
 export type PackModel<
   T extends FindOptionsRelations<PackEntity<T>> = {},

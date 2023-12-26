@@ -1,7 +1,7 @@
 import { AutoMap } from '@automapper/classes';
 import { CreateDateColumn, Entity, FindOptionsRelations, ManyToOne } from 'typeorm';
 import { BaseEntity } from '../other/base.entity';
-import { CreateModel, From, GetEntityRelations } from '../other/types';
+import { CreateEntityFields, CreateModel, From, GetEntityRelations } from '../other/types';
 import { PokemonEntity } from './pokemon.entity';
 import { UserEntity } from './user.entity';
 
@@ -23,6 +23,14 @@ export class UserInventoryEntryEntity<
 }
 
 type UserInventoryEntryEntityRelations = GetEntityRelations<UserInventoryEntryEntity, 'user' | 'pokemon'>;
+
+export type CreateUserInventoryEntryEntityFields = CreateEntityFields<
+  UserInventoryEntryEntity,
+  UserInventoryEntryEntityRelations,
+  'user' | 'pokemon'
+>;
+
+export type UpdateUserInventoryEntryEntityFields = never;
 
 export type UserInventoryEntryModel<
   T extends FindOptionsRelations<UserInventoryEntryEntity<T>> = {},

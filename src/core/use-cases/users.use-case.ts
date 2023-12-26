@@ -53,6 +53,6 @@ export class UsersUseCase {
     user: UserModel,
     pokemon: PokemonModel
   ): Promise<UserInventoryEntryModel<{ user: true, pokemon: true }>> {
-    return this.usersService.addPokemonToInventory(user, pokemon);
+    return this.usersService.addPokemonToInventory({ user, pokemon });
   }
 }

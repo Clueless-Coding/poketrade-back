@@ -5,7 +5,7 @@ import { UserEntity, UserModel } from "src/infra/postgres/entities/user.entity";
 import { UserInventoryEntryEntity, UserInventoryEntryModel } from "../entities/user-inventory-entry.entity";
 
 // NOTE: Add new Entities here
-type EntityToModel<Entity, Relations> =
+type EntityToModel<Entity, Relations = {}> =
   Entity extends UserEntity<Relations> ? UserModel<Relations>
   : Entity extends PokemonEntity<Relations> ? PokemonModel<Relations>
   : Entity extends PackEntity<Relations> ? PackModel<Relations>
@@ -14,7 +14,7 @@ type EntityToModel<Entity, Relations> =
   : never;
 
 
-type EntityOrArrayOfEntitiesToModel<EntityOrArrayOfEntities, Relations> =
+type EntityOrArrayOfEntitiesToModel<EntityOrArrayOfEntities, Relations = {}> =
   EntityOrArrayOfEntities extends Array<infer Entity>
     ? Array<EntityToModel<Entity, Relations>>
     : EntityToModel<EntityOrArrayOfEntities, Relations>
@@ -36,3 +36,16 @@ export type CreateModel<
   };
 
 export type From<T> = Exclude<T, boolean | undefined>;
+
+export type CreateEntityFields<
+  Entity,
+  Relations,
+  Fields extends keyof Entity,
+  T = Pick<Entity, Fields>,
+> = { [K in keyof T]: K extends Relations ? EntityOrArrayOfEntitiesToModel<T[K]> : T[K] };
+
+export type UpdateEntityFields<
+  Entity,
+  Relations,
+  Fields extends keyof Entity,
+> = Partial<CreateEntityFields<Entity, Relations, Fields>>;

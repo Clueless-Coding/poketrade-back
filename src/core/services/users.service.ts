@@ -1,11 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { CreateUserInputDTO } from 'src/api/dtos/users/create-user.input.dto';
-import { UpdateUserInputDTO } from 'src/api/dtos/users/update-user.input.dto';
 import { Nullable } from 'src/common/types';
 import { PokemonModel } from 'src/infra/postgres/entities/pokemon.entity';
-import { UserInventoryEntryEntity, UserInventoryEntryModel } from 'src/infra/postgres/entities/user-inventory-entry.entity';
-import { UserEntity, UserModel } from 'src/infra/postgres/entities/user.entity';
+import { CreateUserInventoryEntryEntityFields, UserInventoryEntryEntity, UserInventoryEntryModel } from 'src/infra/postgres/entities/user-inventory-entry.entity';
+import { UserEntity, UserModel, CreateUserEntityFields, UpdateUserEntityFields } from 'src/infra/postgres/entities/user.entity';
 import { FindOptionsRelations, FindOptionsWhere, Repository } from 'typeorm';
 
 @Injectable()
@@ -40,8 +38,8 @@ export class UsersService {
     }) as Promise<Nullable<UserModel<T>>>;
   }
 
-  public async createOne(dto: CreateUserInputDTO): Promise<UserModel> {
-    const user = this.usersRepository.create(dto);
+  public async createOne(fields: CreateUserEntityFields): Promise<UserModel> {
+    const user = this.usersRepository.create(fields);
 
     return this.usersRepository.save(user);
   }
@@ -50,22 +48,18 @@ export class UsersService {
     T extends FindOptionsRelations<UserEntity> = {},
   >(
     user: UserModel<T>,
-    dto: UpdateUserInputDTO
+    fields: UpdateUserEntityFields,
   ): Promise<UserModel<T>> {
-    const updatedUser = this.usersRepository.merge(user, dto);
+    const updatedUser = this.usersRepository.merge(user, fields);
 
     return this.usersRepository.save(updatedUser) as Promise<UserModel<T>>;
   }
 
 
   public async addPokemonToInventory(
-    user: UserModel,
-    pokemon: PokemonModel,
+    fields: CreateUserInventoryEntryEntityFields,
   ): Promise<UserInventoryEntryModel<{ user: true, pokemon: true }>> {
-    const userPokemon = this.userInventoryEntriesRepository.create({
-      user,
-      pokemon,
-    });
+    const userPokemon = this.userInventoryEntriesRepository.create(fields);
 
     return this.userInventoryEntriesRepository.save(userPokemon);
   }

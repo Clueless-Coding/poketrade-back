@@ -1,5 +1,5 @@
 import { AutoMap } from '@automapper/classes';
-import { CreateModel, GetEntityRelations } from '../other/types';
+import { CreateEntityFields, CreateModel, GetEntityRelations } from '../other/types';
 import { Column, Entity, FindOptionsRelations, PrimaryColumn } from 'typeorm';
 
 @Entity('pokemons')
@@ -35,6 +35,17 @@ export class PokemonEntity<
 // NOTE: If PokemonEntity will have relations add it here
 type PokemonEntityRelations = GetEntityRelations<PokemonEntity, never>;
 
+export type CreatePokemonEntityFields = CreateEntityFields<
+  PokemonEntity,
+  PokemonEntityRelations,
+  keyof PokemonEntity
+>;
+
+// NOTE: There is no need to ever update PokemonEntity
+// since it's loaded from the api
+export type UpdatePokemonEntityFields = never;
+
 export type PokemonModel<
   T extends FindOptionsRelations<PokemonEntity<T>> = {}
 > = CreateModel<PokemonEntity<T>, PokemonEntityRelations, T>;
+

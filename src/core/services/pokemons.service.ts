@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { CreatePokemonInputDTO } from 'src/api/dtos/pokemons/create-pokemon.input.dto';
-import { PokemonEntity, PokemonModel } from 'src/infra/postgres/entities/pokemon.entity';
+import { CreatePokemonEntityFields, PokemonEntity, PokemonModel } from 'src/infra/postgres/entities/pokemon.entity';
 import { DeleteResult, FindOptionsRelations, FindOptionsWhere, Repository } from 'typeorm';
 
 @Injectable()
@@ -23,18 +22,18 @@ export class PokemonsService {
     }) as Promise<Array<PokemonModel<T>>>;
   }
 
-  private async create(...dtos: Array<CreatePokemonInputDTO>): Promise<Array<PokemonModel>> {
-    const pokemons = this.pokemonsRepository.create(dtos);
+  private async create(...fields: Array<CreatePokemonEntityFields>): Promise<Array<PokemonModel>> {
+    const pokemons = this.pokemonsRepository.create(fields);
 
     return this.pokemonsRepository.save(pokemons) as Promise<Array<PokemonModel>>;
   }
 
-  public async createOne(dto: CreatePokemonInputDTO): Promise<PokemonModel> {
-    return this.create(dto).then(([pokemon]) => pokemon!);
+  public async createOne(fields: CreatePokemonEntityFields): Promise<PokemonModel> {
+    return this.create(fields).then(([pokemon]) => pokemon!);
   }
 
-  public async createMany(dtos: Array<CreatePokemonInputDTO>): Promise<Array<PokemonModel>> {
-    return this.create(...dtos);
+  public async createMany(fields: Array<CreatePokemonEntityFields>): Promise<Array<PokemonModel>> {
+    return this.create(...fields);
   }
 
   public async deleteAll(): Promise<DeleteResult> {

@@ -11,6 +11,6 @@ export class OpenedPacksUseCase {
   ) {}
 
   public async openPack(user: UserModel, pack: PackModel, pokemon: PokemonModel) {
-    return this.openedPacksService.createOne(user, pack, pokemon);
+    return this.openedPacksService.createOne({ user, pack, pokemon });
   }
 }

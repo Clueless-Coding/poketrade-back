@@ -1,9 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { OpenedPackEntity, OpenedPackModel } from 'src/infra/postgres/entities/opened-pack.entity';
-import { PackModel } from 'src/infra/postgres/entities/pack.entity';
-import { PokemonModel } from 'src/infra/postgres/entities/pokemon.entity';
-import { UserModel } from 'src/infra/postgres/entities/user.entity';
+import { CreateOpenedPackEntityFields, OpenedPackEntity, OpenedPackModel } from 'src/infra/postgres/entities/opened-pack.entity';
 import { Repository } from 'typeorm';
 
 @Injectable()
@@ -14,15 +11,9 @@ export class OpenedPacksService {
   ) {}
 
   public async createOne(
-    user: UserModel,
-    pack: PackModel,
-    pokemon: PokemonModel,
+    fields: CreateOpenedPackEntityFields,
   ): Promise<OpenedPackModel<{ user: true, pack: true, pokemon: true }>> {
-    const openedPack = this.openedPacksRepository.create({
-      user,
-      pack,
-      pokemon,
-    });
+    const openedPack = this.openedPacksRepository.create(fields);
 
     return this.openedPacksRepository.save(openedPack);
   }
