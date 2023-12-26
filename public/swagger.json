@@ -175,12 +175,15 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/OpenPackOutputDTO"
+                  "$ref": "#/components/schemas/OpenedPackOutputDTO"
                 }
               }
             }
           },
           "404": {
+            "description": ""
+          },
+          "409": {
             "description": ""
           }
         },
@@ -405,23 +408,32 @@
           "balance"
         ]
       },
-      "OpenPackOutputDTO": {
+      "OpenedPackOutputDTO": {
         "type": "object",
         "properties": {
+          "id": {
+            "type": "string"
+          },
+          "openedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
           "user": {
             "$ref": "#/components/schemas/UserOutputDTO"
           },
+          "pack": {
+            "$ref": "#/components/schemas/PackOutputDTO"
+          },
           "pokemon": {
             "$ref": "#/components/schemas/PokemonOutputDTO"
-          },
-          "isDuplicate": {
-            "type": "boolean"
           }
         },
         "required": [
+          "id",
+          "openedAt",
           "user",
-          "pokemon",
-          "isDuplicate"
+          "pack",
+          "pokemon"
         ]
       }
     }

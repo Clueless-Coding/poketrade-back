@@ -3,6 +3,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { CreateUserInputDTO } from 'src/api/dtos/users/create-user.input.dto';
 import { UpdateUserInputDTO } from 'src/api/dtos/users/update-user.input.dto';
 import { Nullable } from 'src/common/types';
+import { PokemonModel } from 'src/infra/postgres/entities/pokemon.entity';
+import { UserPokemonEntity, UserPokemonModel } from 'src/infra/postgres/entities/user-pokemon.entity';
 import { UserEntity, UserModel } from 'src/infra/postgres/entities/user.entity';
 import { FindOptionsRelations, FindOptionsWhere, Repository } from 'typeorm';
 
@@ -11,6 +13,9 @@ export class UsersService {
   public constructor(
     @InjectRepository(UserEntity)
     private readonly usersRepository: Repository<UserEntity>,
+
+    @InjectRepository(UserPokemonEntity)
+    private readonly userPokemonsRepository: Repository<UserPokemonEntity>,
   ) {}
 
   public async preload<
@@ -50,5 +55,18 @@ export class UsersService {
     const updatedUser = this.usersRepository.merge(user, dto);
 
     return this.usersRepository.save(updatedUser) as Promise<UserModel<T>>;
+  }
+
+
+  public async addPokemon(
+    user: UserModel,
+    pokemon: PokemonModel,
+  ): Promise<UserPokemonModel<{ user: true, pokemon: true }>> {
+    const userPokemon = this.userPokemonsRepository.create({
+      user,
+      pokemon,
+    });
+
+    return this.userPokemonsRepository.save(userPokemon);
   }
 }

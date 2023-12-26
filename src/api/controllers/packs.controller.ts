@@ -3,7 +3,7 @@ import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 import { User } from '../decorators/user.decorator';
 import { UserEntity, UserModel } from 'src/infra/postgres/entities/user.entity';
 import { PacksUseCase } from 'src/core/use-cases/packs.use-case';
-import { ApiCreatedResponse, ApiNotFoundResponse, ApiOkResponse, ApiSecurity, ApiTags } from '@nestjs/swagger';
+import { ApiConflictResponse, ApiCreatedResponse, ApiNotFoundResponse, ApiOkResponse, ApiSecurity, ApiTags } from '@nestjs/swagger';
 import { UUIDv4 } from 'src/common/types';
 import { Mapper } from '@automapper/core';
 import { PackEntity } from 'src/infra/postgres/entities/pack.entity';
@@ -15,6 +15,8 @@ import { UserOutputDTO } from '../dtos/users/user.output.dto';
 import { PokemonEntity } from 'src/infra/postgres/entities/pokemon.entity';
 import { PokemonOutputDTO } from '../dtos/pokemons/pokemon.output.dto';
 import { PackWithPokemonsOutputDTO } from '../dtos/packs/pack-with-pokemons.output.dto';
+import { OpenedPackEntity } from 'src/infra/postgres/entities/opened-pack.entity';
+import { OpenedPackOutputDTO } from '../dtos/packs/opened-pack.output.dto';
 
 @ApiTags('Packs')
 @Controller('packs')
@@ -50,9 +52,8 @@ export class PacksController {
     return this.mapper.map(pack, PackEntity, PackWithPokemonsOutputDTO);
   }
 
-  // TODO: Get rid of isDuplicate functionality.
-  // TODO: openPack should return OpenedPackEntity ({ openedAt: Date, user: UserEntity, pack: PackEntity, pokemon: PokemonEntity })
-  @ApiCreatedResponse({ type: OpenPackOutputDTO })
+  @ApiCreatedResponse({ type: OpenedPackOutputDTO })
+  @ApiConflictResponse()
   @ApiNotFoundResponse()
   @ApiSecurity('AccessToken')
   @Post(':id/open')
@@ -61,14 +62,8 @@ export class PacksController {
     @User() user: UserModel,
     @Param('id', new ParseUUIDPipe({ version: '4' })) id: UUIDv4,
   ) {
-    // TODO: Find a nicer way of doing that.
-    // Maybe return a class instance from openPack instead of object and then map it?
-    const { user: updatedUser, pokemon, isDuplicate } = await this.packsUseCase.openPack(user, id, this.dataSource);
+    const openedPack = await this.packsUseCase.openPack(user, id, this.dataSource);
 
-    return {
-      user: this.mapper.map(updatedUser, UserEntity, UserOutputDTO),
-      pokemon: this.mapper.map(pokemon, PokemonEntity, PokemonOutputDTO),
-      isDuplicate,
-    };
+    return this.mapper.map(openedPack, OpenedPackEntity, OpenedPackOutputDTO);
   }
 }

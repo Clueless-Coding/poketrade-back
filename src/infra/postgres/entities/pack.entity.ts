@@ -28,7 +28,7 @@ export class PackEntity<
   @AutoMap(() => PokemonEntity)
   @ManyToMany(() => PokemonEntity)
   @JoinTable({
-    name: 'packs_pokemons',
+    name: 'pack_pokemons',
     joinColumn: { name: 'pack_id' },
     inverseJoinColumn: { name: 'pokemon_id' },
   })

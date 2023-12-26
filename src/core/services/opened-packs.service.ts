@@ -17,7 +17,7 @@ export class OpenedPacksService {
     user: UserModel,
     pack: PackModel,
     pokemon: PokemonModel,
-  ): Promise<OpenedPackModel> {
+  ): Promise<OpenedPackModel<{ user: true, pack: true, pokemon: true }>> {
     const openedPack = this.openedPacksRepository.create({
       user,
       pack,

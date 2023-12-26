@@ -7,7 +7,7 @@ import { BaseWithDateEntity } from '../other/base-with-date.entity';
 
 @Entity('users')
 export class UserEntity<
-  T extends FindOptionsRelations<UserEntity<T>> = {},
+  T extends FindOptionsRelations<UserEntity> = {},
 > extends BaseWithDateEntity {
   @AutoMap()
   @Column({ type: 'text', unique: true })
@@ -24,12 +24,13 @@ export class UserEntity<
   @AutoMap(() => PokemonEntity)
   @ManyToMany(() => PokemonEntity)
   @JoinTable({
-    name: 'users_pokemons',
+    name: 'user_pokemons',
     joinColumn: { name: 'user_id' },
     inverseJoinColumn: { name: 'pokemon_id' },
   })
   public readonly pokemons: Array<PokemonEntity<From<T['pokemons']>>>;
 
+  @AutoMap(() => OpenedPackEntity)
   @OneToMany(() => OpenedPackEntity, (openedPack) => openedPack.user)
   public readonly openedPacks: Array<OpenedPackEntity<From<T['openedPacks']>>>;
 }
@@ -37,5 +38,5 @@ export class UserEntity<
 type UserEntityRelations = GetEntityRelations<UserEntity, 'pokemons' | 'openedPacks'>;
 
 export type UserModel<
-  T extends FindOptionsRelations<UserEntity<T>> = {},
+  T extends FindOptionsRelations<UserEntity> = {},
 > = CreateModel<UserEntity<T>, UserEntityRelations, T>;

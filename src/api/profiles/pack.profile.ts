@@ -4,6 +4,8 @@ import { Mapper, createMap } from '@automapper/core';
 import { PackEntity } from 'src/infra/postgres/entities/pack.entity';
 import { PackOutputDTO } from '../dtos/packs/pack.output.dto';
 import { PackWithPokemonsOutputDTO } from '../dtos/packs/pack-with-pokemons.output.dto';
+import { OpenedPackEntity } from 'src/infra/postgres/entities/opened-pack.entity';
+import { OpenedPackOutputDTO } from '../dtos/packs/opened-pack.output.dto';
 
 @Injectable()
 export class PackProfile extends AutomapperProfile {
@@ -15,6 +17,7 @@ export class PackProfile extends AutomapperProfile {
     return (mapper: Mapper) => {
       createMap(mapper, PackEntity, PackOutputDTO);
       createMap(mapper, PackEntity, PackWithPokemonsOutputDTO);
+      createMap(mapper, OpenedPackEntity, OpenedPackOutputDTO);
     };
   }
 }

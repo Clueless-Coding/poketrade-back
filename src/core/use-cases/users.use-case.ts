@@ -5,6 +5,7 @@ import { PokemonModel } from 'src/infra/postgres/entities/pokemon.entity';
 import { CreateUserInputDTO } from 'src/api/dtos/users/create-user.input.dto';
 import { UpdateUserInputDTO } from 'src/api/dtos/users/update-user.input.dto';
 import { FindOptionsRelations, FindOptionsWhere } from 'typeorm';
+import { UserPokemonModel } from 'src/infra/postgres/entities/user-pokemon.entity';
 
 @Injectable()
 export class UsersUseCase {
@@ -48,19 +49,10 @@ export class UsersUseCase {
     return this.usersService.updateOne(user, dto);
   }
 
-  public async addPokemonToCollection(
-    user: UserModel<{ pokemons: true }>,
+  public async addPokemon(
+    user: UserModel,
     pokemon: PokemonModel
-  ): Promise<{ user: UserModel<{ pokemons: true }>; isDuplicate: boolean }> {
-    const isDuplicate = user.pokemons.some((x) => x.id === pokemon.id);
-
-    if (!isDuplicate) {
-      user = await this.usersService.updateOne(
-        user,
-        { pokemons: [...user.pokemons, pokemon] },
-      )
-    }
-
-    return { user, isDuplicate };
+  ): Promise<UserPokemonModel<{ user: true, pokemon: true }>> {
+    return this.usersService.addPokemon(user, pokemon);
   }
 }

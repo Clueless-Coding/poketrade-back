@@ -14,15 +14,15 @@ export class OpenedPackEntity<
   @CreateDateColumn({ type: 'timestamptz' })
   public readonly openedAt: Date;
 
-  @AutoMap()
+  @AutoMap(() => UserEntity)
   @ManyToOne(() => UserEntity, { nullable: false, onDelete: 'CASCADE', onUpdate: 'CASCADE' })
   public readonly user: UserEntity<From<T['user']>>;
 
-  @AutoMap()
+  @AutoMap(() => PackEntity)
   @ManyToOne(() => PackEntity, { nullable: false, onDelete: 'CASCADE', onUpdate: 'CASCADE' })
   public readonly pack: PackEntity<From<T['pack']>>;
 
-  @AutoMap()
+  @AutoMap(() => PokemonEntity)
   @ManyToOne(() => PokemonEntity, { nullable: false, onDelete: 'CASCADE', onUpdate: 'CASCADE' })
   public readonly pokemon: PokemonEntity<From<T['pokemon']>>;
 }

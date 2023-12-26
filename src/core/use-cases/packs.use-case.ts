@@ -15,7 +15,6 @@ import { OpenedPacksUseCase } from './opened-packs.use-case';
 export class PacksUseCase extends TransactionFor<PacksUseCase> {
   public constructor(
     private readonly packsService: PacksService,
-    private readonly pokemonsUseCase: PokemonsUseCase,
     private readonly usersUseCase: UsersUseCase,
     private readonly openedPacksUseCase: OpenedPacksUseCase,
 
@@ -62,16 +61,14 @@ export class PacksUseCase extends TransactionFor<PacksUseCase> {
 
     user = await this.usersUseCase.updateUser(user, { balance: user.balance - pack.price });
 
-    const { user: userWithPokemons, isDuplicate } = await this.usersUseCase.addPokemonToCollection(
-      // TODO: Get rid of this preload, and try to update pokemons of the user
-      // without needing `pokemons` field in `UserModel`
-      await this.usersUseCase.preload(user, { pokemons: true }),
+    const userPokemon = await this.usersUseCase.addPokemon(
+      user,
       pokemon,
     );
 
-    const openedPack = await this.openedPacksUseCase.openPack(userWithPokemons, pack, pokemon);
+    const openedPack = await this.openedPacksUseCase.openPack(userPokemon.user, pack, pokemon);
 
-    return { user: userWithPokemons, pokemon, isDuplicate };
+    return openedPack;
   }
 
   public async openPack(user: UserModel, id: UUIDv4, dataSource: DataSource) {
