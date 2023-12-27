@@ -58,10 +58,7 @@ export class UsersUseCase extends TransactionFor<UsersUseCase> {
     }
 
     const [updatedUser, { pokemon: soldPokemon }] = await Promise.all([
-      this.updateUser(
-        user,
-        { balance: user.balance + userInventoryEntry.pokemon.worth },
-      ),
+      this.replenishUserBalance(user, userInventoryEntry.pokemon.worth),
       this.userInventoryEntriesUseCase.deleteUserInventoryEntry(userInventoryEntry),
     ]);
 
@@ -94,6 +91,24 @@ export class UsersUseCase extends TransactionFor<UsersUseCase> {
     dto: UpdateUserInputDTO
   ): Promise<UserModel<T>> {
     return this.usersService.updateOne(user, dto);
+  }
+
+  public async replenishUserBalance<
+    T extends FindEntityRelationsOptions<UserEntity>,
+  >(
+    user: UserModel<T>,
+    amount: number,
+  ) {
+    return this.updateUser(user, { balance: user.balance + amount });
+  }
+
+  public async spendUserBalance<
+    T extends FindEntityRelationsOptions<UserEntity>,
+  >(
+    user: UserModel<T>,
+    amount: number,
+  ) {
+    return this.updateUser(user, { balance: user.balance - amount });
   }
 
   public async addPokemonToInventory(
