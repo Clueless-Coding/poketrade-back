@@ -43,6 +43,10 @@ export class UsersUseCase extends TransactionFor<UsersUseCase> {
     return this.getUserInventory(user, paginationOptions);
   }
 
+  public async checkIfUserExistsByName(name: string) {
+    return this.usersService.exist({ name });
+  }
+
   public async getUserInventory(
     user: UserModel,
     paginationOptions: IPaginationOptions,

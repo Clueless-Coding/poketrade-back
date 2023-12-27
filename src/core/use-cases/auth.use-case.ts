@@ -34,6 +34,10 @@ export class AuthUseCase {
       throw new HttpException('Passwords does not match', HttpStatus.BAD_REQUEST);
     }
 
+    if (await this.usersUseCase.checkIfUserExistsByName(dto.username)) {
+      throw new HttpException('User with this name already exists', HttpStatus.CONFLICT);
+    }
+
     const user = await this.usersUseCase.createUser({
       name: dto.username,
       hashedPassword: await bcrypt.hash(dto.password, 10),

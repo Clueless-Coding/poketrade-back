@@ -52,4 +52,10 @@ export class UsersService {
 
     return this.usersRepository.save(updatedUser) as unknown as Promise<UserModel<T>>;
   }
+
+  public async exist(
+    where?: FindOptionsWhere<UserEntity>,
+  ): Promise<boolean> {
+    return this.usersRepository.exist({ where });
+  }
 }
