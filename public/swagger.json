@@ -173,6 +173,34 @@
         ]
       }
     },
+    "/api/users/me/inventory/{id}/sell": {
+      "post": {
+        "operationId": "UsersController_sellPokemonFromInventory",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Users"
+        ],
+        "security": [
+          {
+            "AccessToken": []
+          }
+        ]
+      }
+    },
     "/api/packs": {
       "get": {
         "operationId": "PacksController_getPacks",

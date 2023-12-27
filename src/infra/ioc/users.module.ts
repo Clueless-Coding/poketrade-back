@@ -3,10 +3,13 @@ import { PostgresModule } from '../postgres/postgres.module';
 import { UserEntity } from '../postgres/entities/user.entity';
 import { UsersService } from 'src/core/services/users.service';
 import { UsersUseCase } from 'src/core/use-cases/users.use-case';
-import { UserInventoryEntryEntity } from '../postgres/entities/user-inventory-entry.entity';
+import { UserInventoryEntryModule } from './user-inventory-entries.module';
 
 @Module({
-  imports: [PostgresModule.forFeature([UserEntity, UserInventoryEntryEntity])],
+  imports: [
+    PostgresModule.forFeature([UserEntity]),
+    UserInventoryEntryModule,
+  ],
   providers: [UsersUseCase, UsersService],
   exports: [UsersUseCase, UsersService],
 })

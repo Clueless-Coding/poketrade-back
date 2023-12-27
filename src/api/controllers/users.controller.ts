@@ -1,4 +1,4 @@
-import { Controller, Get, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Param, ParseUUIDPipe, Post, Query, UseGuards } from '@nestjs/common';
 import { UsersUseCase } from 'src/core/use-cases/users.use-case';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 import { UserEntity, UserModel } from 'src/infra/postgres/entities/user.entity';
@@ -12,6 +12,10 @@ import { UserInventoryEntryOutputDTO } from '../dtos/users/user-inventory-entry.
 import { mapArrayWithPagination } from 'src/common/helpers/map-array-with-pagination.helper';
 import { PaginationInputDTO } from '../dtos/pagination.input.dto';
 import { ApiOkResponseWithPagination } from '../decorators/api-ok-response-with-pagination.decorator';
+import { UUIDv4 } from 'src/common/types';
+import { DataSource } from 'typeorm';
+import { PokemonEntity } from 'src/infra/postgres/entities/pokemon.entity';
+import { PokemonOutputDTO } from '../dtos/pokemons/pokemon.output.dto';
 
 @ApiTags('Users')
 @Controller('users')
@@ -20,7 +24,8 @@ export class UsersController {
     @InjectMapper()
     private readonly mapper: Mapper,
 
-    private readonly usersUseCase: UsersUseCase
+    private readonly usersUseCase: UsersUseCase,
+    private readonly dataSource: DataSource,
   ) {}
 
   @ApiOkResponse({ type: UserOutputDTO })
@@ -47,5 +52,22 @@ export class UsersController {
       UserInventoryEntryEntity,
       UserInventoryEntryOutputDTO
     );
+  }
+
+  @ApiSecurity('AccessToken')
+  @Post('me/inventory/:id/sell')
+  @UseGuards(JwtAuthGuard)
+  public async sellPokemonFromInventory(
+    @User() user: UserModel,
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: UUIDv4,
+  ) {
+    // TODO: Implement this as it is implemented for opened packs
+    // Create an SoldPokemonEntity for that
+    const { user: updatedUser, soldPokemon } = await this.usersUseCase.sellPokemonFromInventory(user, id, this.dataSource);
+
+    return {
+      user: this.mapper.map(updatedUser, UserEntity, UserOutputDTO),
+      soldPokemon: this.mapper.map(soldPokemon, PokemonEntity, PokemonOutputDTO),
+    };
   }
 }

@@ -4,18 +4,26 @@ import { UserEntity, UserModel } from 'src/infra/postgres/entities/user.entity';
 import { PokemonModel } from 'src/infra/postgres/entities/pokemon.entity';
 import { CreateUserInputDTO } from 'src/api/dtos/users/create-user.input.dto';
 import { UpdateUserInputDTO } from 'src/api/dtos/users/update-user.input.dto';
-import { FindOptionsRelations } from 'typeorm';
+import { DataSource, FindOptionsRelations } from 'typeorm';
 import { UserInventoryEntryModel } from 'src/infra/postgres/entities/user-inventory-entry.entity';
 import { IPaginationOptions, Pagination } from 'nestjs-typeorm-paginate';
 import { UUIDv4 } from 'src/common/types';
+import { ModuleRef } from '@nestjs/core';
+import { TransactionFor } from 'nest-transact';
+import { UserInventoryEntriesUseCase } from './user-inventory-entries.service';
 
 @Injectable()
-export class UsersUseCase {
-  public constructor(private readonly usersService: UsersService) {}
+export class UsersUseCase extends TransactionFor<UsersUseCase> {
+  public constructor(
+    private readonly usersService: UsersService,
+    private readonly userInventoryEntriesUseCase: UserInventoryEntriesUseCase,
 
-  public async findUserById(
-    id: UUIDv4,
-  ): Promise<UserModel> {
+    module: ModuleRef,
+  ) {
+    super(module);
+  }
+
+  public async findUserById(id: UUIDv4): Promise<UserModel> {
     const user = await this.usersService.findOne({ id });
 
     if (!user) {
@@ -38,11 +46,31 @@ export class UsersUseCase {
     user: UserModel,
     paginationOptions: IPaginationOptions,
   ): Promise<Pagination<UserInventoryEntryModel<{ pokemon: true }>>> {
-    return this.usersService.findOneInventory(
-      paginationOptions,
-      { user: { id: user.id } },
-      { pokemon: true },
-    );
+    return this.userInventoryEntriesUseCase.findUserInventoryEntriesByUser(user, paginationOptions);
+  }
+
+  private async _sellPokemonFromInventory(user: UserModel, id: UUIDv4) {
+    const userInventoryEntry = await this.userInventoryEntriesUseCase.findUserInventoryEntryById(id);
+
+    if (user.id !== userInventoryEntry.user.id) {
+      throw new HttpException('You can\'t sell someone else\'s pokemon', HttpStatus.CONFLICT);
+    }
+
+    const [updatedUser, { pokemon: soldPokemon }] = await Promise.all([
+      this.updateUser(
+        user,
+        { balance: user.balance + userInventoryEntry.pokemon.worth },
+      ),
+      this.userInventoryEntriesUseCase.deleteUserInventoryEntry(userInventoryEntry),
+    ]);
+
+    return { user: updatedUser, soldPokemon };
+  }
+
+  public async sellPokemonFromInventory(user: UserModel, id: UUIDv4, dataSource: DataSource) {
+    return dataSource.transaction((manager) => {
+      return this.withTransaction(manager)._sellPokemonFromInventory(user, id);
+    })
   }
 
   public async preload<
@@ -71,6 +99,6 @@ export class UsersUseCase {
     user: UserModel,
     pokemon: PokemonModel
   ): Promise<UserInventoryEntryModel<{ user: true, pokemon: true }>> {
-    return this.usersService.addPokemonToInventory({ user, pokemon });
+    return this.userInventoryEntriesUseCase.createUserInventoryEntry(user, pokemon);
   }
 }
