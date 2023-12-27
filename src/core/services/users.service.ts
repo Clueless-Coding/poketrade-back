@@ -23,7 +23,7 @@ export class UsersService {
   public async findOne<
     T extends FindOptionsRelations<UserEntity> = {},
   >(
-    where?: FindOptionsWhere<UserEntity<T>>,
+    where?: FindOptionsWhere<UserEntity>,
     relations?: T,
   ): Promise<Nullable<UserModel<T>>> {
     return this.usersRepository.findOne({

@@ -13,7 +13,7 @@ export class PokemonsService {
   public async find<
     T extends FindOptionsRelations<PokemonEntity> = {},
   >(
-    where?: FindOptionsWhere<PokemonEntity<T>>,
+    where?: FindOptionsWhere<PokemonEntity>,
     relations?: T,
   ): Promise<Array<PokemonModel<T>>> {
     return this.pokemonsRepository.find({

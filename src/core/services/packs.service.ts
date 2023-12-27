@@ -14,7 +14,7 @@ export class PacksService {
   public async find<
     T extends FindOptionsRelations<PackEntity> = {},
   >(
-    where?: FindOptionsWhere<PackEntity<T>>,
+    where?: FindOptionsWhere<PackEntity>,
     relations?: T,
   ): Promise<Array<PackModel<T>>> {
     return this.packsRepository.find({
@@ -26,7 +26,7 @@ export class PacksService {
   public async findOne<
     T extends FindOptionsRelations<PackEntity> = {},
   >(
-    where?: FindOptionsWhere<PackEntity<T>>,
+    where?: FindOptionsWhere<PackEntity>,
     relations?: T,
   ): Promise<Nullable<PackModel<T>>> {
 

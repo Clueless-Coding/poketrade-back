@@ -15,7 +15,7 @@ export class UserInventoryEntriesService {
   public async findOne<
     T extends FindOptionsRelations<UserInventoryEntryEntity> = {},
   >(
-    where?: FindOptionsWhere<UserInventoryEntryEntity<T>>,
+    where?: FindOptionsWhere<UserInventoryEntryEntity>,
     relations?: T,
   ): Promise<Nullable<UserInventoryEntryModel<T>>> {
     return this.userInventoryEntriesRepository.findOne({
@@ -28,7 +28,7 @@ export class UserInventoryEntriesService {
     T extends FindOptionsRelations<UserInventoryEntryEntity> = {},
   >(
     paginationOptions: IPaginationOptions,
-    where?: FindOptionsWhere<UserInventoryEntryEntity<T>>,
+    where?: FindOptionsWhere<UserInventoryEntryEntity>,
     relations?: T,
   ): Promise<Pagination<UserInventoryEntryModel<T>>> {
     return paginate(
@@ -47,7 +47,7 @@ export class UserInventoryEntriesService {
   }
 
   public async deleteOne<
-    T extends FindOptionsRelations<UserInventoryEntryEntity>, 
+    T extends FindOptionsRelations<UserInventoryEntryEntity>,
   >(
     userInventoryEntry: UserInventoryEntryModel<T>,
   ): Promise<UserInventoryEntryModel<T>> {

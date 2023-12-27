@@ -6,11 +6,11 @@ import { UserInventoryEntryEntity, UserInventoryEntryModel } from "../entities/u
 
 // NOTE: Add new Entities here
 type EntityToModel<Entity, Relations = {}> =
-  Entity extends UserEntity<Relations> ? UserModel<Relations>
-  : Entity extends PokemonEntity<Relations> ? PokemonModel<Relations>
-  : Entity extends PackEntity<Relations> ? PackModel<Relations>
-  : Entity extends OpenedPackEntity<Relations> ? OpenedPackModel<Relations>
-  : Entity extends UserInventoryEntryEntity<Relations> ? UserInventoryEntryModel<Relations>
+  Entity extends UserEntity ? UserModel<Relations>
+  : Entity extends PokemonEntity ? PokemonModel<Relations>
+  : Entity extends PackEntity ? PackModel<Relations>
+  : Entity extends OpenedPackEntity ? OpenedPackModel<Relations>
+  : Entity extends UserInventoryEntryEntity ? UserInventoryEntryModel<Relations>
   : never;
 
 

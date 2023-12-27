@@ -3,9 +3,7 @@ import { CreateEntityFields, CreateModel, GetEntityRelations } from '../other/ty
 import { Column, Entity, FindOptionsRelations, PrimaryColumn } from 'typeorm';
 
 @Entity('pokemons')
-export class PokemonEntity<
-  T extends FindOptionsRelations<PokemonEntity<T>> = {},
-> {
+export class PokemonEntity {
   @AutoMap()
   @PrimaryColumn({ type: 'integer' })
   public readonly id: number;
@@ -46,6 +44,6 @@ export type CreatePokemonEntityFields = CreateEntityFields<
 export type UpdatePokemonEntityFields = never;
 
 export type PokemonModel<
-  T extends FindOptionsRelations<PokemonEntity<T>> = {}
-> = CreateModel<PokemonEntity<T>, PokemonEntityRelations, T>;
+  T extends FindOptionsRelations<PokemonEntity> = {}
+> = CreateModel<PokemonEntity, PokemonEntityRelations, T>;
 
