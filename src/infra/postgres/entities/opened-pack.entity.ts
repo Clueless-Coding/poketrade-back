@@ -1,6 +1,6 @@
 import { AutoMap } from '@automapper/classes';
-import { CreateModel, GetEntityRelations, CreateEntityFields } from '../other/types';
-import { CreateDateColumn, Entity, FindOptionsRelations, ManyToOne } from 'typeorm';
+import { CreateModel, CreateEntityFields, FindEntityRelationsOptions } from '../other/types';
+import { CreateDateColumn, Entity, ManyToOne } from 'typeorm';
 import { BaseEntity } from '../other/base.entity';
 import { PackEntity } from './pack.entity';
 import { PokemonEntity } from './pokemon.entity';
@@ -25,16 +25,13 @@ export class OpenedPackEntity extends BaseEntity {
   public readonly pokemon: PokemonEntity;
 }
 
-type OpenedPackEntityRelations = GetEntityRelations<OpenedPackEntity, 'user' | 'pack' | 'pokemon'>;
-
 export type CreateOpenedPackEntityFields = CreateEntityFields<
   OpenedPackEntity,
-  OpenedPackEntityRelations,
   'user' | 'pack' | 'pokemon'
 >;
 
 export type UpdateOpenedPackEntityFields = never;
 
 export type OpenedPackModel<
-  T extends FindOptionsRelations<OpenedPackEntity> = {},
-> = CreateModel<OpenedPackEntity, OpenedPackEntityRelations, T>;
+  T extends FindEntityRelationsOptions<OpenedPackEntity> = {},
+> = CreateModel<OpenedPackEntity, T>;

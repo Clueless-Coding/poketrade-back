@@ -4,13 +4,14 @@ import { UserEntity, UserModel } from 'src/infra/postgres/entities/user.entity';
 import { PokemonModel } from 'src/infra/postgres/entities/pokemon.entity';
 import { CreateUserInputDTO } from 'src/api/dtos/users/create-user.input.dto';
 import { UpdateUserInputDTO } from 'src/api/dtos/users/update-user.input.dto';
-import { DataSource, FindOptionsRelations } from 'typeorm';
+import { DataSource } from 'typeorm';
 import { UserInventoryEntryModel } from 'src/infra/postgres/entities/user-inventory-entry.entity';
 import { IPaginationOptions, Pagination } from 'nestjs-typeorm-paginate';
 import { UUIDv4 } from 'src/common/types';
 import { ModuleRef } from '@nestjs/core';
 import { TransactionFor } from 'nest-transact';
 import { UserInventoryEntriesUseCase } from './user-inventory-entries.service';
+import { FindEntityRelationsOptions } from 'src/infra/postgres/other/types';
 
 @Injectable()
 export class UsersUseCase extends TransactionFor<UsersUseCase> {
@@ -74,7 +75,7 @@ export class UsersUseCase extends TransactionFor<UsersUseCase> {
   }
 
   public async preload<
-    T extends FindOptionsRelations<UserEntity>,
+    T extends FindEntityRelationsOptions<UserEntity>,
   >(
     user: UserModel,
     relations?: T,
@@ -87,7 +88,7 @@ export class UsersUseCase extends TransactionFor<UsersUseCase> {
   }
 
   public async updateUser<
-    T extends FindOptionsRelations<UserEntity>,
+    T extends FindEntityRelationsOptions<UserEntity>,
   >(
     user: UserModel<T>,
     dto: UpdateUserInputDTO

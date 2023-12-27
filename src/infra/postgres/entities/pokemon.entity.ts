@@ -1,9 +1,9 @@
 import { AutoMap } from '@automapper/classes';
-import { CreateEntityFields, CreateModel, GetEntityRelations } from '../other/types';
-import { Column, Entity, FindOptionsRelations, PrimaryColumn } from 'typeorm';
+import { CreateEntityFields, CreateModel, FindEntityRelationsOptions } from '../other/types';
+import { BaseEntity as TypeormBaseEntity, Column, Entity, PrimaryColumn } from 'typeorm';
 
 @Entity('pokemons')
-export class PokemonEntity {
+export class PokemonEntity extends TypeormBaseEntity {
   @AutoMap()
   @PrimaryColumn({ type: 'integer' })
   public readonly id: number;
@@ -30,13 +30,9 @@ export class PokemonEntity {
   public readonly image: string;
 }
 
-// NOTE: If PokemonEntity will have relations add it here
-type PokemonEntityRelations = GetEntityRelations<PokemonEntity, never>;
-
 export type CreatePokemonEntityFields = CreateEntityFields<
   PokemonEntity,
-  PokemonEntityRelations,
-  keyof PokemonEntity
+  'id' | 'name' | 'worth' | 'height' | 'weight' | 'image'
 >;
 
 // NOTE: There is no need to ever update PokemonEntity
@@ -44,6 +40,6 @@ export type CreatePokemonEntityFields = CreateEntityFields<
 export type UpdatePokemonEntityFields = never;
 
 export type PokemonModel<
-  T extends FindOptionsRelations<PokemonEntity> = {}
-> = CreateModel<PokemonEntity, PokemonEntityRelations, T>;
+  T extends FindEntityRelationsOptions<PokemonEntity> = {}
+  > = CreateModel<PokemonEntity, T>;
 

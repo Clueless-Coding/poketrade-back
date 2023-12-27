@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CreatePokemonEntityFields, PokemonEntity, PokemonModel } from 'src/infra/postgres/entities/pokemon.entity';
-import { DeleteResult, FindOptionsRelations, FindOptionsWhere, Repository } from 'typeorm';
+import { FindEntityRelationsOptions } from 'src/infra/postgres/other/types';
+import { DeleteResult, FindOptionsWhere, Repository } from 'typeorm';
 
 @Injectable()
 export class PokemonsService {
@@ -11,7 +12,7 @@ export class PokemonsService {
   ) {}
 
   public async find<
-    T extends FindOptionsRelations<PokemonEntity> = {},
+    T extends FindEntityRelationsOptions<PokemonEntity> = {},
   >(
     where?: FindOptionsWhere<PokemonEntity>,
     relations?: T,

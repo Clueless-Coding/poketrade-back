@@ -3,7 +3,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { IPaginationOptions, paginate, Pagination } from 'nestjs-typeorm-paginate';
 import { Nullable } from 'src/common/types';
 import { CreateUserInventoryEntryEntityFields, UserInventoryEntryEntity, UserInventoryEntryModel } from 'src/infra/postgres/entities/user-inventory-entry.entity';
-import { FindOptionsRelations, FindOptionsWhere, Repository } from 'typeorm';
+import { FindEntityRelationsOptions } from 'src/infra/postgres/other/types';
+import { FindOptionsWhere, Repository } from 'typeorm';
 
 @Injectable()
 export class UserInventoryEntriesService {
@@ -13,7 +14,7 @@ export class UserInventoryEntriesService {
   ) {}
 
   public async findOne<
-    T extends FindOptionsRelations<UserInventoryEntryEntity> = {},
+    T extends FindEntityRelationsOptions<UserInventoryEntryEntity> = {},
   >(
     where?: FindOptionsWhere<UserInventoryEntryEntity>,
     relations?: T,
@@ -25,7 +26,7 @@ export class UserInventoryEntriesService {
   }
 
   public async findMany<
-    T extends FindOptionsRelations<UserInventoryEntryEntity> = {},
+    T extends FindEntityRelationsOptions<UserInventoryEntryEntity> = {},
   >(
     paginationOptions: IPaginationOptions,
     where?: FindOptionsWhere<UserInventoryEntryEntity>,
@@ -35,7 +36,7 @@ export class UserInventoryEntriesService {
       this.userInventoryEntriesRepository,
       paginationOptions,
       { where, relations },
-    ) as Promise<Pagination<UserInventoryEntryModel<T>>>;
+    ) as unknown as Promise<Pagination<UserInventoryEntryModel<T>>>;
   }
 
   public async createOne(
@@ -47,12 +48,12 @@ export class UserInventoryEntriesService {
   }
 
   public async deleteOne<
-    T extends FindOptionsRelations<UserInventoryEntryEntity>,
+    T extends FindEntityRelationsOptions<UserInventoryEntryEntity>,
   >(
     userInventoryEntry: UserInventoryEntryModel<T>,
   ): Promise<UserInventoryEntryModel<T>> {
-    // TODO: deal with @ts-ignore
-    // @ts-ignore
-    return this.userInventoryEntriesRepository.remove(userInventoryEntry);
+    return this.userInventoryEntriesRepository.remove(
+      userInventoryEntry as unknown as UserInventoryEntryEntity
+    ) as unknown as Promise<UserInventoryEntryModel<T>>;
   }
 }

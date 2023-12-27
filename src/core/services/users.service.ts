@@ -2,7 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Nullable } from 'src/common/types';
 import { UserEntity, UserModel, CreateUserEntityFields, UpdateUserEntityFields } from 'src/infra/postgres/entities/user.entity';
-import { FindOptionsRelations, FindOptionsWhere, Repository } from 'typeorm';
+import { FindEntityRelationsOptions } from 'src/infra/postgres/other/types';
+import { FindOptionsWhere, Repository } from 'typeorm';
 
 @Injectable()
 export class UsersService {
@@ -12,7 +13,7 @@ export class UsersService {
   ) {}
 
   public async preload<
-    T extends FindOptionsRelations<UserEntity> = {},
+    T extends FindEntityRelationsOptions<UserEntity> = {},
   >(
     user: UserModel,
     relations?: T,
@@ -21,7 +22,7 @@ export class UsersService {
   }
 
   public async findOne<
-    T extends FindOptionsRelations<UserEntity> = {},
+    T extends FindEntityRelationsOptions<UserEntity> = {},
   >(
     where?: FindOptionsWhere<UserEntity>,
     relations?: T,
@@ -39,13 +40,16 @@ export class UsersService {
   }
 
   public async updateOne<
-    T extends FindOptionsRelations<UserEntity> = {},
+    T extends FindEntityRelationsOptions<UserEntity> = {},
   >(
     user: UserModel<T>,
     fields: UpdateUserEntityFields,
   ): Promise<UserModel<T>> {
-    const updatedUser = this.usersRepository.merge(user, fields);
+    const updatedUser = this.usersRepository.merge(
+      user as unknown as UserEntity,
+      fields
+    );
 
-    return this.usersRepository.save(updatedUser) as Promise<UserModel<T>>;
+    return this.usersRepository.save(updatedUser) as unknown as Promise<UserModel<T>>;
   }
 }

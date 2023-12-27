@@ -2,7 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Nullable } from 'src/common/types';
 import { PackEntity, PackModel } from 'src/infra/postgres/entities/pack.entity';
-import { FindOptionsRelations, FindOptionsWhere, Repository } from 'typeorm';
+import { FindEntityRelationsOptions } from 'src/infra/postgres/other/types';
+import { FindOptionsWhere, Repository } from 'typeorm';
 
 @Injectable()
 export class PacksService {
@@ -12,7 +13,7 @@ export class PacksService {
   ) {}
 
   public async find<
-    T extends FindOptionsRelations<PackEntity> = {},
+    T extends FindEntityRelationsOptions<PackEntity> = {},
   >(
     where?: FindOptionsWhere<PackEntity>,
     relations?: T,
@@ -24,7 +25,7 @@ export class PacksService {
   }
 
   public async findOne<
-    T extends FindOptionsRelations<PackEntity> = {},
+    T extends FindEntityRelationsOptions<PackEntity> = {},
   >(
     where?: FindOptionsWhere<PackEntity>,
     relations?: T,

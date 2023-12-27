@@ -1,7 +1,7 @@
-import { Column, Entity, OneToMany, FindOptionsRelations } from 'typeorm';
+import { Column, Entity, OneToMany } from 'typeorm';
 import { AutoMap } from '@automapper/classes';
 import { OpenedPackEntity } from './opened-pack.entity';
-import { GetEntityRelations, CreateModel, CreateEntityFields, UpdateEntityFields } from '../other/types';
+import { CreateModel, CreateEntityFields, UpdateEntityFields, FindEntityRelationsOptions } from '../other/types';
 import { BaseWithDateEntity } from '../other/base-with-date.entity';
 import { UserInventoryEntryEntity } from './user-inventory-entry.entity';
 
@@ -28,20 +28,16 @@ export class UserEntity extends BaseWithDateEntity {
   public readonly openedPacks: Array<OpenedPackEntity>;
 }
 
-type UserEntityRelations = GetEntityRelations<UserEntity, 'inventory' | 'openedPacks'>;
-
 export type CreateUserEntityFields = CreateEntityFields<
   UserEntity,
-  UserEntityRelations,
   'name' | 'hashedPassword'
 >;
 
 export type UpdateUserEntityFields = Partial<CreateUserEntityFields> & UpdateEntityFields<
   UserEntity,
-  UserEntityRelations,
   'balance'
 >;
 
 export type UserModel<
-  T extends FindOptionsRelations<UserEntity> = {},
-> = CreateModel<UserEntity, UserEntityRelations, T>;
+  T extends FindEntityRelationsOptions<UserEntity> = {},
+> = CreateModel<UserEntity, T>;

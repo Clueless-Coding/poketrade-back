@@ -4,7 +4,7 @@ import { UUIDv4 } from 'src/common/types';
 import { PokemonModel } from 'src/infra/postgres/entities/pokemon.entity';
 import { UserInventoryEntryEntity, UserInventoryEntryModel } from 'src/infra/postgres/entities/user-inventory-entry.entity';
 import { UserModel } from 'src/infra/postgres/entities/user.entity';
-import { FindOptionsRelations } from 'typeorm';
+import { FindEntityRelationsOptions } from 'src/infra/postgres/other/types';
 import { UserInventoryEntriesService } from '../services/user-inventory-entries.service';
 
 @Injectable()
@@ -47,7 +47,7 @@ export class UserInventoryEntriesUseCase {
   }
 
   public async deleteUserInventoryEntry<
-    T extends FindOptionsRelations<UserInventoryEntryEntity>,
+    T extends FindEntityRelationsOptions<UserInventoryEntryEntity>,
   >(
     userInventoryEntry: UserInventoryEntryModel<T>,
   ): Promise<UserInventoryEntryModel<T>> {

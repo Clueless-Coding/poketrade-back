@@ -3,6 +3,7 @@ import { PackEntity, PackModel } from "src/infra/postgres/entities/pack.entity";
 import { PokemonEntity, PokemonModel } from "src/infra/postgres/entities/pokemon.entity";
 import { UserEntity, UserModel } from "src/infra/postgres/entities/user.entity";
 import { UserInventoryEntryEntity, UserInventoryEntryModel } from "../entities/user-inventory-entry.entity";
+import { BaseEntity as TypeormBaseEntity } from "typeorm";
 
 // NOTE: Add new Entities here
 type EntityToModel<Entity, Relations = {}> =
@@ -19,33 +20,60 @@ type EntityOrArrayOfEntitiesToModel<EntityOrArrayOfEntities, Relations = {}> =
     ? Array<EntityToModel<Entity, Relations>>
     : EntityToModel<EntityOrArrayOfEntities, Relations>
 
-export type GetEntityRelations<Entity, Properties extends keyof Entity> = keyof Pick<Entity, Properties>;
+type PickEntityRelations<Entity> = Pick<Entity, {
+  [K in keyof Entity]:
+    Entity[K] extends Array<TypeormBaseEntity>
+      ? K
+      : Entity[K] extends TypeormBaseEntity
+        ? K
+        : never
+}[keyof Entity]>;
+
+type GetEntityRelations<
+  Entity,
+  EntityRelations = PickEntityRelations<Entity>,
+> = {
+  [K in keyof EntityRelations]:
+    EntityRelations[K] extends Array<infer ArrayEntity>
+      ? ArrayEntity extends TypeormBaseEntity
+        ? PickEntityRelations<ArrayEntity>
+        : never
+      : EntityRelations[K] extends TypeormBaseEntity
+        ? PickEntityRelations<EntityRelations[K]>
+        : never;
+};
+
+export type FindEntityRelationsOptions<
+  Entity,
+  EntityRelations = GetEntityRelations<Entity>,
+> = {
+  [K in keyof EntityRelations]?: true | FindEntityRelationsOptions<EntityRelations[K]>;
+};
 
 export type CreateModel<
-  Entity,
-  Relations extends keyof Entity,
-  RelationsOptions,
+  Entity extends TypeormBaseEntity,
+  RelationsOptions extends FindEntityRelationsOptions<Entity>,
 > =
-  & Omit<Entity, Relations>
+  & Omit<Entity, keyof FindEntityRelationsOptions<Entity>>
   & {
     [K in keyof RelationsOptions]: EntityOrArrayOfEntitiesToModel<
-      Entity[Extract<K, Relations>],
+      Entity[Extract<K, keyof Entity>],
       RelationsOptions[K] extends true
         ? {}
-        : RelationsOptions[K]>
+        : RelationsOptions[K]
+    >;
   };
-
-export type From<T> = Exclude<T, boolean | undefined>;
 
 export type CreateEntityFields<
   Entity,
-  Relations,
   Fields extends keyof Entity,
+  EntityRelations = GetEntityRelations<Entity>,
   T = Pick<Entity, Fields>,
-> = { [K in keyof T]: K extends Relations ? EntityOrArrayOfEntitiesToModel<T[K]> : T[K] };
+> = {
+  [K in keyof T]: K extends keyof EntityRelations ? EntityOrArrayOfEntitiesToModel<T[K]> : T[K]
+};
 
 export type UpdateEntityFields<
   Entity,
-  Relations,
   Fields extends keyof Entity,
-> = Partial<CreateEntityFields<Entity, Relations, Fields>>;
+> = Partial<CreateEntityFields<Entity, Fields>>;
