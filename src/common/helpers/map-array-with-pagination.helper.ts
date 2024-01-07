@@ -5,7 +5,8 @@ export const mapArrayWithPagination = <TSource extends Dictionary<TSource>, TDes
   mapper: Mapper,
   sourceObjectWithPagination: Pagination<TSource>,
   sourceIdentifier: ModelIdentifier<TSource>,
-  destinationIdentifier: ModelIdentifier<TDestination>) => {
+  destinationIdentifier: ModelIdentifier<TDestination>,
+): Pagination<TDestination> => {
   return {
     ...sourceObjectWithPagination,
     items: mapper.mapArray(sourceObjectWithPagination.items, sourceIdentifier, destinationIdentifier),

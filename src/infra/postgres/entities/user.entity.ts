@@ -4,6 +4,7 @@ import { OpenedPackEntity } from './opened-pack.entity';
 import { CreateModel, CreateEntityFields, UpdateEntityFields, FindEntityRelationsOptions } from '../other/types';
 import { BaseWithDateEntity } from '../other/base-with-date.entity';
 import { UserInventoryEntryEntity } from './user-inventory-entry.entity';
+import { QuickSoldUserInventoryEntryEntity } from './quick-sold-user-inventory-entry.entity';
 
 @Entity('users')
 export class UserEntity extends BaseWithDateEntity {
@@ -20,12 +21,22 @@ export class UserEntity extends BaseWithDateEntity {
   public readonly balance: number;
 
   @AutoMap(() => [UserInventoryEntryEntity])
-  @OneToMany(() => UserInventoryEntryEntity, (inventoryEntry) => inventoryEntry.user)
-  public readonly inventory: Array<UserInventoryEntryEntity>;
+  @OneToMany(
+    () => UserInventoryEntryEntity,
+    (userInventoryEntry) => userInventoryEntry.user,
+  )
+  public readonly inventoryEntries: Array<UserInventoryEntryEntity>;
 
   @AutoMap(() => [OpenedPackEntity])
   @OneToMany(() => OpenedPackEntity, (openedPack) => openedPack.user)
   public readonly openedPacks: Array<OpenedPackEntity>;
+
+  @AutoMap(() => [QuickSoldUserInventoryEntryEntity])
+  @OneToMany(
+    () => QuickSoldUserInventoryEntryEntity,
+    (quickSoldUserInventoryEntry) => quickSoldUserInventoryEntry.user,
+  )
+  public readonly quickSoldInventoryEntries: Array<QuickSoldUserInventoryEntryEntity>;
 }
 
 export type CreateUserEntityFields = CreateEntityFields<

@@ -9,12 +9,14 @@ import { randomChoice } from 'src/common/helpers/random-choice.helper';
 import { TransactionFor } from 'nest-transact';
 import { ModuleRef } from '@nestjs/core';
 import { OpenedPacksUseCase } from './opened-packs.use-case';
+import { UserInventoryEntriesUseCase } from './user-inventory-entries.use-case';
 
 @Injectable()
 export class PacksUseCase extends TransactionFor<PacksUseCase> {
   public constructor(
     private readonly packsService: PacksService,
     private readonly usersUseCase: UsersUseCase,
+    private readonly userInventoryEntriesUseCase: UserInventoryEntriesUseCase,
     private readonly openedPacksUseCase: OpenedPacksUseCase,
 
     moduleRef: ModuleRef,
@@ -58,16 +60,15 @@ export class PacksUseCase extends TransactionFor<PacksUseCase> {
 
     const pokemon = this.getRandomPokemonFromPack(pack);
 
+    // TODO: Maybe use Promise.all?
     user = await this.usersUseCase.spendUserBalance(user, pack.price);
 
-    const userPokemon = await this.usersUseCase.addPokemonToInventory(
+    const userPokemon = await this.userInventoryEntriesUseCase.createUserInventoryEntry(
       user,
       pokemon,
     );
 
-    const openedPack = await this.openedPacksUseCase.openPack(userPokemon.user, pack, pokemon);
-
-    return openedPack;
+    return this.openedPacksUseCase.openPack(userPokemon.user, pack, pokemon);
   }
 
   public async openPack(user: UserModel, id: UUIDv4, dataSource: DataSource) {

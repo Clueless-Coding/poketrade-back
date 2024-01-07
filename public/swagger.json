@@ -173,9 +173,9 @@
         ]
       }
     },
-    "/api/users/me/inventory/{id}/sell": {
+    "/api/users/me/inventory/{id}/quick-sell": {
       "post": {
-        "operationId": "UsersController_sellPokemonFromInventory",
+        "operationId": "UsersController_quickSellPokemonFromInventory",
         "parameters": [
           {
             "name": "id",
@@ -188,7 +188,14 @@
         ],
         "responses": {
           "201": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuickSoldUserInventoryEntryOutputDTO"
+                }
+              }
+            }
           }
         },
         "tags": [
@@ -450,6 +457,35 @@
         "required": [
           "id",
           "receivedAt",
+          "pokemon"
+        ]
+      },
+      "QuickSoldUserInventoryEntryOutputDTO": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "soldAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "receivedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "user": {
+            "$ref": "#/components/schemas/UserOutputDTO"
+          },
+          "pokemon": {
+            "$ref": "#/components/schemas/PokemonOutputDTO"
+          }
+        },
+        "required": [
+          "id",
+          "soldAt",
+          "receivedAt",
+          "user",
           "pokemon"
         ]
       },

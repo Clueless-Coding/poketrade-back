@@ -3,19 +3,21 @@ import { UsersUseCase } from 'src/core/use-cases/users.use-case';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 import { UserEntity, UserModel } from 'src/infra/postgres/entities/user.entity';
 import { User } from '../decorators/user.decorator';
-import { ApiOkResponse, ApiSecurity, ApiTags } from '@nestjs/swagger';
+import { ApiOkResponse, ApiCreatedResponse, ApiSecurity, ApiTags } from '@nestjs/swagger';
 import { Mapper } from '@automapper/core';
 import { InjectMapper } from '@automapper/nestjs';
 import { UserOutputDTO } from '../dtos/users/user.output.dto';
 import { UserInventoryEntryEntity } from 'src/infra/postgres/entities/user-inventory-entry.entity';
-import { UserInventoryEntryOutputDTO } from '../dtos/users/user-inventory-entry.output.dto';
+import { UserInventoryEntryOutputDTO } from '../dtos/user-inventory-entries/user-inventory-entry.output.dto';
 import { mapArrayWithPagination } from 'src/common/helpers/map-array-with-pagination.helper';
 import { PaginationInputDTO } from '../dtos/pagination.input.dto';
 import { ApiOkResponseWithPagination } from '../decorators/api-ok-response-with-pagination.decorator';
 import { UUIDv4 } from 'src/common/types';
 import { DataSource } from 'typeorm';
-import { PokemonEntity } from 'src/infra/postgres/entities/pokemon.entity';
-import { PokemonOutputDTO } from '../dtos/pokemons/pokemon.output.dto';
+import { Pagination } from 'nestjs-typeorm-paginate';
+import { UserInventoryEntriesUseCase } from 'src/core/use-cases/user-inventory-entries.use-case';
+import { QuickSoldUserInventoryEntryEntity } from 'src/infra/postgres/entities/quick-sold-user-inventory-entry.entity';
+import { QuickSoldUserInventoryEntryOutputDTO } from '../dtos/user-inventory-entries/quick-sold-user-inventory-entry.output.dto';
 
 @ApiTags('Users')
 @Controller('users')
@@ -25,6 +27,7 @@ export class UsersController {
     private readonly mapper: Mapper,
 
     private readonly usersUseCase: UsersUseCase,
+    private readonly userInventoryEntriesUseCase: UserInventoryEntriesUseCase,
     private readonly dataSource: DataSource,
   ) {}
 
@@ -43,8 +46,8 @@ export class UsersController {
   public async getMeInventory(
     @User() user: UserModel,
     @Query() paginationDto: PaginationInputDTO,
-  ) {
-    const inventoryWithPagination = await this.usersUseCase.getUserInventory(user, paginationDto);
+  ): Promise<Pagination<UserInventoryEntryOutputDTO>> {
+    const inventoryWithPagination = await this.userInventoryEntriesUseCase.findUserInventoryEntriesByUser(user, paginationDto);
 
     return mapArrayWithPagination(
       this.mapper,
@@ -54,20 +57,16 @@ export class UsersController {
     );
   }
 
+  @ApiCreatedResponse({ type: QuickSoldUserInventoryEntryOutputDTO })
   @ApiSecurity('AccessToken')
-  @Post('me/inventory/:id/sell')
+  @Post('me/inventory/:id/quick-sell')
   @UseGuards(JwtAuthGuard)
-  public async sellPokemonFromInventory(
+  public async quickSellPokemonFromInventory(
     @User() user: UserModel,
     @Param('id', new ParseUUIDPipe({ version: '4' })) id: UUIDv4,
-  ) {
-    // TODO: Implement this as it is implemented for opened packs
-    // Create an SoldPokemonEntity for that
-    const { user: updatedUser, soldPokemon } = await this.usersUseCase.sellPokemonFromInventory(user, id, this.dataSource);
+  ): Promise<QuickSoldUserInventoryEntryOutputDTO> {
+    const quickSoldUserInventoryEntry = await this.userInventoryEntriesUseCase.quickSellUserInventoryEntryById(user, id, this.dataSource);
 
-    return {
-      user: this.mapper.map(updatedUser, UserEntity, UserOutputDTO),
-      soldPokemon: this.mapper.map(soldPokemon, PokemonEntity, PokemonOutputDTO),
-    };
+    return this.mapper.map(quickSoldUserInventoryEntry, QuickSoldUserInventoryEntryEntity, QuickSoldUserInventoryEntryOutputDTO);
   }
 }

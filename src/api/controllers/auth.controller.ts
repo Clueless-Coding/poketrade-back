@@ -22,7 +22,7 @@ export class AuthController {
   public async login(
     @Body() _dto: LoginInputDTO,
     @User() user: UserModel,
-  ) {
+  ): Promise<LoginOutputDTO> {
     return this.authUseCase.login(user);
   }
 
@@ -30,7 +30,7 @@ export class AuthController {
   @Post('register')
   public async register(
     @Body() dto: RegisterInputDTO,
-  ) {
+  ): Promise<RegisterOutputDTO> {
     return this.authUseCase.register(dto);
   }
 }

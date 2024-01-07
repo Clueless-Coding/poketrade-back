@@ -42,9 +42,9 @@ export class UserInventoryEntriesService {
   public async createOne(
     fields: CreateUserInventoryEntryEntityFields,
   ): Promise<UserInventoryEntryModel<{ user: true, pokemon: true }>> {
-    const userPokemon = this.userInventoryEntriesRepository.create(fields);
+    const userInventoryEntry = this.userInventoryEntriesRepository.create(fields);
 
-    return this.userInventoryEntriesRepository.save(userPokemon);
+    return this.userInventoryEntriesRepository.save(userInventoryEntry);
   }
 
   public async deleteOne<

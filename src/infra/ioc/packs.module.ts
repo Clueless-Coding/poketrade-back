@@ -8,12 +8,14 @@ import { PackEntity } from '../postgres/entities/pack.entity';
 import { OpenedPacksUseCase } from 'src/core/use-cases/opened-packs.use-case';
 import { OpenedPacksService } from 'src/core/services/opened-packs.service';
 import { OpenedPackEntity } from '../postgres/entities/opened-pack.entity';
+import { UserInventoryEntriesModule } from './user-inventory-entries.module';
 
 @Module({
   imports: [
     PostgresModule.forFeature([PackEntity, OpenedPackEntity]),
     PokemonsModule,
     UsersModule,
+    UserInventoryEntriesModule,
   ],
   providers: [PacksUseCase, PacksService, OpenedPacksUseCase, OpenedPacksService],
   exports: [PacksUseCase, PacksService, OpenedPacksUseCase, OpenedPacksService],

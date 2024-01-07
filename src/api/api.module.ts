@@ -17,6 +17,8 @@ import { classes } from '@automapper/classes';
 import { UserProfile } from './profiles/user.profile';
 import { PokemonProfile } from './profiles/pokemon.profile';
 import { PackProfile } from './profiles/pack.profile';
+import { UserInventoryEntriesModule } from 'src/infra/ioc/user-inventory-entries.module';
+import { UserInventoryEntryProfile } from './profiles/user-inventory-entry.profile';
 
 @Module({
   imports: [
@@ -36,6 +38,7 @@ import { PackProfile } from './profiles/pack.profile';
     AuthModule,
     PokemonsModule,
     UsersModule,
+    UserInventoryEntriesModule,
     PacksModule,
   ],
   providers: [
@@ -45,6 +48,7 @@ import { PackProfile } from './profiles/pack.profile';
 
     // profiles
     UserProfile,
+    UserInventoryEntryProfile,
     PokemonProfile,
     PackProfile,
   ],

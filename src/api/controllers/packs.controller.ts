@@ -57,7 +57,7 @@ export class PacksController {
   public async openPack(
     @User() user: UserModel,
     @Param('id', new ParseUUIDPipe({ version: '4' })) id: UUIDv4,
-  ) {
+  ): Promise<OpenedPackOutputDTO> {
     const openedPack = await this.packsUseCase.openPack(user, id, this.dataSource);
 
     return this.mapper.map(openedPack, OpenedPackEntity, OpenedPackOutputDTO);
