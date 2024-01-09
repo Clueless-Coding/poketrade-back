@@ -315,6 +315,42 @@
           }
         ]
       }
+    },
+    "/api/trades": {
+      "post": {
+        "operationId": "TradesController_createTrade",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTradeInputDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TradeOutputDTO"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Trades"
+        ],
+        "security": [
+          {
+            "AccessToken": []
+          }
+        ]
+      }
     }
   },
   "info": {
@@ -576,6 +612,78 @@
           "user",
           "pack",
           "pokemon"
+        ]
+      },
+      "CreateTradeInputDTO": {
+        "type": "object",
+        "properties": {
+          "senderInventoryEntryIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "receiverId": {
+            "type": "string"
+          },
+          "receiverInventoryEntryIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "senderInventoryEntryIds",
+          "receiverId",
+          "receiverInventoryEntryIds"
+        ]
+      },
+      "TradeOutputDTO": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "sender": {
+            "$ref": "#/components/schemas/UserOutputDTO"
+          },
+          "senderInventoryEntries": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UserInventoryEntryOutputDTO"
+            }
+          },
+          "receiver": {
+            "$ref": "#/components/schemas/UserOutputDTO"
+          },
+          "receiverInventoryEntries": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UserInventoryEntryOutputDTO"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "createdAt",
+          "updatedAt",
+          "status",
+          "sender",
+          "senderInventoryEntries",
+          "receiver",
+          "receiverInventoryEntries"
         ]
       }
     }

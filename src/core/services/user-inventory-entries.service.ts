@@ -28,6 +28,17 @@ export class UserInventoryEntriesService {
   public async findMany<
     T extends FindEntityRelationsOptions<UserInventoryEntryEntity> = {},
   >(
+    where?: FindOptionsWhere<UserInventoryEntryEntity>,
+    relations?: T,
+  ): Promise<Array<UserInventoryEntryModel<T>>> {
+    return this.userInventoryEntriesRepository.find(
+      { where, relations },
+    ) as unknown as Promise<Array<UserInventoryEntryModel<T>>>;
+  }
+
+  public async findManyWithPagination<
+    T extends FindEntityRelationsOptions<UserInventoryEntryEntity> = {},
+  >(
     paginationOptions: IPaginationOptions,
     where?: FindOptionsWhere<UserInventoryEntryEntity>,
     relations?: T,

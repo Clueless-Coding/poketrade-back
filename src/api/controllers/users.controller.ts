@@ -26,7 +26,6 @@ export class UsersController {
     @InjectMapper()
     private readonly mapper: Mapper,
 
-    private readonly usersUseCase: UsersUseCase,
     private readonly userInventoryEntriesUseCase: UserInventoryEntriesUseCase,
     private readonly dataSource: DataSource,
   ) {}

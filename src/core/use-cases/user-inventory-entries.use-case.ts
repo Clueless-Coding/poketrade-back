@@ -1,5 +1,6 @@
-import { HttpException, HttpStatus, Injectable, OnModuleInit } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
+import { isString } from 'class-validator';
 import { TransactionFor } from 'nest-transact';
 import { IPaginationOptions, Pagination } from 'nestjs-typeorm-paginate';
 import { UUIDv4 } from 'src/common/types';
@@ -8,7 +9,7 @@ import { QuickSoldUserInventoryEntryModel } from 'src/infra/postgres/entities/qu
 import { UserInventoryEntryEntity, UserInventoryEntryModel } from 'src/infra/postgres/entities/user-inventory-entry.entity';
 import { UserModel } from 'src/infra/postgres/entities/user.entity';
 import { FindEntityRelationsOptions } from 'src/infra/postgres/other/types';
-import { DataSource } from 'typeorm';
+import { DataSource, FindOptionsWhere, In } from 'typeorm';
 import { QuickSoldUserInventoryEntriesService } from '../services/quick-sold-user-inventory-entries.service';
 import { UserInventoryEntriesService } from '../services/user-inventory-entries.service';
 import { UsersUseCase } from './users.use-case';
@@ -34,17 +35,40 @@ export class UserInventoryEntriesUseCase extends TransactionFor<UserInventoryEnt
     );
 
     if (!userInventoryEntry) {
-      throw new HttpException('User inventory entry not found', HttpStatus.NOT_FOUND);
+      throw new HttpException(`User inventory entry (\`${id}\`) not found`, HttpStatus.NOT_FOUND);
     }
 
     return userInventoryEntry;
+  }
+
+  public async findManyUserInventoryEntriesByIds(
+    ids: Array<UUIDv4>,
+    errorMessageFn?: (id: UUIDv4) => string,
+  ): Promise<Array<UserInventoryEntryModel<{ user: true, pokemon: true }>>> {
+    const userInventoryEntries = await this.userInventoryEntriesService.findMany(
+      { id: In(ids) },
+      { user: true, pokemon: true },
+    );
+
+    for (const id of ids) {
+      const userInventoryEntry = userInventoryEntries.find((userInventoryEntry) => userInventoryEntry.id === id);
+
+      if (!userInventoryEntry) {
+        throw new HttpException(
+          errorMessageFn?.(id) ?? `User inventory entry (\`${id}\`) not found`,
+          HttpStatus.NOT_FOUND,
+        );
+      }
+    }
+
+    return userInventoryEntries;
   }
 
   public async findUserInventoryEntriesByUser(
     user: UserModel,
     paginationOptions: IPaginationOptions,
   ): Promise<Pagination<UserInventoryEntryModel<{ pokemon: true }>>> {
-    return this.userInventoryEntriesService.findMany(
+    return this.userInventoryEntriesService.findManyWithPagination(
       paginationOptions,
       { user: { id: user.id } },
       { pokemon: true },

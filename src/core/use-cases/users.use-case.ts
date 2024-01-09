@@ -5,6 +5,7 @@ import { CreateUserInputDTO } from 'src/api/dtos/users/create-user.input.dto';
 import { UpdateUserInputDTO } from 'src/api/dtos/users/update-user.input.dto';
 import { UUIDv4 } from 'src/common/types';
 import { FindEntityRelationsOptions } from 'src/infra/postgres/other/types';
+import { FindOptionsWhere } from 'typeorm';
 
 @Injectable()
 export class UsersUseCase {
@@ -12,14 +13,24 @@ export class UsersUseCase {
     private readonly usersService: UsersService,
   ) {}
 
-  public async findUserById(id: UUIDv4): Promise<UserModel> {
-    const user = await this.usersService.findOne({ id });
+  public async findUser(
+    where: FindOptionsWhere<UserEntity>,
+    errorMessage?: string,
+  ): Promise<UserModel> {
+    const user = await this.usersService.findOne(where);
 
     if (!user) {
-      throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+      throw new HttpException(errorMessage ?? 'User not found', HttpStatus.NOT_FOUND);
     }
 
     return user;
+  }
+
+  public async findUserById(
+    id: UUIDv4,
+    errorMessageFn?: (id: UUIDv4) => string,
+  ): Promise<UserModel> {
+    return this.findUser({ id }, errorMessageFn?.(id) ?? `User (\`${id}\`) not found`);
   }
 
   public async checkIfUserExistsByName(name: string) {
