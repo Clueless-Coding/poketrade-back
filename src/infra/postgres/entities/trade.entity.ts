@@ -3,15 +3,17 @@ import { Column, Entity, JoinTable, ManyToMany, ManyToOne, TableInheritance } fr
 import { BaseWithDateEntity } from '../other/base-with-date.entity';
 import { FindEntityRelationsOptions } from '../other/types';
 import { AcceptedTradeModel } from './accepted-trade.entity';
+import { CancelledTradeModel } from './cancelled-trade.entity';
 import { PendingTradeModel } from './pending-trade.entity';
+import { RejectedTradeModel } from './rejected-trade.entity';
 import { UserInventoryEntryEntity } from './user-inventory-entry.entity';
 import { UserEntity } from './user.entity';
 
 export enum TradeStatus {
   PENDING = 'PENDING',
-  CANCELED = 'CANCELED',
+  CANCELLED = 'CANCELLED',
   ACCEPTED = 'ACCEPTED',
-  DENIED = 'DENIED',
+  REJECTED = 'REJECTED',
 }
 
 @Entity('trades')
@@ -53,6 +55,14 @@ export class TradeEntity extends BaseWithDateEntity {
 
   public isAccepted(): this is AcceptedTradeModel {
     return this.status === TradeStatus.ACCEPTED;
+  }
+
+  public isCancelled(): this is CancelledTradeModel {
+    return this.status === TradeStatus.CANCELLED;
+  }
+
+  public isRejected(): this is RejectedTradeModel {
+    return this.status === TradeStatus.REJECTED;
   }
 }
 

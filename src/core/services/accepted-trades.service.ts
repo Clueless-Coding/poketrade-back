@@ -22,6 +22,7 @@ export class AcceptedTradesService {
     const acceptedTrade = this.acceptedTradesRepository.create({
       ...fields,
       status: TradeStatus.ACCEPTED,
+      acceptedAt: new Date(),
     });
 
     return this.acceptedTradesRepository.save(acceptedTrade);

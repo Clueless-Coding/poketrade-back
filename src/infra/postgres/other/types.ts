@@ -8,6 +8,8 @@ import { TradeEntity, TradeModel } from "../entities/trade.entity";
 import { Nullable } from "src/common/types";
 import { PendingTradeEntity, PendingTradeModel } from "../entities/pending-trade.entity";
 import { AcceptedTradeEntity, AcceptedTradeModel } from "../entities/accepted-trade.entity";
+import { CancelledTradeEntity, CancelledTradeModel } from "../entities/cancelled-trade.entity";
+import { RejectedTradeEntity, RejectedTradeModel } from "../entities/rejected-trade.entity";
 
 // NOTE: Add new Entities here
 type EntityToModel<
@@ -22,6 +24,8 @@ type EntityToModel<
   : Entity extends TradeEntity ? TradeModel<Relations>
   : Entity extends PendingTradeEntity ? PendingTradeModel<Relations>
   : Entity extends AcceptedTradeEntity ? AcceptedTradeModel<Relations>
+  : Entity extends CancelledTradeEntity ? CancelledTradeModel<Relations>
+  : Entity extends RejectedTradeEntity ? RejectedTradeModel<Relations>
   : never;
 
 

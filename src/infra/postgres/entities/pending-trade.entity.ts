@@ -1,6 +1,6 @@
 import { AutoMap } from "@automapper/classes";
 import { ChildEntity } from "typeorm";
-import { CreateEntityFields, CreateModel, FindEntityRelationsOptions, UpdateEntityFields } from "../other/types";
+import { CreateEntityFields, CreateModel, FindEntityRelationsOptions } from "../other/types";
 import { TradeEntity, TradeStatus } from "./trade.entity";
 
 @ChildEntity(TradeStatus.PENDING)
@@ -13,11 +13,6 @@ export type CreatePendingTradeEntityFields = CreateEntityFields<
   PendingTradeEntity,
   'sender' | 'senderInventoryEntries' | 'receiver' | 'receiverInventoryEntries'
 >;
-
-export type UpdatePendingTradeEntityFields = UpdateEntityFields<
-  PendingTradeEntity,
-  'status'
->
 
 export type PendingTradeModel<
   T extends FindEntityRelationsOptions<PendingTradeEntity> = {},

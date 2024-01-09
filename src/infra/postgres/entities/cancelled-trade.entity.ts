@@ -4,23 +4,23 @@ import { CreateEntityFields, CreateModel, FindEntityRelationsOptions } from "../
 import { CreatePendingTradeEntityFields } from "./pending-trade.entity";
 import { TradeEntity, TradeStatus } from "./trade.entity";
 
-@ChildEntity(TradeStatus.ACCEPTED)
-export class AcceptedTradeEntity extends TradeEntity {
+@ChildEntity(TradeStatus.CANCELLED)
+export class CancelledTradeEntity extends TradeEntity {
   @AutoMap()
-  public status: TradeStatus.ACCEPTED = TradeStatus.ACCEPTED;
+  public status: TradeStatus.CANCELLED = TradeStatus.CANCELLED;
 
   @AutoMap()
   @Column({ type: 'timestamptz' })
-  public acceptedAt: Date;
+  public cancelledAt: Date;
 }
 
-export type CreateAcceptedTradeEntityFields =
+export type CreateCancelledTradeEntityFields =
   & CreatePendingTradeEntityFields
   & CreateEntityFields<
-    AcceptedTradeEntity,
+    CancelledTradeEntity,
     'id'
   >;
 
-export type AcceptedTradeModel<
-  T extends FindEntityRelationsOptions<AcceptedTradeEntity> = {},
-> = CreateModel<AcceptedTradeEntity, T>;
+export type CancelledTradeModel<
+  T extends FindEntityRelationsOptions<CancelledTradeEntity> = {},
+> = CreateModel<CancelledTradeEntity, T>;

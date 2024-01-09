@@ -10,10 +10,20 @@ import { AcceptedTradeEntity } from '../postgres/entities/accepted-trade.entity'
 import { PendingTradesUseCase } from 'src/core/use-cases/pending-trades.use-case';
 import { PendingTradesService } from 'src/core/services/pending-trades.service';
 import { AcceptedTradesService } from 'src/core/services/accepted-trades.service';
+import { CancelledTradesService } from 'src/core/services/cancelled-trades.service';
+import { CancelledTradeEntity } from '../postgres/entities/cancelled-trade.entity';
+import { RejectedTradeEntity } from '../postgres/entities/rejected-trade.entity';
+import { RejectedTradesService } from 'src/core/services/rejected-trades.service';
 
 @Module({
   imports: [
-    PostgresModule.forFeature([TradeEntity, PendingTradeEntity, AcceptedTradeEntity]),
+    PostgresModule.forFeature([
+      TradeEntity,
+      PendingTradeEntity,
+      AcceptedTradeEntity,
+      CancelledTradeEntity,
+      RejectedTradeEntity,
+    ]),
     UsersModule,
     UserInventoryEntriesModule,
   ],
@@ -23,6 +33,8 @@ import { AcceptedTradesService } from 'src/core/services/accepted-trades.service
     PendingTradesUseCase,
     PendingTradesService,
     AcceptedTradesService,
+    CancelledTradesService,
+    RejectedTradesService,
   ],
   exports: [
     TradesUseCase,
@@ -30,6 +42,8 @@ import { AcceptedTradesService } from 'src/core/services/accepted-trades.service
     PendingTradesUseCase,
     PendingTradesService,
     AcceptedTradesService,
+    CancelledTradesService,
+    RejectedTradesService,
   ],
 })
 export class TradesModule {}

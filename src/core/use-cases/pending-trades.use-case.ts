@@ -4,7 +4,9 @@ import { TransactionFor } from 'nest-transact';
 import { CreatePendingTradeInputDTO } from 'src/api/dtos/pending-trades/create-pending-trade.input.dto';
 import { UUIDv4 } from 'src/common/types';
 import { AcceptedTradeModel } from 'src/infra/postgres/entities/accepted-trade.entity';
+import { CancelledTradeModel } from 'src/infra/postgres/entities/cancelled-trade.entity';
 import { PendingTradeEntity, PendingTradeModel } from 'src/infra/postgres/entities/pending-trade.entity';
+import { RejectedTradeModel } from 'src/infra/postgres/entities/rejected-trade.entity';
 import { UserModel } from 'src/infra/postgres/entities/user.entity';
 import { FindEntityRelationsOptions } from 'src/infra/postgres/other/types';
 import { DataSource, FindOptionsWhere } from 'typeorm';
@@ -178,4 +180,135 @@ export class PendingTradesUseCase extends TransactionFor<PendingTradesUseCase> {
       return this.withTransaction(manager)._acceptPendingTrade(user, pendingTrade);
     })
   }
+
+  private async _cancelPendingTradeById(
+    user: UserModel,
+    id: UUIDv4,
+  ): Promise<CancelledTradeModel<{
+      sender: true,
+      senderInventoryEntries: { pokemon: true },
+      receiver: true,
+      receiverInventoryEntries: { pokemon: true },
+  }>> {
+    const pendingTrade = await this.findPendingTradeById(id, {
+      sender: true,
+      senderInventoryEntries: { pokemon: true },
+      receiver: true,
+      receiverInventoryEntries: { pokemon: true },
+    })
+
+    return this._cancelPendingTrade(user, pendingTrade);
+  }
+
+  public async cancelPendingTradeById(
+    user: UserModel,
+    id: UUIDv4,
+    dataSource: DataSource,
+  ) {
+    return dataSource.transaction((manager) => {
+      return this.withTransaction(manager)._cancelPendingTradeById(user, id);
+    })
+  }
+
+  private async _cancelPendingTrade(
+    user: UserModel,
+    pendingTrade: PendingTradeModel<{
+      sender: true,
+      senderInventoryEntries: { pokemon: true },
+      receiver: true,
+      receiverInventoryEntries: { pokemon: true },
+    }>
+  ): Promise<CancelledTradeModel<{
+      sender: true,
+      senderInventoryEntries: { pokemon: true },
+      receiver: true,
+      receiverInventoryEntries: { pokemon: true },
+  }>> {
+    if (user.id !== pendingTrade.sender.id) {
+      throw new HttpException('You cannot cancel a trade that is not yours', HttpStatus.CONFLICT);
+    }
+
+    return this.pendingTradesService.updateToCancelled(pendingTrade);
+  }
+
+  public async cancelPendingTrade(
+    user: UserModel,
+    pendingTrade: PendingTradeModel<{
+      sender: true,
+      senderInventoryEntries: { pokemon: true },
+      receiver: true,
+      receiverInventoryEntries: { pokemon: true },
+    }>,
+    dataSource: DataSource,
+  ) {
+    return dataSource.transaction((manager) => {
+      return this.withTransaction(manager)._cancelPendingTrade(user, pendingTrade);
+    })
+  }
+
+  private async _rejectPendingTrade(
+    user: UserModel,
+    pendingTrade: PendingTradeModel<{
+      sender: true,
+      senderInventoryEntries: { pokemon: true },
+      receiver: true,
+      receiverInventoryEntries: { pokemon: true },
+    }>
+  ): Promise<RejectedTradeModel<{
+      sender: true,
+      senderInventoryEntries: { pokemon: true },
+      receiver: true,
+      receiverInventoryEntries: { pokemon: true },
+  }>> {
+    if (user.id !== pendingTrade.receiver.id) {
+      throw new HttpException('You cannot reject a trade that is sent to you', HttpStatus.CONFLICT);
+    }
+
+    return this.pendingTradesService.updateToRejected(pendingTrade);
+  }
+
+  public async rejectPendingTrade(
+    user: UserModel,
+    pendingTrade: PendingTradeModel<{
+      sender: true,
+      senderInventoryEntries: { pokemon: true },
+      receiver: true,
+      receiverInventoryEntries: { pokemon: true },
+    }>,
+    dataSource: DataSource,
+  ) {
+    return dataSource.transaction((manager) => {
+      return this.withTransaction(manager)._rejectPendingTrade(user, pendingTrade);
+    })
+  }
+
+  private async _rejectPendingTradeById(
+    user: UserModel,
+    id: UUIDv4,
+  ): Promise<RejectedTradeModel<{
+      sender: true,
+      senderInventoryEntries: { pokemon: true },
+      receiver: true,
+      receiverInventoryEntries: { pokemon: true },
+  }>> {
+    const pendingTrade = await this.findPendingTradeById(id, {
+      sender: true,
+      senderInventoryEntries: { pokemon: true },
+      receiver: true,
+      receiverInventoryEntries: { pokemon: true },
+    })
+
+    return this._rejectPendingTrade(user, pendingTrade);
+  }
+
+  public async rejectPendingTradeById(
+    user: UserModel,
+    id: UUIDv4,
+    dataSource: DataSource,
+  ) {
+    return dataSource.transaction((manager) => {
+      return this.withTransaction(manager)._rejectPendingTradeById(user, id);
+    })
+  }
+
 }

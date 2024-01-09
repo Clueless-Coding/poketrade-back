@@ -1,14 +1,14 @@
 import { MigrationInterface, QueryRunner } from "typeorm";
 
-export class Trades1704804079567 implements MigrationInterface {
-    name = 'Trades1704804079567'
+export class Trades1704836181740 implements MigrationInterface {
+    name = 'Trades1704836181740'
 
     public async up(queryRunner: QueryRunner): Promise<void> {
-        await queryRunner.query(`CREATE TYPE "public"."trades_status_enum" AS ENUM('PENDING', 'CANCELED', 'ACCEPTED', 'DENIED')`);
-        await queryRunner.query(`CREATE TABLE "trades" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "created_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "updated_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "status" "public"."trades_status_enum" NOT NULL, "accepted_at" TIMESTAMP WITH TIME ZONE, "sender_id" uuid NOT NULL, "receiver_id" uuid NOT NULL, CONSTRAINT "PK_c6d7c36a837411ba5194dc58595" PRIMARY KEY ("id"))`);
+        await queryRunner.query(`CREATE TYPE "public"."trades_status_enum" AS ENUM('PENDING', 'CANCELLED', 'ACCEPTED', 'REJECTED')`);
+        await queryRunner.query(`CREATE TABLE "trades" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "created_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "updated_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "status" "public"."trades_status_enum" NOT NULL, "accepted_at" TIMESTAMP WITH TIME ZONE, "cancelled_at" TIMESTAMP WITH TIME ZONE, "rejected_at" TIMESTAMP WITH TIME ZONE, "sender_id" uuid NOT NULL, "receiver_id" uuid NOT NULL, CONSTRAINT "PK_c6d7c36a837411ba5194dc58595" PRIMARY KEY ("id"))`);
+        await queryRunner.query(`CREATE INDEX "IDX_358b36d15b38834d8879b74fd0" ON "trades" ("status") `);
         await queryRunner.query(`ALTER TABLE "trades" ADD CONSTRAINT "FK_490f4df080a3862cdb4236505a9" FOREIGN KEY ("sender_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE`);
         await queryRunner.query(`ALTER TABLE "trades" ADD CONSTRAINT "FK_d5bd2471ea5175f4bfdb0df0cde" FOREIGN KEY ("receiver_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE`);
-        await queryRunner.query(`CREATE INDEX "IDX_358b36d15b38834d8879b74fd0" ON "trades" ("status") `);
 
         await queryRunner.query(`CREATE TABLE "trade_sender_inventory_entries" ("trade_id" uuid NOT NULL, "user_inventory_entry_id" uuid NOT NULL, CONSTRAINT "PK_15ec1aa76702e2d6035d9ec8dc1" PRIMARY KEY ("trade_id", "user_inventory_entry_id"))`);
         await queryRunner.query(`CREATE INDEX "IDX_366016177a6c2b1cbce45c4bed" ON "trade_sender_inventory_entries" ("trade_id") `);
@@ -36,9 +36,9 @@ export class Trades1704804079567 implements MigrationInterface {
         await queryRunner.query(`DROP INDEX "public"."IDX_366016177a6c2b1cbce45c4bed"`);
         await queryRunner.query(`DROP TABLE "trade_sender_inventory_entries"`);
 
-        await queryRunner.query(`DROP INDEX "public"."IDX_358b36d15b38834d8879b74fd0"`);
         await queryRunner.query(`ALTER TABLE "trades" DROP CONSTRAINT "FK_d5bd2471ea5175f4bfdb0df0cde"`);
         await queryRunner.query(`ALTER TABLE "trades" DROP CONSTRAINT "FK_490f4df080a3862cdb4236505a9"`);
+        await queryRunner.query(`DROP INDEX "public"."IDX_358b36d15b38834d8879b74fd0"`);
         await queryRunner.query(`DROP TABLE "trades"`);
         await queryRunner.query(`DROP TYPE "public"."trades_status_enum"`);
     }
