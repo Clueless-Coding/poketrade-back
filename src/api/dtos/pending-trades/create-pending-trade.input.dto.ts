@@ -2,7 +2,7 @@ import { ApiProperty } from "@nestjs/swagger";
 import { ArrayNotEmpty, IsUUID } from "class-validator";
 import { UUIDv4 } from "src/common/types";
 
-export class CreateTradeInputDTO {
+export class CreatePendingTradeInputDTO {
   @ApiProperty()
   @IsUUID(4, { each: true })
   @ArrayNotEmpty()

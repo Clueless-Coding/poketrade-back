@@ -82,6 +82,15 @@ export class UserInventoryEntriesUseCase extends TransactionFor<UserInventoryEnt
     return this.userInventoryEntriesService.createOne({ user, pokemon });
   }
 
+  public async transferUserInventoryEntriesToAnotherUser(
+    userInventoryEntries: Array<UserInventoryEntryModel>,
+    user: UserModel,
+  ) {
+    // TODO: add validation here
+    // NOTE: This might not work we need to set id directory like that: { user: { id: user.id } }
+    return this.userInventoryEntriesService.updateMany(userInventoryEntries, { user });
+  }
+
   private async _quickSellUserInventoryEntry(
     user: UserModel,
     userInventoryEntry: UserInventoryEntryModel<{ user: true, pokemon: true }>,

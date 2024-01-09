@@ -5,6 +5,7 @@ import { CreateModel, CreateEntityFields, UpdateEntityFields, FindEntityRelation
 import { BaseWithDateEntity } from '../other/base-with-date.entity';
 import { UserInventoryEntryEntity } from './user-inventory-entry.entity';
 import { QuickSoldUserInventoryEntryEntity } from './quick-sold-user-inventory-entry.entity';
+import { PendingTradeEntity } from './pending-trade.entity';
 
 @Entity('users')
 export class UserEntity extends BaseWithDateEntity {
@@ -37,6 +38,20 @@ export class UserEntity extends BaseWithDateEntity {
     (quickSoldUserInventoryEntry) => quickSoldUserInventoryEntry.user,
   )
   public readonly quickSoldInventoryEntries: Array<QuickSoldUserInventoryEntryEntity>;
+
+  @AutoMap(() => [PendingTradeEntity])
+  @OneToMany(
+    () => PendingTradeEntity,
+    (trade) => trade.sender,
+  )
+  public readonly pendingSendingTrades: Array<PendingTradeEntity>;
+
+  @AutoMap(() => [PendingTradeEntity])
+  @OneToMany(
+    () => PendingTradeEntity,
+    (trade) => trade.receiver,
+  )
+  public readonly pendingReceivingTrades: Array<PendingTradeEntity>;
 }
 
 export type CreateUserEntityFields = CreateEntityFields<

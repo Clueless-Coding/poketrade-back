@@ -1,18 +1,21 @@
 import { AutoMap } from '@automapper/classes';
-import { Column, Entity, JoinTable, ManyToMany, ManyToOne } from 'typeorm';
+import { Column, Entity, JoinTable, ManyToMany, ManyToOne, TableInheritance } from 'typeorm';
 import { BaseWithDateEntity } from '../other/base-with-date.entity';
-import { CreateEntityFields, CreateModel, FindEntityRelationsOptions, UpdateEntityFields } from '../other/types';
+import { FindEntityRelationsOptions } from '../other/types';
+import { AcceptedTradeModel } from './accepted-trade.entity';
+import { PendingTradeModel } from './pending-trade.entity';
 import { UserInventoryEntryEntity } from './user-inventory-entry.entity';
 import { UserEntity } from './user.entity';
 
 export enum TradeStatus {
   PENDING = 'PENDING',
+  CANCELED = 'CANCELED',
   ACCEPTED = 'ACCEPTED',
   DENIED = 'DENIED',
 }
 
-// TODO: Maybe in the future it will be more suitable to use TableInheritance feature of typeorm
 @Entity('trades')
+@TableInheritance({ column: { type: 'enum', enum: TradeStatus, name: 'status' } })
 export class TradeEntity extends BaseWithDateEntity {
   @AutoMap()
   @Column({ type: 'enum', enum: TradeStatus })
@@ -43,18 +46,16 @@ export class TradeEntity extends BaseWithDateEntity {
     inverseJoinColumn: { name: 'user_inventory_entry_id' }
   })
   public receiverInventoryEntries: Array<UserInventoryEntryEntity>;
+
+  public isPending(): this is PendingTradeModel {
+    return this.status === TradeStatus.PENDING;
+  }
+
+  public isAccepted(): this is AcceptedTradeModel {
+    return this.status === TradeStatus.ACCEPTED;
+  }
 }
-
-export type CreateTradeEntityFields = CreateEntityFields<
-  TradeEntity,
-  'status' | 'sender' | 'senderInventoryEntries' | 'receiver' | 'receiverInventoryEntries'
->;
-
-export type UpdateTradeEntityFields = UpdateEntityFields<
-  TradeEntity,
-  'status'
->
 
 export type TradeModel<
   T extends FindEntityRelationsOptions<TradeEntity> = {},
-> = CreateModel<TradeEntity, T>;
+> = PendingTradeModel<T> | AcceptedTradeModel<T>;

@@ -5,6 +5,9 @@ import { UserEntity, UserModel } from "src/infra/postgres/entities/user.entity";
 import { UserInventoryEntryEntity, UserInventoryEntryModel } from "../entities/user-inventory-entry.entity";
 import { BaseEntity as TypeormBaseEntity } from "typeorm";
 import { TradeEntity, TradeModel } from "../entities/trade.entity";
+import { Nullable } from "src/common/types";
+import { PendingTradeEntity, PendingTradeModel } from "../entities/pending-trade.entity";
+import { AcceptedTradeEntity, AcceptedTradeModel } from "../entities/accepted-trade.entity";
 
 // NOTE: Add new Entities here
 type EntityToModel<
@@ -17,18 +20,22 @@ type EntityToModel<
   : Entity extends OpenedPackEntity ? OpenedPackModel<Relations>
   : Entity extends UserInventoryEntryEntity ? UserInventoryEntryModel<Relations>
   : Entity extends TradeEntity ? TradeModel<Relations>
+  : Entity extends PendingTradeEntity ? PendingTradeModel<Relations>
+  : Entity extends AcceptedTradeEntity ? AcceptedTradeModel<Relations>
   : never;
 
 
 type EntityOrArrayOfEntitiesToModel<
-  EntityOrArrayOfEntities extends Array<TypeormBaseEntity> | TypeormBaseEntity,
+  EntityOrArrayOfEntities extends Array<TypeormBaseEntity> | Nullable<TypeormBaseEntity> | TypeormBaseEntity,
   Relations = {}
 > =
   EntityOrArrayOfEntities extends Array<infer ArrayEntity extends TypeormBaseEntity>
     ? Array<EntityToModel<ArrayEntity, Relations>>
     : EntityOrArrayOfEntities extends infer Entity extends TypeormBaseEntity
       ? EntityToModel<Entity, Relations>
-      : never
+      : EntityOrArrayOfEntities extends Nullable<infer NullableEntity extends TypeormBaseEntity>
+        ? Nullable<EntityToModel<NullableEntity, Relations>>
+        : never
 
 type RemovePropertiesWith<T extends Record<string, unknown>, U> = {
   [K in keyof T as T[K] extends U ? never : K]: T[K]
@@ -45,7 +52,9 @@ Partial<RemovePropertiesWithNever<{
       ? true | FindEntityRelationsOptions<ArrayEntity>
       : Entity[K] extends TypeormBaseEntity
         ? true | FindEntityRelationsOptions<Entity[K]>
-        : never
+        : Entity[K] extends Nullable<infer NullableEntity extends TypeormBaseEntity>
+          ? true | FindEntityRelationsOptions<NullableEntity>
+          : never
 }>>;
 
 export type CreateModel<

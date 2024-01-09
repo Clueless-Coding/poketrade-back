@@ -50,7 +50,9 @@ export class UsersService {
       fields
     );
 
-    return this.usersRepository.save(updatedUser) as unknown as Promise<UserModel<T>>;
+    return this.usersRepository.save(
+      updatedUser
+    ) as unknown as Promise<UserModel<T>>;
   }
 
   public async exist(

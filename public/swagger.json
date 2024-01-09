@@ -318,14 +318,14 @@
     },
     "/api/trades": {
       "post": {
-        "operationId": "TradesController_createTrade",
+        "operationId": "TradesController_createPendingTrade",
         "parameters": [],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CreateTradeInputDTO"
+                "$ref": "#/components/schemas/CreatePendingTradeInputDTO"
               }
             }
           }
@@ -340,6 +340,34 @@
                 }
               }
             }
+          }
+        },
+        "tags": [
+          "Trades"
+        ],
+        "security": [
+          {
+            "AccessToken": []
+          }
+        ]
+      }
+    },
+    "/api/trades/{id}/accept": {
+      "post": {
+        "operationId": "TradesController_acceptPendingTradeById",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
           }
         },
         "tags": [
@@ -614,7 +642,7 @@
           "pokemon"
         ]
       },
-      "CreateTradeInputDTO": {
+      "CreatePendingTradeInputDTO": {
         "type": "object",
         "properties": {
           "senderInventoryEntryIds": {

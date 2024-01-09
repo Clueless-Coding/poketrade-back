@@ -1,8 +1,10 @@
 import { createMap, Mapper } from '@automapper/core';
 import { AutomapperProfile, InjectMapper } from '@automapper/nestjs';
 import { Injectable } from '@nestjs/common';
-import { TradeEntity } from 'src/infra/postgres/entities/trade.entity';
-import { TradeOutputDTO } from '../dtos/trades/trade.output.dto';
+import { AcceptedTradeEntity } from 'src/infra/postgres/entities/accepted-trade.entity';
+import { PendingTradeEntity } from 'src/infra/postgres/entities/pending-trade.entity';
+import { AcceptedTradeOutputDTO } from '../dtos/accepted-trades/accepted-trade.output.dto';
+import { PendingTradeOutputDTO } from '../dtos/pending-trades/pending-trade.output.dto';
 
 @Injectable()
 export class TradeProfile extends AutomapperProfile {
@@ -12,7 +14,8 @@ export class TradeProfile extends AutomapperProfile {
 
   public override get profile() {
     return (mapper: Mapper) => {
-      createMap(mapper, TradeEntity, TradeOutputDTO);
+      createMap(mapper, PendingTradeEntity, PendingTradeOutputDTO);
+      createMap(mapper, AcceptedTradeEntity, AcceptedTradeOutputDTO);
     };
   }
 }
