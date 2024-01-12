@@ -6,24 +6,29 @@ import { TypeOrmModuleOptions, TypeOrmOptionsFactory } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
 import * as dotenv from 'dotenv';
 
-function getFromEnv<T extends keyof EnvVariables>(
-  variableName: T,
-  defaultValue: EnvVariables[T],
+function getOrThrowFromEnv<T extends keyof EnvVariables>(
+  envVariableName: T,
   configService?: ConfigService<EnvVariables>,
 ): EnvVariables[T] {
-  return configService
-    ? configService.get(variableName, defaultValue)
-    : (process.env[variableName] as EnvVariables[T]) ?? defaultValue;
+  if (configService) {
+    return configService.getOrThrow(envVariableName)
+  }
+
+  const envVariable = process.env[envVariableName] as EnvVariables[T] | undefined;
+  if (!envVariable) {
+    throw new TypeError(`Configuration key "${envVariableName}" does not exist`);
+  }
+  return envVariable;
 }
 
 const getDataSourceOptions = (configService?: ConfigService<EnvVariables>): DataSourceOptions => {
   return {
     type: 'postgres',
-    host: getFromEnv('DATABASE_HOST', '127.0.0.1', configService),
-    port: getFromEnv('DATABASE_PORT', 5432, configService),
-    username: getFromEnv('DATABASE_USER', 'postgres', configService),
-    password: getFromEnv('DATABASE_PASSWORD', 'postgres', configService),
-    database: getFromEnv('DATABASE_NAME', 'poketrade', configService),
+    host: getOrThrowFromEnv('POSTGRES_HOST', configService),
+    port: getOrThrowFromEnv('POSTGRES_PORT', configService),
+    username: getOrThrowFromEnv('POSTGRES_USER', configService),
+    password: getOrThrowFromEnv('POSTGRES_PASSWORD', configService),
+    database: getOrThrowFromEnv('POSTGRES_DB', configService),
 
     entities: ['dist/infra/postgres/entities/*.js'],
     migrations: ['dist/infra/postgres/migrations/*.js'],

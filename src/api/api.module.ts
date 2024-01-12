@@ -26,7 +26,7 @@ import { UserInventoryEntryProfile } from './profiles/user-inventory-entry.profi
       inject: [ConfigService<EnvVariables>],
       useFactory: (configService: ConfigService<EnvVariables>) => ({
         secret: configService.getOrThrow('JWT_SECRET'),
-        signOptions: { expiresIn: configService.get('JWT_EXPIRES_IN', '24h') }
+        signOptions: { expiresIn: configService.getOrThrow('JWT_EXPIRES_IN') }
       }),
       global: true,
     }),

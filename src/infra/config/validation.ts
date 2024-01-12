@@ -13,36 +13,32 @@ export class EnvVariables {
   NODE_ENV: NodeEnv = NodeEnv.DEV;
 
   @IsOptional()
+  @IsString()
+  HOST: string = '127.0.0.1';
+
   @IsPortNumber()
-  PORT: number = 3000;
+  PORT: number;
 
-  @IsOptional()
   @IsString()
-  DATABASE_HOST?: string;
+  POSTGRES_HOST: string;
 
-  @IsOptional()
   @IsPortNumber()
-  DATABASE_PORT?: number;
+  POSTGRES_PORT: number;
 
-  @IsOptional()
   @IsString()
-  DATABASE_USER?: string;
+  POSTGRES_USER: string;
 
-  @IsOptional()
   @IsString()
-  DATABASE_PASSWORD?: string;
+  POSTGRES_PASSWORD: string;
 
-  @IsOptional()
   @IsString()
-  DATABASE_NAME?: string;
+  POSTGRES_DB: string;
 
-  @IsOptional()
   @IsString()
-  JWT_SECRET?: string;
+  JWT_SECRET: string;
 
-  @IsOptional()
   @IsString()
-  JWT_EXPIRES_IN?: string;
+  JWT_EXPIRES_IN: string;
 }
 
 export const validate = (config: Record<string, unknown>) => {

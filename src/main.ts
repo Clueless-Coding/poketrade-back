@@ -40,7 +40,7 @@ async function bootstrap() {
 
   initializeSwaggerDocumentation(app);
 
-  await app.listen(configService.getOrThrow('PORT'));
+  await app.listen(configService.getOrThrow('PORT'), configService.getOrThrow('HOST'));
 }
 
 bootstrap();

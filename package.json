@@ -10,13 +10,13 @@
     "start": "nest start",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
-    "start:prod": "node dist/main",
-    "typeorm": "pnpm build && pnpx typeorm -d ./dist/infra/config/typeorm",
+    "start:prod": "node ./dist/main",
+    "typeorm": "pnpx typeorm -d ./dist/infra/config/typeorm/",
     "migrations:run": "pnpm typeorm migration:run",
     "migrations:generate": "pnpm typeorm migration:generate",
     "migrations:revert": "pnpm typeorm migration:revert",
-    "seed": "node dist/infra/postgres/seeders/run",
-    "seed:refresh": "pnpm seed --refresh"
+    "seeders:run": "node ./dist/infra/postgres/seeders/run",
+    "seeders:refresh": "pnpm seeders:run --refresh"
   },
   "dependencies": {
     "@automapper/classes": "8.7.7",
