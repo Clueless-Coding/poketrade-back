@@ -30,7 +30,6 @@ export class PacksService {
     where?: FindOptionsWhere<PackEntity>,
     relations?: T,
   ): Promise<Nullable<PackModel<T>>> {
-
     return this.packsRepository.findOne({
       where,
       relations,

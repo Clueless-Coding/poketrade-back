@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { IPaginationOptions, paginate, Pagination } from 'nestjs-typeorm-paginate';
 import { Nullable } from 'src/common/types';
-import { CreateUserInventoryEntryEntityFields, UserInventoryEntryEntity, UserInventoryEntryModel } from 'src/infra/postgres/entities/user-inventory-entry.entity';
+import { CreateUserInventoryEntryEntityFields, UpdateUserInventoryEntryEntityFields, UserInventoryEntryEntity, UserInventoryEntryModel } from 'src/infra/postgres/entities/user-inventory-entry.entity';
 import { FindEntityRelationsOptions } from 'src/infra/postgres/other/types';
 import { FindOptionsWhere, Repository } from 'typeorm';
 
@@ -28,6 +28,17 @@ export class UserInventoryEntriesService {
   public async findMany<
     T extends FindEntityRelationsOptions<UserInventoryEntryEntity> = {},
   >(
+    where?: FindOptionsWhere<UserInventoryEntryEntity>,
+    relations?: T,
+  ): Promise<Array<UserInventoryEntryModel<T>>> {
+    return this.userInventoryEntriesRepository.find(
+      { where, relations },
+    ) as unknown as Promise<Array<UserInventoryEntryModel<T>>>;
+  }
+
+  public async findManyWithPagination<
+    T extends FindEntityRelationsOptions<UserInventoryEntryEntity> = {},
+  >(
     paginationOptions: IPaginationOptions,
     where?: FindOptionsWhere<UserInventoryEntryEntity>,
     relations?: T,
@@ -45,6 +56,40 @@ export class UserInventoryEntriesService {
     const userInventoryEntry = this.userInventoryEntriesRepository.create(fields);
 
     return this.userInventoryEntriesRepository.save(userInventoryEntry);
+  }
+
+  public async updateOne<
+    T extends FindEntityRelationsOptions<UserInventoryEntryEntity> = {},
+  >(
+    userInventoryEntry: UserInventoryEntryModel<T>,
+    fields: UpdateUserInventoryEntryEntityFields,
+  ): Promise<UserInventoryEntryModel<T>> {
+    const updatedUserInventoryEntry = this.userInventoryEntriesRepository.merge(
+      userInventoryEntry as unknown as UserInventoryEntryEntity,
+      fields,
+    );
+
+    return this.userInventoryEntriesRepository.save(
+      updatedUserInventoryEntry
+    ) as unknown as Promise<UserInventoryEntryModel<T>>;
+  }
+
+  public async updateMany<
+    T extends FindEntityRelationsOptions<UserInventoryEntryEntity> = {},
+  >(
+    userInventoryEntries: Array<UserInventoryEntryModel<T>>,
+    fields: UpdateUserInventoryEntryEntityFields,
+  ): Promise<Array<UserInventoryEntryModel<T>>> {
+    const updatedUserInventoryEntries = userInventoryEntries.map((userInventoryEntry) => {
+      return this.userInventoryEntriesRepository.merge(
+        userInventoryEntry as unknown as UserInventoryEntryEntity,
+        fields,
+      );
+    });
+
+    return this.userInventoryEntriesRepository.save(
+      updatedUserInventoryEntries
+    ) as unknown as Promise<Array<UserInventoryEntryModel<T>>>;
   }
 
   public async deleteOne<

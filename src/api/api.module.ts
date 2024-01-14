@@ -19,6 +19,9 @@ import { PokemonProfile } from './profiles/pokemon.profile';
 import { PackProfile } from './profiles/pack.profile';
 import { UserInventoryEntriesModule } from 'src/infra/ioc/user-inventory-entries.module';
 import { UserInventoryEntryProfile } from './profiles/user-inventory-entry.profile';
+import { TradesController } from './controllers/trades.controller';
+import { TradesModule } from 'src/infra/ioc/trades.module';
+import { TradeProfile } from './profiles/trade.profile';
 
 @Module({
   imports: [
@@ -40,6 +43,7 @@ import { UserInventoryEntryProfile } from './profiles/user-inventory-entry.profi
     UsersModule,
     UserInventoryEntriesModule,
     PacksModule,
+    TradesModule,
   ],
   providers: [
     // strategies
@@ -51,11 +55,13 @@ import { UserInventoryEntryProfile } from './profiles/user-inventory-entry.profi
     UserInventoryEntryProfile,
     PokemonProfile,
     PackProfile,
+    TradeProfile,
   ],
   controllers: [
     AuthController,
     UsersController,
     PacksController,
+    TradesController,
   ],
 })
 export class ApiModule {}

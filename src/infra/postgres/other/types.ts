@@ -4,51 +4,62 @@ import { PokemonEntity, PokemonModel } from "src/infra/postgres/entities/pokemon
 import { UserEntity, UserModel } from "src/infra/postgres/entities/user.entity";
 import { UserInventoryEntryEntity, UserInventoryEntryModel } from "../entities/user-inventory-entry.entity";
 import { BaseEntity as TypeormBaseEntity } from "typeorm";
+import { TradeEntity, TradeModel } from "../entities/trade.entity";
+import { Nullable } from "src/common/types";
+import { PendingTradeEntity, PendingTradeModel } from "../entities/pending-trade.entity";
+import { AcceptedTradeEntity, AcceptedTradeModel } from "../entities/accepted-trade.entity";
+import { CancelledTradeEntity, CancelledTradeModel } from "../entities/cancelled-trade.entity";
+import { RejectedTradeEntity, RejectedTradeModel } from "../entities/rejected-trade.entity";
 
 // NOTE: Add new Entities here
-type EntityToModel<Entity, Relations = {}> =
+type EntityToModel<
+  Entity extends TypeormBaseEntity,
+  Relations extends FindEntityRelationsOptions<Entity> = {},
+> =
   Entity extends UserEntity ? UserModel<Relations>
   : Entity extends PokemonEntity ? PokemonModel<Relations>
   : Entity extends PackEntity ? PackModel<Relations>
   : Entity extends OpenedPackEntity ? OpenedPackModel<Relations>
   : Entity extends UserInventoryEntryEntity ? UserInventoryEntryModel<Relations>
+  : Entity extends TradeEntity ? TradeModel<Relations>
+  : Entity extends PendingTradeEntity ? PendingTradeModel<Relations>
+  : Entity extends AcceptedTradeEntity ? AcceptedTradeModel<Relations>
+  : Entity extends CancelledTradeEntity ? CancelledTradeModel<Relations>
+  : Entity extends RejectedTradeEntity ? RejectedTradeModel<Relations>
   : never;
 
 
-type EntityOrArrayOfEntitiesToModel<EntityOrArrayOfEntities, Relations = {}> =
-  EntityOrArrayOfEntities extends Array<infer Entity>
-    ? Array<EntityToModel<Entity, Relations>>
-    : EntityToModel<EntityOrArrayOfEntities, Relations>
-
-type PickEntityRelations<Entity> = Pick<Entity, {
-  [K in keyof Entity]:
-    Entity[K] extends Array<TypeormBaseEntity>
-      ? K
-      : Entity[K] extends TypeormBaseEntity
-        ? K
+type EntityOrArrayOfEntitiesToModel<
+  EntityOrArrayOfEntities extends Array<TypeormBaseEntity> | Nullable<TypeormBaseEntity> | TypeormBaseEntity,
+  Relations = {}
+> =
+  EntityOrArrayOfEntities extends Array<infer ArrayEntity extends TypeormBaseEntity>
+    ? Array<EntityToModel<ArrayEntity, Relations>>
+    : EntityOrArrayOfEntities extends infer Entity extends TypeormBaseEntity
+      ? EntityToModel<Entity, Relations>
+      : EntityOrArrayOfEntities extends Nullable<infer NullableEntity extends TypeormBaseEntity>
+        ? Nullable<EntityToModel<NullableEntity, Relations>>
         : never
-}[keyof Entity]>;
 
-type GetEntityRelations<
-  Entity,
-  EntityRelations = PickEntityRelations<Entity>,
-> = {
-  [K in keyof EntityRelations]:
-    EntityRelations[K] extends Array<infer ArrayEntity>
-      ? ArrayEntity extends TypeormBaseEntity
-        ? PickEntityRelations<ArrayEntity>
-        : never
-      : EntityRelations[K] extends TypeormBaseEntity
-        ? PickEntityRelations<EntityRelations[K]>
-        : never;
-};
+type RemovePropertiesWith<T extends Record<string, unknown>, U> = {
+  [K in keyof T as T[K] extends U ? never : K]: T[K]
+}
+
+export type RemovePropertiesWithNever<T extends Record<string, unknown>> = RemovePropertiesWith<T, never>;
 
 export type FindEntityRelationsOptions<
-  Entity,
-  EntityRelations = GetEntityRelations<Entity>,
-> = {
-  [K in keyof EntityRelations]?: true | FindEntityRelationsOptions<EntityRelations[K]>;
-};
+  Entity extends TypeormBaseEntity,
+> =
+Partial<RemovePropertiesWithNever<{
+  [K in keyof Entity]:
+    Entity[K] extends Array<infer ArrayEntity extends TypeormBaseEntity>
+      ? true | FindEntityRelationsOptions<ArrayEntity>
+      : Entity[K] extends TypeormBaseEntity
+        ? true | FindEntityRelationsOptions<Entity[K]>
+        : Entity[K] extends Nullable<infer NullableEntity extends TypeormBaseEntity>
+          ? true | FindEntityRelationsOptions<NullableEntity>
+          : never
+}>>;
 
 export type CreateModel<
   Entity extends TypeormBaseEntity,
@@ -57,6 +68,7 @@ export type CreateModel<
   & Omit<Entity, keyof FindEntityRelationsOptions<Entity>>
   & {
     [K in keyof RelationsOptions]: EntityOrArrayOfEntitiesToModel<
+      // @ts-ignore
       Entity[Extract<K, keyof Entity>],
       RelationsOptions[K] extends true
         ? {}
@@ -65,15 +77,19 @@ export type CreateModel<
   };
 
 export type CreateEntityFields<
-  Entity,
+  Entity extends TypeormBaseEntity,
   Fields extends keyof Entity,
-  EntityRelations = GetEntityRelations<Entity>,
   T = Pick<Entity, Fields>,
 > = {
-  [K in keyof T]: K extends keyof EntityRelations ? EntityOrArrayOfEntitiesToModel<T[K]> : T[K]
+  [K in keyof T]: K extends keyof FindEntityRelationsOptions<Entity>
+    ? EntityOrArrayOfEntitiesToModel<
+      // @ts-ignore
+      T[K]
+    >
+    : T[K]
 };
 
 export type UpdateEntityFields<
-  Entity,
+  Entity extends TypeormBaseEntity,
   Fields extends keyof Entity,
 > = Partial<CreateEntityFields<Entity, Fields>>;

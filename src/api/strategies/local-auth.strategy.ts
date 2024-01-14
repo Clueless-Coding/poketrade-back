@@ -1,22 +1,17 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy } from 'passport-local';
-import { UsersService } from 'src/core/services/users.service';
 import * as bcrypt from 'bcrypt';
+import { UsersUseCase } from 'src/core/use-cases/users.use-case';
 
 @Injectable()
 export class LocalAuthStrategy extends PassportStrategy(Strategy) {
-  // TODO: change it to use case
-  public constructor(private readonly usersService: UsersService) {
+  public constructor(private readonly usersUseCase: UsersUseCase) {
     super();
   }
 
   public async validate(username: string, password: string) {
-    const user = await this.usersService.findOne({ name: username });
-
-    if (!user) {
-      throw new HttpException('User not found', HttpStatus.UNAUTHORIZED);
-    }
+    const user = await this.usersUseCase.findUser({ name: username });
 
     if (!(await bcrypt.compare(password, user.hashedPassword))) {
       throw new HttpException('Wrong password', HttpStatus.UNAUTHORIZED);

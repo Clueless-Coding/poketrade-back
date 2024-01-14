@@ -315,6 +315,147 @@
           }
         ]
       }
+    },
+    "/api/trades": {
+      "post": {
+        "operationId": "TradesController_createPendingTrade",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePendingTradeInputDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PendingTradeOutputDTO"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Trades"
+        ],
+        "security": [
+          {
+            "AccessToken": []
+          }
+        ]
+      }
+    },
+    "/api/trades/{id}/accept": {
+      "post": {
+        "operationId": "TradesController_acceptPendingTradeById",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AcceptedTradeOutputDTO"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Trades"
+        ],
+        "security": [
+          {
+            "AccessToken": []
+          }
+        ]
+      }
+    },
+    "/api/trades/{id}/cancel": {
+      "post": {
+        "operationId": "TradesController_cancelPendingTradeById",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CancelledTradeOuputDTO"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Trades"
+        ],
+        "security": [
+          {
+            "AccessToken": []
+          }
+        ]
+      }
+    },
+    "/api/trades/{id}/reject": {
+      "post": {
+        "operationId": "TradesController_rejectPendingTradeById",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RejectedTradeOutputDTO"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Trades"
+        ],
+        "security": [
+          {
+            "AccessToken": []
+          }
+        ]
+      }
     }
   },
   "info": {
@@ -576,6 +717,234 @@
           "user",
           "pack",
           "pokemon"
+        ]
+      },
+      "CreatePendingTradeInputDTO": {
+        "type": "object",
+        "properties": {
+          "senderInventoryEntryIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "receiverId": {
+            "type": "string"
+          },
+          "receiverInventoryEntryIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "senderInventoryEntryIds",
+          "receiverId",
+          "receiverInventoryEntryIds"
+        ]
+      },
+      "PendingTradeOutputDTO": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "sender": {
+            "$ref": "#/components/schemas/UserOutputDTO"
+          },
+          "senderInventoryEntries": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UserInventoryEntryOutputDTO"
+            }
+          },
+          "receiver": {
+            "$ref": "#/components/schemas/UserOutputDTO"
+          },
+          "receiverInventoryEntries": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UserInventoryEntryOutputDTO"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "createdAt",
+          "updatedAt",
+          "status",
+          "sender",
+          "senderInventoryEntries",
+          "receiver",
+          "receiverInventoryEntries"
+        ]
+      },
+      "AcceptedTradeOutputDTO": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "sender": {
+            "$ref": "#/components/schemas/UserOutputDTO"
+          },
+          "senderInventoryEntries": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UserInventoryEntryOutputDTO"
+            }
+          },
+          "receiver": {
+            "$ref": "#/components/schemas/UserOutputDTO"
+          },
+          "receiverInventoryEntries": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UserInventoryEntryOutputDTO"
+            }
+          },
+          "acceptedAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "createdAt",
+          "updatedAt",
+          "status",
+          "sender",
+          "senderInventoryEntries",
+          "receiver",
+          "receiverInventoryEntries",
+          "acceptedAt"
+        ]
+      },
+      "CancelledTradeOuputDTO": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "sender": {
+            "$ref": "#/components/schemas/UserOutputDTO"
+          },
+          "senderInventoryEntries": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UserInventoryEntryOutputDTO"
+            }
+          },
+          "receiver": {
+            "$ref": "#/components/schemas/UserOutputDTO"
+          },
+          "receiverInventoryEntries": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UserInventoryEntryOutputDTO"
+            }
+          },
+          "cancelledAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "createdAt",
+          "updatedAt",
+          "status",
+          "sender",
+          "senderInventoryEntries",
+          "receiver",
+          "receiverInventoryEntries",
+          "cancelledAt"
+        ]
+      },
+      "RejectedTradeOutputDTO": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "sender": {
+            "$ref": "#/components/schemas/UserOutputDTO"
+          },
+          "senderInventoryEntries": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UserInventoryEntryOutputDTO"
+            }
+          },
+          "receiver": {
+            "$ref": "#/components/schemas/UserOutputDTO"
+          },
+          "receiverInventoryEntries": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UserInventoryEntryOutputDTO"
+            }
+          },
+          "rejectedAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "createdAt",
+          "updatedAt",
+          "status",
+          "sender",
+          "senderInventoryEntries",
+          "receiver",
+          "receiverInventoryEntries",
+          "rejectedAt"
         ]
       }
     }
