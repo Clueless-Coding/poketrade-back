@@ -83,12 +83,22 @@ export class UserInventoryEntriesUseCase extends TransactionFor<UserInventoryEnt
   }
 
   public async transferUserInventoryEntriesToAnotherUser(
-    userInventoryEntries: Array<UserInventoryEntryModel>,
-    user: UserModel,
+    fromUserInventoryEntries: Array<UserInventoryEntryModel>,
+    toUser: UserModel,
   ) {
-    // TODO: add validation here
-    // NOTE: This might not work we need to set id directly like that: { user: { id: user.id } }
-    return this.userInventoryEntriesService.updateMany(userInventoryEntries, { user });
+    if (!fromUserInventoryEntries.length) return [];
+
+    const set = new Set<UUIDv4>(fromUserInventoryEntries.map(({ id }) => id));
+    if (set.size > 1) {
+      throw new HttpException('All of the inventory entries must have the same user', HttpStatus.CONFLICT);
+    }
+
+    const fromUserId = fromUserInventoryEntries[0]!.id;
+    if (fromUserId === toUser.id) {
+      throw new HttpException('You cannot transfer inventory entries to yourself', HttpStatus.CONFLICT);
+    }
+
+    return this.userInventoryEntriesService.updateMany(fromUserInventoryEntries, { user: toUser });
   }
 
   private async _quickSellUserInventoryEntry(
