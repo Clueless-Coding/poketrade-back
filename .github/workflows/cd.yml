@@ -1,0 +1,25 @@
+name: Continuous Deployment
+
+on:
+  push:
+    branches:
+      - main
+
+# TODO: Build docker image and publish it to ghcr. Then pull it in deploy job
+# https://medium.com/@odenigbo67/docker-ci-cd-in-vpc-vps-environments-automating-deployment-with-github-actions-via-ssh-or-web-e2192bb75a69
+jobs:
+  deploy:
+    name: Continuous Deployment
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy using ssh
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          script: |
+            cd $HOME/apps/poketrade-back/
+            git pull origin main
+            docker compose up --detach --build
+            docker compose exec app ./node_modules/typeorm/cli.js -d ./dist/infra/config/typeorm/ migration:run
