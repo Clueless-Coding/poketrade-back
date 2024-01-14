@@ -35,20 +35,20 @@ export class PendingTradesUseCase extends TransactionFor<PendingTradesUseCase> {
     receiver: true,
     receiverInventoryEntries: { pokemon: true },
   }>> {
-    // TODO: I should use Promise.all here but because typescript is FUCKING TRASH I have to do this
-    // idfk how to resolve this and this is really annoying
-    const senderInventoryEntries = await this.userInventoryEntriesUseCase.findManyUserInventoryEntriesByIds(
-      dto.senderInventoryEntryIds,
-      (id) => `Trade sender inventory entry (\`${id}\`) not found`,
-    );
-    const receiver = await this.usersUseCase.findUserById(
-      dto.receiverId,
-      (id) => `Trade receiver (\`${id}\`) not found`,
-    );
-    const receiverInventoryEntries = await this.userInventoryEntriesUseCase.findManyUserInventoryEntriesByIds(
-      dto.receiverInventoryEntryIds,
-      (id) => `Trade receiver inventory entry (\`${id}\`) not found`,
-    );
+    const [senderInventoryEntries, receiver, receiverInventoryEntries] = await Promise.all([
+      this.userInventoryEntriesUseCase.findManyUserInventoryEntriesByIds(
+        dto.senderInventoryEntryIds,
+        (id) => `Trade sender inventory entry (\`${id}\`) not found`,
+      ),
+      this.usersUseCase.findUserById(
+        dto.receiverId,
+        (id) => `Trade receiver (\`${id}\`) not found`,
+      ),
+      this.userInventoryEntriesUseCase.findManyUserInventoryEntriesByIds(
+        dto.receiverInventoryEntryIds,
+        (id) => `Trade receiver inventory entry (\`${id}\`) not found`,
+      ),
+    ]);
 
     if (sender.id === receiver.id) {
       throw new HttpException('You cannot send trade to yourself', HttpStatus.CONFLICT);
