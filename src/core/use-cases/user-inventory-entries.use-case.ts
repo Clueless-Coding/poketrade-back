@@ -87,7 +87,7 @@ export class UserInventoryEntriesUseCase extends TransactionFor<UserInventoryEnt
     user: UserModel,
   ) {
     // TODO: add validation here
-    // NOTE: This might not work we need to set id directory like that: { user: { id: user.id } }
+    // NOTE: This might not work we need to set id directly like that: { user: { id: user.id } }
     return this.userInventoryEntriesService.updateMany(userInventoryEntries, { user });
   }
 

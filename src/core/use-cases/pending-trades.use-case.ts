@@ -26,21 +26,29 @@ export class PendingTradesUseCase extends TransactionFor<PendingTradesUseCase> {
     super(moduleRef);
   }
 
-  public async createPendingTrade(sender: UserModel, dto: CreatePendingTradeInputDTO) {
-    const [senderInventoryEntries, receiver, receiverInventoryEntries] = await Promise.all([
-      this.userInventoryEntriesUseCase.findManyUserInventoryEntriesByIds(
-        dto.senderInventoryEntryIds,
-        (id) => `Trade sender inventory entry (\`${id}\`) not found`,
-      ),
-      this.usersUseCase.findUserById(
-        dto.receiverId,
-        (id) => `Trade receiver (\`${id}\`) not found`,
-      ),
-      this.userInventoryEntriesUseCase.findManyUserInventoryEntriesByIds(
-        dto.receiverInventoryEntryIds,
-        (id) => `Trade receiver inventory entry (\`${id}\`) not found`,
-      ),
-    ]);
+  public async createPendingTrade(
+    sender: UserModel,
+    dto: CreatePendingTradeInputDTO
+  ): Promise<PendingTradeModel<{
+    sender: true,
+    senderInventoryEntries: { pokemon: true },
+    receiver: true,
+    receiverInventoryEntries: { pokemon: true },
+  }>> {
+    // TODO: I should use Promise.all here but because typescript is FUCKING TRASH I have to do this
+    // idfk how to resolve this and this is really annoying
+    const senderInventoryEntries = await this.userInventoryEntriesUseCase.findManyUserInventoryEntriesByIds(
+      dto.senderInventoryEntryIds,
+      (id) => `Trade sender inventory entry (\`${id}\`) not found`,
+    );
+    const receiver = await this.usersUseCase.findUserById(
+      dto.receiverId,
+      (id) => `Trade receiver (\`${id}\`) not found`,
+    );
+    const receiverInventoryEntries = await this.userInventoryEntriesUseCase.findManyUserInventoryEntriesByIds(
+      dto.receiverInventoryEntryIds,
+      (id) => `Trade receiver inventory entry (\`${id}\`) not found`,
+    );
 
     if (sender.id === receiver.id) {
       throw new HttpException('You cannot send trade to yourself', HttpStatus.CONFLICT);
@@ -108,20 +116,26 @@ export class PendingTradesUseCase extends TransactionFor<PendingTradesUseCase> {
       receiver: true,
       receiverInventoryEntries: { pokemon: true },
   }>> {
-    const pendingTrade = await this.findPendingTradeById(
-      id,
-      {
-        sender: true,
-        senderInventoryEntries: { pokemon: true },
-        receiver: true,
-        receiverInventoryEntries: { pokemon: true },
-      },
-    );
+    const pendingTrade = await this.findPendingTradeById(id, {
+      sender: true,
+      senderInventoryEntries: { pokemon: true },
+      receiver: true,
+      receiverInventoryEntries: { pokemon: true },
+    });
 
     return this._acceptPendingTrade(user, pendingTrade);
   }
 
-  public async acceptPendingTradeById(user: UserModel, id: UUIDv4, dataSource: DataSource) {
+  public async acceptPendingTradeById(
+    user: UserModel,
+    id: UUIDv4,
+    dataSource: DataSource,
+  ): Promise<AcceptedTradeModel<{
+      sender: true,
+      senderInventoryEntries: { pokemon: true },
+      receiver: true,
+      receiverInventoryEntries: { pokemon: true },
+  }>> {
     return dataSource.transaction((manager) => {
       return this.withTransaction(manager)._acceptPendingTradeById(user, id);
     })
@@ -175,7 +189,12 @@ export class PendingTradesUseCase extends TransactionFor<PendingTradesUseCase> {
       receiverInventoryEntries: { pokemon: true },
     }>,
     dataSource: DataSource,
-  ) {
+  ): Promise<AcceptedTradeModel<{
+      sender: true,
+      senderInventoryEntries: { pokemon: true },
+      receiver: true,
+      receiverInventoryEntries: { pokemon: true },
+  }>> {
     return dataSource.transaction((manager) => {
       return this.withTransaction(manager)._acceptPendingTrade(user, pendingTrade);
     })
@@ -204,7 +223,12 @@ export class PendingTradesUseCase extends TransactionFor<PendingTradesUseCase> {
     user: UserModel,
     id: UUIDv4,
     dataSource: DataSource,
-  ) {
+  ): Promise<CancelledTradeModel<{
+      sender: true,
+      senderInventoryEntries: { pokemon: true },
+      receiver: true,
+      receiverInventoryEntries: { pokemon: true },
+  }>> {
     return dataSource.transaction((manager) => {
       return this.withTransaction(manager)._cancelPendingTradeById(user, id);
     })
@@ -240,7 +264,12 @@ export class PendingTradesUseCase extends TransactionFor<PendingTradesUseCase> {
       receiverInventoryEntries: { pokemon: true },
     }>,
     dataSource: DataSource,
-  ) {
+  ): Promise<CancelledTradeModel<{
+      sender: true,
+      senderInventoryEntries: { pokemon: true },
+      receiver: true,
+      receiverInventoryEntries: { pokemon: true },
+  }>> {
     return dataSource.transaction((manager) => {
       return this.withTransaction(manager)._cancelPendingTrade(user, pendingTrade);
     })
@@ -276,7 +305,12 @@ export class PendingTradesUseCase extends TransactionFor<PendingTradesUseCase> {
       receiverInventoryEntries: { pokemon: true },
     }>,
     dataSource: DataSource,
-  ) {
+  ): Promise<RejectedTradeModel<{
+      sender: true,
+      senderInventoryEntries: { pokemon: true },
+      receiver: true,
+      receiverInventoryEntries: { pokemon: true },
+  }>> {
     return dataSource.transaction((manager) => {
       return this.withTransaction(manager)._rejectPendingTrade(user, pendingTrade);
     })
@@ -305,7 +339,12 @@ export class PendingTradesUseCase extends TransactionFor<PendingTradesUseCase> {
     user: UserModel,
     id: UUIDv4,
     dataSource: DataSource,
-  ) {
+  ): Promise<RejectedTradeModel<{
+    sender: true,
+    senderInventoryEntries: { pokemon: true },
+    receiver: true,
+    receiverInventoryEntries: { pokemon: true },
+  }>> {
     return dataSource.transaction((manager) => {
       return this.withTransaction(manager)._rejectPendingTradeById(user, id);
     })

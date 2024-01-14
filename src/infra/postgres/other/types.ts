@@ -45,7 +45,7 @@ type RemovePropertiesWith<T extends Record<string, unknown>, U> = {
   [K in keyof T as T[K] extends U ? never : K]: T[K]
 }
 
-type RemovePropertiesWithNever<T extends Record<string, unknown>> = RemovePropertiesWith<T, never>;
+export type RemovePropertiesWithNever<T extends Record<string, unknown>> = RemovePropertiesWith<T, never>;
 
 export type FindEntityRelationsOptions<
   Entity extends TypeormBaseEntity,

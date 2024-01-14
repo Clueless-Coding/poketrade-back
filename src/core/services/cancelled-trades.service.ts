@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CancelledTradeEntity, CancelledTradeModel, CreateCancelledTradeEntityFields } from 'src/infra/postgres/entities/cancelled-trade.entity';
+import { PendingEntityFindRelationsOptionsFromCreateFields } from 'src/infra/postgres/entities/pending-trade.entity';
 import { TradeStatus } from 'src/infra/postgres/entities/trade.entity';
 import { Repository } from 'typeorm';
 
@@ -11,20 +12,19 @@ export class CancelledTradesService {
     private readonly cancelledTradesRepository: Repository<CancelledTradeEntity>,
   ) {}
 
-  public async createOne(
-    fields: CreateCancelledTradeEntityFields
-  ): Promise<CancelledTradeModel<{
-      sender: true,
-      senderInventoryEntries: { pokemon: true },
-      receiver: true,
-      receiverInventoryEntries: { pokemon: true },
-  }>> {
+  public async createOne<
+    T extends CreateCancelledTradeEntityFields,
+  >(
+    fields: T,
+  ): Promise<CancelledTradeModel<PendingEntityFindRelationsOptionsFromCreateFields<T>>> {
     const cancelledTrade = this.cancelledTradesRepository.create({
       ...fields,
       status: TradeStatus.CANCELLED,
       cancelledAt: new Date(),
     });
 
-    return this.cancelledTradesRepository.save(cancelledTrade);
+    return this.cancelledTradesRepository.save(
+      cancelledTrade
+    ) as unknown as Promise<CancelledTradeModel<PendingEntityFindRelationsOptionsFromCreateFields<T>>>;
   }
 }

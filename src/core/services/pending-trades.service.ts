@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Nullable } from 'src/common/types';
 import { AcceptedTradeModel } from 'src/infra/postgres/entities/accepted-trade.entity';
 import { CancelledTradeModel } from 'src/infra/postgres/entities/cancelled-trade.entity';
-import { CreatePendingTradeEntityFields, PendingTradeEntity, PendingTradeModel } from 'src/infra/postgres/entities/pending-trade.entity';
+import { CreatePendingTradeEntityFields, PendingEntityFindRelationsOptionsFromCreateFields, PendingTradeEntity, PendingTradeModel } from 'src/infra/postgres/entities/pending-trade.entity';
 import { RejectedTradeModel } from 'src/infra/postgres/entities/rejected-trade.entity';
 import { TradeStatus } from 'src/infra/postgres/entities/trade.entity';
 import { FindEntityRelationsOptions } from 'src/infra/postgres/other/types';
@@ -35,38 +35,26 @@ export class PendingTradesService {
     }) as Promise<Nullable<PendingTradeModel<T>>>;
   }
 
-  // TODO: create some kind of a type
-  // that converts `CreatePendingTradeEntityFields` to `FindEntityRelationsOptions`
-  // and put that inside of PendingTradeModel
-  public async createOne(
-    fields: CreatePendingTradeEntityFields
-  ): Promise<PendingTradeModel<{
-    sender: true,
-    senderInventoryEntries: { pokemon: true },
-    receiver: true,
-    receiverInventoryEntries: { pokemon: true },
-  }>> {
+  public async createOne<
+    T extends CreatePendingTradeEntityFields,
+  >(
+    fields: T,
+  ): Promise<PendingTradeModel<PendingEntityFindRelationsOptionsFromCreateFields<T>>> {
     const pendingTrade = this.pendingTradesRepository.create({
       ...fields,
       status: TradeStatus.PENDING,
     });
 
-    return this.pendingTradesRepository.save(pendingTrade);
+    return this.pendingTradesRepository.save(
+      pendingTrade
+    ) as unknown as Promise<PendingTradeModel<PendingEntityFindRelationsOptionsFromCreateFields<T>>>;
   }
 
-  public async updateToAccepted(
-    pendingTrade: PendingTradeModel<{
-      sender: true,
-      senderInventoryEntries: { pokemon: true },
-      receiver: true,
-      receiverInventoryEntries: { pokemon: true },
-    }>,
-  ): Promise<AcceptedTradeModel<{
-      sender: true,
-      senderInventoryEntries: { pokemon: true },
-      receiver: true,
-      receiverInventoryEntries: { pokemon: true },
-  }>> {
+  public async updateToAccepted<
+    T extends Required<FindEntityRelationsOptions<PendingTradeEntity>>,
+  >(
+    pendingTrade: PendingTradeModel<T>,
+  ): Promise<AcceptedTradeModel<T>> {
     // TODO: Research more how to easily switch entity from one to another
     // right now this is the only way I could find out
     const pendingTradeId = pendingTrade.id;
@@ -75,22 +63,14 @@ export class PendingTradesService {
     return this.acceptedTradesService.createOne({
         ...pendingTrade,
         id: pendingTradeId,
-    });
+    }) as Promise<AcceptedTradeModel<T>>;
   }
 
-  public async updateToCancelled(
-    pendingTrade: PendingTradeModel<{
-      sender: true,
-      senderInventoryEntries: { pokemon: true },
-      receiver: true,
-      receiverInventoryEntries: { pokemon: true },
-    }>,
-  ): Promise<CancelledTradeModel<{
-      sender: true,
-      senderInventoryEntries: { pokemon: true },
-      receiver: true,
-      receiverInventoryEntries: { pokemon: true },
-  }>> {
+  public async updateToCancelled<
+    T extends Required<FindEntityRelationsOptions<PendingTradeEntity>>
+  >(
+    pendingTrade: PendingTradeModel<T>,
+  ): Promise<CancelledTradeModel<T>> {
     // TODO: Research more how to easily switch entity from one to another
     // right now this is the only way I could find out
     const pendingTradeId = pendingTrade.id;
@@ -99,22 +79,14 @@ export class PendingTradesService {
     return this.cancelledTradesService.createOne({
         ...pendingTrade,
         id: pendingTradeId,
-    });
+    }) as Promise<CancelledTradeModel<T>>;
   }
 
-  public async updateToRejected(
-    pendingTrade: PendingTradeModel<{
-      sender: true,
-      senderInventoryEntries: { pokemon: true },
-      receiver: true,
-      receiverInventoryEntries: { pokemon: true },
-    }>,
-  ): Promise<RejectedTradeModel<{
-      sender: true,
-      senderInventoryEntries: { pokemon: true },
-      receiver: true,
-      receiverInventoryEntries: { pokemon: true },
-  }>> {
+  public async updateToRejected<
+    T extends Required<FindEntityRelationsOptions<PendingTradeEntity>>,
+  >(
+    pendingTrade: PendingTradeModel<T>,
+  ): Promise<RejectedTradeModel<T>> {
     // TODO: Research more how to easily switch entity from one to another
     // right now this is the only way I could find out
     const pendingTradeId = pendingTrade.id;
@@ -123,7 +95,7 @@ export class PendingTradesService {
     return this.rejectedTradesService.createOne({
         ...pendingTrade,
         id: pendingTradeId,
-    });
+    }) as Promise<RejectedTradeModel<T>>;
   }
 
   public async deleteOne<
