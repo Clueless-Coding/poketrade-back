@@ -1,6 +1,6 @@
 import { Mapper } from '@automapper/core';
 import { InjectMapper } from '@automapper/nestjs';
-import { Body, Controller, Param, ParseUUIDPipe, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, HttpException, HttpStatus, Param, ParseUUIDPipe, Post, UseGuards } from '@nestjs/common';
 import { ApiCreatedResponse, ApiSecurity, ApiTags } from '@nestjs/swagger';
 import { UUIDv4 } from 'src/common/types';
 import { PendingTradesUseCase } from 'src/core/use-cases/pending-trades.use-case';
@@ -37,6 +37,13 @@ export class TradesController {
     @User() user: UserModel,
     @Body() dto: CreatePendingTradeInputDTO,
   ) {
+    if (!dto.senderInventoryEntryIds.length && !dto.receiverInventoryEntryIds.length) {
+      throw new HttpException(
+        '`senderInventoryEntryIds` and `receiverInventoryEntryIds` cannot be empty simultaneously',
+        HttpStatus.BAD_REQUEST
+      );
+    }
+
     const pendingTrade = await this.pendingTradesUseCase.createPendingTrade(user, dto);
 
     return this.mapper.map(pendingTrade, PendingTradeEntity, PendingTradeOutputDTO);
