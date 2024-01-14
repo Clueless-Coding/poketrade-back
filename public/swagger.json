@@ -63,6 +63,59 @@
         ]
       }
     },
+    "/api/users": {
+      "get": {
+        "operationId": "UsersController_getUsers",
+        "parameters": [
+          {
+            "name": "nameLike",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 10,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserOutputDTO"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Users"
+        ],
+        "security": [
+          {
+            "AccessToken": []
+          }
+        ]
+      }
+    },
     "/api/users/me": {
       "get": {
         "operationId": "UsersController_getMe",

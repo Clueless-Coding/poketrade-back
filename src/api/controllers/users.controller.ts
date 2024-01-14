@@ -18,6 +18,7 @@ import { Pagination } from 'nestjs-typeorm-paginate';
 import { UserInventoryEntriesUseCase } from 'src/core/use-cases/user-inventory-entries.use-case';
 import { QuickSoldUserInventoryEntryEntity } from 'src/infra/postgres/entities/quick-sold-user-inventory-entry.entity';
 import { QuickSoldUserInventoryEntryOutputDTO } from '../dtos/user-inventory-entries/quick-sold-user-inventory-entry.output.dto';
+import { GetUsersInputDTO } from '../dtos/users/get-users.input.dto';
 
 @ApiTags('Users')
 @Controller('users')
@@ -26,9 +27,28 @@ export class UsersController {
     @InjectMapper()
     private readonly mapper: Mapper,
 
+    private readonly usersUseCase: UsersUseCase,
     private readonly userInventoryEntriesUseCase: UserInventoryEntriesUseCase,
     private readonly dataSource: DataSource,
   ) {}
+
+  @ApiOkResponse({ type: UserOutputDTO })
+  @ApiSecurity('AccessToken')
+  @Get()
+  @UseGuards(JwtAuthGuard)
+  public async getUsers(
+    @Query() dto: GetUsersInputDTO,
+    @Query() paginationDTO: PaginationInputDTO,
+  ): Promise<Pagination<UserOutputDTO>> {
+    const users = await this.usersUseCase.findUsers(dto, paginationDTO);
+
+    return mapArrayWithPagination(
+      this.mapper,
+      users,
+      UserEntity,
+      UserOutputDTO,
+    )
+  }
 
   @ApiOkResponse({ type: UserOutputDTO })
   @ApiSecurity('AccessToken')

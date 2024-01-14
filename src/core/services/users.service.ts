@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { IPaginationOptions, paginate, Pagination } from 'nestjs-typeorm-paginate';
 import { Nullable } from 'src/common/types';
 import { UserEntity, UserModel, CreateUserEntityFields, UpdateUserEntityFields } from 'src/infra/postgres/entities/user.entity';
 import { FindEntityRelationsOptions } from 'src/infra/postgres/other/types';
@@ -31,6 +32,20 @@ export class UsersService {
       where,
       relations,
     }) as Promise<Nullable<UserModel<T>>>;
+  }
+
+  public async findManyWithPagination<
+    T extends FindEntityRelationsOptions<UserEntity> = {},
+  >(
+    paginationOptions: IPaginationOptions,
+    where?: FindOptionsWhere<UserEntity>,
+    relations?: T,
+  ): Promise<Pagination<UserModel<T>>> {
+    return paginate(
+      this.usersRepository,
+      paginationOptions,
+      { where, relations },
+    ) as unknown as Promise<Pagination<UserModel<T>>>;
   }
 
   public async createOne(fields: CreateUserEntityFields): Promise<UserModel> {

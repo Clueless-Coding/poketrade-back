@@ -5,7 +5,9 @@ import { CreateUserInputDTO } from 'src/api/dtos/users/create-user.input.dto';
 import { UpdateUserInputDTO } from 'src/api/dtos/users/update-user.input.dto';
 import { UUIDv4 } from 'src/common/types';
 import { FindEntityRelationsOptions } from 'src/infra/postgres/other/types';
-import { FindOptionsWhere } from 'typeorm';
+import { FindOptionsWhere, Like } from 'typeorm';
+import { IPaginationOptions, Pagination } from 'nestjs-typeorm-paginate';
+import { GetUsersInputDTO } from 'src/api/dtos/users/get-users.input.dto';
 
 @Injectable()
 export class UsersUseCase {
@@ -13,6 +15,7 @@ export class UsersUseCase {
     private readonly usersService: UsersService,
   ) {}
 
+  // TODO: Rename all methods in use cases starting with find to starting with get
   public async findUser(
     where: FindOptionsWhere<UserEntity>,
     errorMessage?: string,
@@ -31,6 +34,20 @@ export class UsersUseCase {
     errorMessageFn?: (id: UUIDv4) => string,
   ): Promise<UserModel> {
     return this.findUser({ id }, errorMessageFn?.(id) ?? `User (\`${id}\`) not found`);
+  }
+
+  public async findUsers(
+    dto: GetUsersInputDTO,
+    paginationOptions: IPaginationOptions
+  ): Promise<Pagination<UserModel>> {
+    const where: FindOptionsWhere<UserEntity> = {
+      ...(dto.nameLike && { name: Like(`%${dto.nameLike}%`) }),
+    };
+
+    return this.usersService.findManyWithPagination(
+      paginationOptions,
+      where,
+    );
   }
 
   public async checkIfUserExistsByName(name: string) {
