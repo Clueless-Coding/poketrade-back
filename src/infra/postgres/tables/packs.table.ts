@@ -1,7 +1,7 @@
 import { relations } from 'drizzle-orm';
 import { integer, pgTable, text } from 'drizzle-orm/pg-core';
 import { baseColumns } from '../other/base-columns';
-import { pokemons } from './pokemons.table';
+import { packPokemons } from './pack-pokemons.table';
 
 export const packs = pgTable('packs', {
   ...baseColumns,
@@ -16,7 +16,5 @@ export const packs = pgTable('packs', {
 })
 
 export const packsRelations = relations(packs, ({ many }) => ({
-  pokemons: many(pokemons),
+  packPokemons: many(packPokemons),
 }))
-
-export type PackEntity = typeof packs.$inferSelect;

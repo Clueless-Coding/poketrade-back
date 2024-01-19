@@ -22,5 +22,3 @@ export const usersRelations = relations(users, ({ many }) => ({
   openedPacks: many(openedPacks),
   quickSoldItems: many(quickSoldUserItems),
 }))
-
-export type UserEntity = typeof users.$inferSelect;

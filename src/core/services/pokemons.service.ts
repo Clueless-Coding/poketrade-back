@@ -1,43 +1,25 @@
 import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { CreatePokemonEntityFields, PokemonEntity, PokemonModel } from 'src/infra/postgres/entities/pokemon.entity';
-import { FindEntityRelationsOptions } from 'src/infra/postgres/other/types';
-import { DeleteResult, FindOptionsWhere, Repository } from 'typeorm';
+import { NodePgDatabase, NodePgQueryResultHKT } from 'drizzle-orm/node-postgres';
+import { InjectDrizzle } from 'src/infra/postgres/postgres.module';
+import { BaseService } from './base.service';
+import * as tables from 'src/infra/postgres/tables';
+import { PgTransaction } from 'drizzle-orm/pg-core';
+import { ExtractTablesWithRelations } from 'drizzle-orm';
 
 @Injectable()
-export class PokemonsService {
+export class PokemonsService extends BaseService<'pokemons'> {
   public constructor(
-    @InjectRepository(PokemonEntity)
-    private readonly pokemonsRepository: Repository<PokemonEntity>,
-  ) {}
-
-  public async find<
-    T extends FindEntityRelationsOptions<PokemonEntity> = {},
-  >(
-    where?: FindOptionsWhere<PokemonEntity>,
-    relations?: T,
-  ): Promise<Array<PokemonModel<T>>> {
-    return this.pokemonsRepository.find({
-      where,
-      relations
-    }) as Promise<Array<PokemonModel<T>>>;
+    @InjectDrizzle()
+    drizzle: NodePgDatabase<typeof tables>,
+  ) {
+    super('pokemons', drizzle);
   }
 
-  private async create(...fields: Array<CreatePokemonEntityFields>): Promise<Array<PokemonModel>> {
-    const pokemons = this.pokemonsRepository.create(fields);
-
-    return this.pokemonsRepository.save(pokemons) as Promise<Array<PokemonModel>>;
-  }
-
-  public async createOne(fields: CreatePokemonEntityFields): Promise<PokemonModel> {
-    return this.create(fields).then(([pokemon]) => pokemon!);
-  }
-
-  public async createMany(fields: Array<CreatePokemonEntityFields>): Promise<Array<PokemonModel>> {
-    return this.create(...fields);
-  }
-
-  public async deleteAll(): Promise<DeleteResult> {
-    return this.pokemonsRepository.delete({});
+  public async deleteAll(
+    tx?: PgTransaction<NodePgQueryResultHKT, typeof tables, ExtractTablesWithRelations<typeof tables>>,
+  ): Promise<Array<typeof tables['pokemons']['$inferSelect']>> {
+    return (tx ?? this.drizzle)
+      .delete(this.table)
+      .returning();
   }
 }

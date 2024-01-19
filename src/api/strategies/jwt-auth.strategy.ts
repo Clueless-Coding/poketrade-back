@@ -1,16 +1,15 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { UserTokenPayload } from 'src/common/types';
-import { UsersService } from 'src/core/services/users.service';
+import { UsersUseCase } from 'src/core/use-cases/users.use-case';
 import { EnvVariables } from 'src/infra/config/validation';
 
 @Injectable()
 export class JwtAuthStrategy extends PassportStrategy(Strategy) {
   public constructor(
-    // TODO: change it to use case
-    private readonly usersService: UsersService,
+    private readonly usersService: UsersUseCase,
     configService: ConfigService<EnvVariables>,
   ) {
     super({
@@ -23,12 +22,9 @@ export class JwtAuthStrategy extends PassportStrategy(Strategy) {
   }
 
   public async validate(tokenPayload: UserTokenPayload) {
-    const user = await this.usersService.findOne({ id: tokenPayload.id });
-
-    if (!user) {
-      throw new HttpException('Unauthorized', HttpStatus.UNAUTHORIZED);
-    }
-
-    return user;
+    return this.usersService.getUser({ id: tokenPayload.id }, {
+      errorMessage: 'Unauthorized',
+      errorStatus: HttpStatus.UNAUTHORIZED,
+    });
   }
 }

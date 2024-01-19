@@ -5,11 +5,11 @@ import { BaseService } from './base.service';
 import * as tables from 'src/infra/postgres/tables';
 
 @Injectable()
-export class UsersService extends BaseService<'users'> {
+export class UserItemsService extends BaseService<'userItems'> {
   public constructor(
     @InjectDrizzle()
     drizzle: NodePgDatabase<typeof tables>,
   ) {
-    super('users', drizzle);
+    super('userItems', drizzle);
   }
 }

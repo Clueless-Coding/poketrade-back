@@ -21,5 +21,3 @@ export const quickSoldUserItemsRelations = relations(quickSoldUserItems, ({ one 
   user: one(users),
   pokemon: one(pokemons),
 }));
-
-export type QuickSoldUserItemEntity = typeof quickSoldUserItems.$inferSelect;

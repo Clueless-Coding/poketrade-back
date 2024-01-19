@@ -1,6 +1,8 @@
+import { relations } from 'drizzle-orm';
 import { uuid, pgTable, index, primaryKey } from 'drizzle-orm/pg-core';
 import { UUIDv4 } from 'src/common/types';
 import { trades } from './trades.table';
+import { userItems } from './user-items.table';
 
 export const tradeSenderItems = pgTable('trade_sender_items', {
   tradeId: uuid('trade_id')
@@ -17,4 +19,7 @@ export const tradeSenderItems = pgTable('trade_sender_items', {
   userItemIdIdx: index().on(table.userItemId),
 }));
 
-// export type TradeSenderItemEntity = typeof tradeSenderItems.$inferSelect;
+export const tradeSenderItemsRelations = relations(tradeSenderItems, ({ one }) => ({
+  trade: one(trades),
+  userItem: one(userItems),
+}));

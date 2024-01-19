@@ -37,9 +37,9 @@ export class TradesController {
     @User() user: UserModel,
     @Body() dto: CreatePendingTradeInputDTO,
   ) {
-    if (!dto.senderInventoryEntryIds.length && !dto.receiverInventoryEntryIds.length) {
+    if (!dto.senderItemIds.length && !dto.receiverItemIds.length) {
       throw new HttpException(
-        '`senderInventoryEntryIds` and `receiverInventoryEntryIds` cannot be empty simultaneously',
+        '`senderItemIds` and `receiverItemIds` cannot be empty simultaneously',
         HttpStatus.BAD_REQUEST
       );
     }

@@ -29,5 +29,3 @@ export const openedPacksRelations = relations(openedPacks, ({ one }) => ({
   pack: one(packs),
   pokemon: one(pokemons),
 }))
-
-export type OpenedPackEntity = typeof openedPacks.$inferSelect;

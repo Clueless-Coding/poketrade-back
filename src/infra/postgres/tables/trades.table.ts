@@ -40,22 +40,3 @@ export const tradesRelations = relations(trades, ({ one, many }) => ({
 }))
 
 export type TradeStatus = typeof tradeStatusEnum.enumValues[number];
-
-export type PendingTradeEntity = Omit<typeof trades.$inferSelect, 'status'> & {
-  status: typeof tradeStatusEnum.enumValues[0];
-}
-export type CancelledTradeEntity = Omit<typeof trades.$inferSelect, 'status'> & {
-  status: typeof tradeStatusEnum.enumValues[1];
-}
-export type AcceptedTradeEntity = Omit<typeof trades.$inferSelect, 'status'> & {
-  status: typeof tradeStatusEnum.enumValues[2];
-}
-export type RejectedTradeEntity = Omit<typeof trades.$inferSelect, 'status'> & {
-  status: typeof tradeStatusEnum.enumValues[3];
-}
-
-export type TradeEntity =
-  | PendingTradeEntity
-  | CancelledTradeEntity
-  | AcceptedTradeEntity
-  | RejectedTradeEntity

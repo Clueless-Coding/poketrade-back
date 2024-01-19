@@ -1,7 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { PackModel } from 'src/infra/postgres/entities/pack.entity';
-import { PokemonModel } from 'src/infra/postgres/entities/pokemon.entity';
-import { UserModel } from 'src/infra/postgres/entities/user.entity';
+import { UserEntity, PackEntity, PokemonEntity, OpenedPackEntity, Transaction } from 'src/infra/postgres/other/types';
 import { OpenedPacksService } from '../services/opened-packs.service';
 
 @Injectable()
@@ -10,7 +8,27 @@ export class OpenedPacksUseCase {
     private readonly openedPacksService: OpenedPacksService,
   ) {}
 
-  public async openPack(user: UserModel, pack: PackModel, pokemon: PokemonModel) {
-    return this.openedPacksService.createOne({ user, pack, pokemon });
+  public async createOpenedPack(
+    user: UserEntity,
+    pack: PackEntity,
+    pokemon: PokemonEntity,
+    tx?: Transaction,
+  ): Promise<OpenedPackEntity<{
+    user: true,
+    pack: true,
+    pokemon: true,
+  }>> {
+    return this.openedPacksService
+      .createOne({
+        userId: user.id,
+        packId: pack.id,
+        pokemonId: pokemon.id,
+      }, tx)
+      .then((openedPack) => ({
+        ...openedPack,
+        user,
+        pack,
+        pokemon,
+      }))
   }
 }

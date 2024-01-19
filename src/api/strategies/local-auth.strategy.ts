@@ -11,7 +11,10 @@ export class LocalAuthStrategy extends PassportStrategy(Strategy) {
   }
 
   public async validate(username: string, password: string) {
-    const user = await this.usersUseCase.findUser({ name: username });
+    const user = await this.usersUseCase.getUser({ name: username }, {
+      errorMessage: 'Wrong username',
+      errorStatus: HttpStatus.UNAUTHORIZED,
+    });
 
     if (!(await bcrypt.compare(password, user.hashedPassword))) {
       throw new HttpException('Wrong password', HttpStatus.UNAUTHORIZED);

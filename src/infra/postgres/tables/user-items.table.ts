@@ -25,5 +25,3 @@ export const userItemsRelations = relations(userItems, ({ one }) => ({
   user: one(users),
   pokemon: one(pokemons),
 }));
-
-export type UserItemEntity = typeof userItems.$inferSelect;

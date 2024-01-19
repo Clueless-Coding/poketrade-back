@@ -1,95 +1,141 @@
-import { OpenedPackEntity, OpenedPackModel } from "src/infra/postgres/entities/opened-pack.entity";
-import { PackEntity, PackModel } from "src/infra/postgres/entities/pack.entity";
-import { PokemonEntity, PokemonModel } from "src/infra/postgres/entities/pokemon.entity";
-import { UserEntity, UserModel } from "src/infra/postgres/entities/user.entity";
-import { UserInventoryEntryEntity, UserInventoryEntryModel } from "../entities/user-inventory-entry.entity";
-import { BaseEntity as TypeormBaseEntity } from "typeorm";
-import { TradeEntity, TradeModel } from "../entities/trade.entity";
 import { Nullable } from "src/common/types";
-import { PendingTradeEntity, PendingTradeModel } from "../entities/pending-trade.entity";
-import { AcceptedTradeEntity, AcceptedTradeModel } from "../entities/accepted-trade.entity";
-import { CancelledTradeEntity, CancelledTradeModel } from "../entities/cancelled-trade.entity";
-import { RejectedTradeEntity, RejectedTradeModel } from "../entities/rejected-trade.entity";
+import { ExtractTablesWithRelations, FindTableByDBName, One, TableRelationalConfig, TablesRelationalConfig } from "drizzle-orm";
+import { RemovePropertiesWithNever } from "src/common/types";
+import * as tables from '../tables';
+import { PgTransaction } from "drizzle-orm/pg-core";
+import { NodePgQueryResultHKT } from "drizzle-orm/node-postgres";
 
-// NOTE: Add new Entities here
-type EntityToModel<
-  Entity extends TypeormBaseEntity,
-  Relations extends FindEntityRelationsOptions<Entity> = {},
-> =
-  Entity extends UserEntity ? UserModel<Relations>
-  : Entity extends PokemonEntity ? PokemonModel<Relations>
-  : Entity extends PackEntity ? PackModel<Relations>
-  : Entity extends OpenedPackEntity ? OpenedPackModel<Relations>
-  : Entity extends UserInventoryEntryEntity ? UserInventoryEntryModel<Relations>
-  : Entity extends TradeEntity ? TradeModel<Relations>
-  : Entity extends PendingTradeEntity ? PendingTradeModel<Relations>
-  : Entity extends AcceptedTradeEntity ? AcceptedTradeModel<Relations>
-  : Entity extends CancelledTradeEntity ? CancelledTradeModel<Relations>
-  : Entity extends RejectedTradeEntity ? RejectedTradeModel<Relations>
-  : never;
-
-
-type EntityOrArrayOfEntitiesToModel<
-  EntityOrArrayOfEntities extends Array<TypeormBaseEntity> | Nullable<TypeormBaseEntity> | TypeormBaseEntity,
-  Relations = {}
-> =
-  EntityOrArrayOfEntities extends Array<infer ArrayEntity extends TypeormBaseEntity>
-    ? Array<EntityToModel<ArrayEntity, Relations>>
-    : EntityOrArrayOfEntities extends infer Entity extends TypeormBaseEntity
-      ? EntityToModel<Entity, Relations>
-      : EntityOrArrayOfEntities extends Nullable<infer NullableEntity extends TypeormBaseEntity>
-        ? Nullable<EntityToModel<NullableEntity, Relations>>
-        : never
-
-type RemovePropertiesWith<T extends Record<string, unknown>, U> = {
-  [K in keyof T as T[K] extends U ? never : K]: T[K]
-}
-
-export type RemovePropertiesWithNever<T extends Record<string, unknown>> = RemovePropertiesWith<T, never>;
-
-export type FindEntityRelationsOptions<
-  Entity extends TypeormBaseEntity,
-> =
-Partial<RemovePropertiesWithNever<{
-  [K in keyof Entity]:
-    Entity[K] extends Array<infer ArrayEntity extends TypeormBaseEntity>
-      ? true | FindEntityRelationsOptions<ArrayEntity>
-      : Entity[K] extends TypeormBaseEntity
-        ? true | FindEntityRelationsOptions<Entity[K]>
-        : Entity[K] extends Nullable<infer NullableEntity extends TypeormBaseEntity>
-          ? true | FindEntityRelationsOptions<NullableEntity>
-          : never
-}>>;
-
-export type CreateModel<
-  Entity extends TypeormBaseEntity,
-  RelationsOptions extends FindEntityRelationsOptions<Entity>,
-> =
-  & Omit<Entity, keyof FindEntityRelationsOptions<Entity>>
-  & {
-    [K in keyof RelationsOptions]: EntityOrArrayOfEntitiesToModel<
-      // @ts-ignore
-      Entity[Extract<K, keyof Entity>],
-      RelationsOptions[K] extends true
-        ? {}
-        : RelationsOptions[K]
-    >;
-  };
-
-export type CreateEntityFields<
-  Entity extends TypeormBaseEntity,
-  Fields extends keyof Entity,
-  T = Pick<Entity, Fields>,
+export type EntityRelations<
+  TSchema extends TablesRelationalConfig,
+  TTableConfig extends TableRelationalConfig,
 > = {
-  [K in keyof T]: K extends keyof FindEntityRelationsOptions<Entity>
-    ? EntityOrArrayOfEntitiesToModel<
-      // @ts-ignore
-      T[K]
-    >
-    : T[K]
+  [K in keyof TTableConfig['relations']]?:
+    | true
+    | EntityRelations<
+      TSchema,
+      FindTableByDBName<TSchema, TTableConfig['relations'][K]['referencedTableName']>
+    >;
 };
 
-export type UpdateEntityFields<
-  Entity extends TypeormBaseEntity,
-  Fields extends keyof Entity,
-> = Partial<CreateEntityFields<Entity, Fields>>;
+export type Entity<
+  TTableName extends keyof RemovePropertiesWithNever<{
+    [K in keyof ExtractTablesWithRelations<typeof tables>]:
+      'id' extends keyof ExtractTablesWithRelations<typeof tables>[K]['columns']
+        ? K
+        : never
+  }>,
+  TEntityRelations extends EntityRelations<ExtractTablesWithRelations<typeof tables>, ExtractTablesWithRelations<typeof tables>[TTableName]> = {},
+> = typeof tables[TTableName]['$inferSelect'] & {
+  [K in keyof TEntityRelations]:
+    // @ts-ignore
+    ExtractTablesWithRelations<typeof tables>[TTableName]['relations'][K] extends One<string>
+    // TODO: drizzle query with `with` property does leftJoin that's why the field is null
+    // This is a annoying because i have all of my one-to-one many-to-one relations with not null constraint
+    // Find a way to make this less inconvenient
+    ? Nullable<Entity<
+        // @ts-ignore
+        FindTableByDBName<
+          ExtractTablesWithRelations<typeof tables>,
+          ExtractTablesWithRelations<typeof tables>[TTableName]['relations'][K]['referencedTableName']
+        >['tsName'],
+        TEntityRelations[K] extends true ? {} : TEntityRelations[K]
+      >>
+    : Array<Entity<
+        // @ts-ignore
+        FindTableByDBName<
+          ExtractTablesWithRelations<typeof tables>,
+          // @ts-ignore
+          ExtractTablesWithRelations<typeof tables>[TTableName]['relations'][K]['referencedTableName']
+        >['tsName'],
+        TEntityRelations[K] extends true ? {} : TEntityRelations[K]
+      >>
+};
+
+export type UserEntity<
+  TEntityRelations extends EntityRelations<ExtractTablesWithRelations<typeof tables>, ExtractTablesWithRelations<typeof tables>['users']> = {},
+> = Entity<'users', TEntityRelations>;
+export type PokemonEntity<
+  TEntityRelations extends EntityRelations<ExtractTablesWithRelations<typeof tables>, ExtractTablesWithRelations<typeof tables>['pokemons']> = {},
+> = Entity<'pokemons', TEntityRelations>;
+export type PackEntity<
+  TEntityRelations extends EntityRelations<ExtractTablesWithRelations<typeof tables>, ExtractTablesWithRelations<typeof tables>['packs']> = {},
+> = Entity<'packs', TEntityRelations>;
+export type OpenedPackEntity<
+  TEntityRelations extends EntityRelations<ExtractTablesWithRelations<typeof tables>, ExtractTablesWithRelations<typeof tables>['openedPacks']> = {},
+> = Entity<'openedPacks', TEntityRelations>;
+export type UserItemEntity<
+  TEntityRelations extends EntityRelations<ExtractTablesWithRelations<typeof tables>, ExtractTablesWithRelations<typeof tables>['userItems']> = {},
+> = Entity<'userItems', TEntityRelations>;
+export type QuickSoldUserItemEntity<
+  TEntityRelations extends EntityRelations<ExtractTablesWithRelations<typeof tables>, ExtractTablesWithRelations<typeof tables>['quickSoldUserItems']> = {},
+> = Entity<'quickSoldUserItems', TEntityRelations>;
+type _TradeEntity<
+  TEntityRelations extends EntityRelations<ExtractTablesWithRelations<typeof tables>, ExtractTablesWithRelations<typeof tables>['trades']> = {},
+> = Entity<'trades', TEntityRelations>;
+export type PendingTradeEntity<
+  TEntityRelations extends EntityRelations<ExtractTablesWithRelations<typeof tables>, ExtractTablesWithRelations<typeof tables>['trades']> = {},
+> = Omit<_TradeEntity<TEntityRelations>, 'status'> & { status: 'PENDING' };
+export type CancelledTradeEntity<
+  TEntityRelations extends EntityRelations<ExtractTablesWithRelations<typeof tables>, ExtractTablesWithRelations<typeof tables>['trades']> = {},
+> = Omit<_TradeEntity<TEntityRelations>, 'status'> & { status: 'CANCELLED' };
+export type AcceptedTradeEntity<
+  TEntityRelations extends EntityRelations<ExtractTablesWithRelations<typeof tables>, ExtractTablesWithRelations<typeof tables>['trades']> = {},
+> = Omit<_TradeEntity<TEntityRelations>, 'status'> & { status: 'ACCEPTED' };
+export type RejectedTradeEntity<
+  TEntityRelations extends EntityRelations<ExtractTablesWithRelations<typeof tables>, ExtractTablesWithRelations<typeof tables>['trades']> = {},
+> = Omit<_TradeEntity<TEntityRelations>, 'status'> & { status: 'REJECTED' };
+export type TradeEntity<
+  TEntityRelations extends EntityRelations<ExtractTablesWithRelations<typeof tables>, ExtractTablesWithRelations<typeof tables>['trades']> = {},
+> =
+  | PendingTradeEntity<TEntityRelations>
+  | CancelledTradeEntity<TEntityRelations>
+  | AcceptedTradeEntity<TEntityRelations>
+  | RejectedTradeEntity<TEntityRelations>
+
+export type Transaction = PgTransaction<NodePgQueryResultHKT, typeof tables, ExtractTablesWithRelations<typeof tables>>;
+
+type With<
+  TTableName extends keyof ExtractTablesWithRelations<typeof tables>,
+> = {
+  [K in keyof ExtractTablesWithRelations<typeof tables>[TTableName]['relations']]?: true | {
+    with?: With<
+        // @ts-ignore
+        FindTableByDBName<
+          ExtractTablesWithRelations<typeof tables>,
+          // @ts-ignore
+          ExtractTablesWithRelations<typeof tables>[TTableName]['relations'][K]['referencedTableName']
+        >['tsName']
+    >
+  }
+}
+
+// TODO: move it to a separate file
+// TODO: check if it works not only on the type level, but in RUNTIME
+export const entityRelationsToWith = <
+  TTableName extends keyof ExtractTablesWithRelations<typeof tables>,
+>(
+  entityRelations: EntityRelations<ExtractTablesWithRelations<typeof tables>, ExtractTablesWithRelations<typeof tables>[TTableName]>
+): With<TTableName> => {
+  return Object.entries(entityRelations).reduce((acc, [key, value]) => {
+    if (value === true) {
+      return {
+        ...acc,
+        with: {
+          // @ts-ignore
+          ...acc.with,
+          [key]: true,
+        }
+      }
+    } else {
+      return {
+        ...acc,
+        with: {
+          // @ts-ignore
+          ...acc.with,
+          // @ts-ignore
+          [key]: entityRelationsToWith(value),
+        },
+      }
+    }
+  }, {});
+};

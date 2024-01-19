@@ -1,20 +1,15 @@
 import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { CreateOpenedPackEntityFields, OpenedPackEntity, OpenedPackModel } from 'src/infra/postgres/entities/opened-pack.entity';
-import { Repository } from 'typeorm';
+import { NodePgDatabase } from 'drizzle-orm/node-postgres';
+import { InjectDrizzle } from 'src/infra/postgres/postgres.module';
+import { BaseService } from './base.service';
+import * as tables from 'src/infra/postgres/tables';
 
 @Injectable()
-export class OpenedPacksService {
+export class OpenedPacksService extends BaseService<'openedPacks'> {
   public constructor(
-    @InjectRepository(OpenedPackEntity)
-    private readonly openedPacksRepository: Repository<OpenedPackEntity>,
-  ) {}
-
-  public async createOne(
-    fields: CreateOpenedPackEntityFields,
-  ): Promise<OpenedPackModel<{ user: true, pack: true, pokemon: true }>> {
-    const openedPack = this.openedPacksRepository.create(fields);
-
-    return this.openedPacksRepository.save(openedPack);
+    @InjectDrizzle()
+    drizzle: NodePgDatabase<typeof tables>,
+  ) {
+    super('openedPacks', drizzle);
   }
 }

@@ -1,38 +1,43 @@
 import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
+import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { Nullable } from 'src/common/types';
-import { PackEntity, PackModel } from 'src/infra/postgres/entities/pack.entity';
-import { FindEntityRelationsOptions } from 'src/infra/postgres/other/types';
-import { FindOptionsWhere, Repository } from 'typeorm';
+import { PackEntity as PackEntityDrizzle, PokemonEntity as PokemonEntityDrizzle } from 'src/infra/postgres/other/types';
+import { InjectDrizzle } from 'src/infra/postgres/postgres.module';
+import { BaseService } from './base.service';
+import * as tables from 'src/infra/postgres/tables';
+import { packPokemons, pokemons } from 'src/infra/postgres/tables';
+import { eq, sql } from 'drizzle-orm';
 
 @Injectable()
-export class PacksService {
+export class PacksService extends BaseService<'packs'> {
   public constructor(
-    @InjectRepository(PackEntity)
-    private readonly packsRepository: Repository<PackEntity>,
-  ) {}
-
-  public async find<
-    T extends FindEntityRelationsOptions<PackEntity> = {},
-  >(
-    where?: FindOptionsWhere<PackEntity>,
-    relations?: T,
-  ): Promise<Array<PackModel<T>>> {
-    return this.packsRepository.find({
-      where,
-      relations,
-    }) as Promise<Array<PackModel<T>>>;
+    @InjectDrizzle()
+    drizzle: NodePgDatabase<typeof tables>,
+  ) {
+    super('packs', drizzle);
   }
 
-  public async findOne<
-    T extends FindEntityRelationsOptions<PackEntity> = {},
-  >(
-    where?: FindOptionsWhere<PackEntity>,
-    relations?: T,
-  ): Promise<Nullable<PackModel<T>>> {
-    return this.packsRepository.findOne({
-      where,
-      relations,
-    }) as Promise<Nullable<PackModel<T>>>;
+  public async findRandomPokemonFromPack(
+    pack: PackEntityDrizzle
+  ): Promise<Nullable<PokemonEntityDrizzle>> {
+    // TODO: Check the sql of the query
+    // const sqlQuery = this.drizzle
+    //   .select({ pokemon: pokemons })
+    //   .from(this.table)
+    //   .innerJoin(packPokemons, eq(packPokemons.packId, this.table.id))
+    //   .innerJoin(pokemons, eq(pokemons.id, packPokemons.pokemonId))
+    //   .orderBy(sql`random()`)
+    //   .limit(1)
+    //   .getSQL();
+
+    return this.drizzle
+      .select({ pokemon: pokemons })
+      .from(this.table)
+      .innerJoin(packPokemons, eq(packPokemons.packId, this.table.id))
+      .innerJoin(pokemons, eq(pokemons.id, packPokemons.pokemonId))
+      .where(eq(this.table.id, pack.id))
+      .orderBy(sql<number>`random()`)
+      .limit(1)
+      .then(([result]) => result?.pokemon ?? null);
   }
 }

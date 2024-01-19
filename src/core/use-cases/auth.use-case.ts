@@ -4,9 +4,9 @@ import { LoginOutputDTO } from 'src/api/dtos/auth/login.output.dto';
 import { RegisterInputDTO } from 'src/api/dtos/auth/register.input.dto';
 import { RegisterOutputDTO } from 'src/api/dtos/auth/register.output.dto';
 import { JWT, UserTokenPayload } from 'src/common/types';
-import { UserModel } from 'src/infra/postgres/entities/user.entity';
 import { UsersUseCase } from './users.use-case';
 import * as bcrypt from 'bcrypt';
+import { UserEntity } from 'src/infra/postgres/other/types';
 
 @Injectable()
 export class AuthUseCase {
@@ -15,7 +15,7 @@ export class AuthUseCase {
     private readonly usersUseCase: UsersUseCase,
   ) {}
 
-  private async generateAccessToken(user: UserModel): Promise<JWT> {
+  private async generateAccessToken(user: UserEntity): Promise<JWT> {
     const userTokenPayload: UserTokenPayload = {
       id: user.id,
     };
@@ -23,7 +23,7 @@ export class AuthUseCase {
     return this.jwtService.signAsync(userTokenPayload) as Promise<JWT>;
   }
 
-  public async login(user: UserModel): Promise<LoginOutputDTO> {
+  public async login(user: UserEntity): Promise<LoginOutputDTO> {
     const accessToken = await this.generateAccessToken(user);
 
     return { accessToken };
@@ -34,7 +34,7 @@ export class AuthUseCase {
       throw new HttpException('Passwords does not match', HttpStatus.BAD_REQUEST);
     }
 
-    if (await this.usersUseCase.checkIfUserExistsByName(dto.username)) {
+    if (await this.usersUseCase.checkIfUserExists({ name: dto.username })) {
       throw new HttpException('User with this name already exists', HttpStatus.CONFLICT);
     }
 
