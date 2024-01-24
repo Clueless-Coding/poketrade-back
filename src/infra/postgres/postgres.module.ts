@@ -1,16 +1,11 @@
-import { DynamicModule, Inject, Module } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import { EnvVariables } from '../config/validation';
-import { TypeOrmConfigService } from '../config/typeorm';
 import { ConfigModule } from "@nestjs/config";
 import { validate } from '../config/validation';
 import { DrizzlePGModule } from '@knaadh/nestjs-drizzle-pg';
 import * as schema from './tables';
-
-// TODO: move to separate file
-const DRIZZLE_DB_TAG = 'DRIZZLE_DB_TAG';
-export const InjectDrizzle = () => Inject(DRIZZLE_DB_TAG);
+import { DRIZZLE_DB_TAG } from '../consts';
 
 @Module({
   imports: [
@@ -18,10 +13,6 @@ export const InjectDrizzle = () => Inject(DRIZZLE_DB_TAG);
       isGlobal: true,
       envFilePath: '.env',
       validate,
-    }),
-    TypeOrmModule.forRootAsync({
-      inject: [ConfigService<EnvVariables>],
-      useClass: TypeOrmConfigService,
     }),
     DrizzlePGModule.registerAsync({
       tag: DRIZZLE_DB_TAG,
@@ -44,11 +35,4 @@ export const InjectDrizzle = () => Inject(DRIZZLE_DB_TAG);
     })
   ],
 })
-export class PostgresModule {
-  public static forFeature(...args: Parameters<typeof TypeOrmModule.forFeature>): DynamicModule {
-    return {
-      ...TypeOrmModule.forFeature(...args),
-      module: PostgresModule,
-    };
-  }
-}
+export class PostgresModule {}

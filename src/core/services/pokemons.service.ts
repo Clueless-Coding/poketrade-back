@@ -1,25 +1,32 @@
 import { Injectable } from '@nestjs/common';
-import { NodePgDatabase, NodePgQueryResultHKT } from 'drizzle-orm/node-postgres';
-import { InjectDrizzle } from 'src/infra/postgres/postgres.module';
-import { BaseService } from './base.service';
-import * as tables from 'src/infra/postgres/tables';
-import { PgTransaction } from 'drizzle-orm/pg-core';
-import { ExtractTablesWithRelations } from 'drizzle-orm';
+import { Database, Transaction } from 'src/infra/postgres/other/types';
+import { InjectDatabase } from 'src/infra/decorators/inject-database.decorator';
+import { CreatePokemonEntityValues, PokemonEntity, pokemonsTable } from 'src/infra/postgres/tables';
 
 @Injectable()
-export class PokemonsService extends BaseService<'pokemons'> {
+export class PokemonsService {
   public constructor(
-    @InjectDrizzle()
-    drizzle: NodePgDatabase<typeof tables>,
-  ) {
-    super('pokemons', drizzle);
+    @InjectDatabase()
+    private readonly db: Database,
+  ) {}
+
+  public async createMany(
+    values: Array<CreatePokemonEntityValues>,
+    tx?: Transaction,
+  ): Promise<Array<PokemonEntity>> {
+    if (!values.length) return [];
+
+    return (tx ?? this.db)
+      .insert(pokemonsTable)
+      .values(values)
+      .returning()
   }
 
   public async deleteAll(
-    tx?: PgTransaction<NodePgQueryResultHKT, typeof tables, ExtractTablesWithRelations<typeof tables>>,
-  ): Promise<Array<typeof tables['pokemons']['$inferSelect']>> {
-    return (tx ?? this.drizzle)
-      .delete(this.table)
+    tx?: Transaction,
+  ): Promise<Array<PokemonEntity>> {
+    return (tx ?? this.db)
+      .delete(pokemonsTable)
       .returning();
   }
 }

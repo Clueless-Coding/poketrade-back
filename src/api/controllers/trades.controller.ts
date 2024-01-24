@@ -1,15 +1,12 @@
 import { Mapper } from '@automapper/core';
 import { InjectMapper } from '@automapper/nestjs';
-import { Body, Controller, HttpException, HttpStatus, Param, ParseUUIDPipe, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Param, ParseUUIDPipe, Post, UseGuards } from '@nestjs/common';
 import { ApiCreatedResponse, ApiSecurity, ApiTags } from '@nestjs/swagger';
 import { UUIDv4 } from 'src/common/types';
 import { PendingTradesUseCase } from 'src/core/use-cases/pending-trades.use-case';
-import { AcceptedTradeEntity } from 'src/infra/postgres/entities/accepted-trade.entity';
-import { CancelledTradeEntity } from 'src/infra/postgres/entities/cancelled-trade.entity';
-import { PendingTradeEntity } from 'src/infra/postgres/entities/pending-trade.entity';
-import { RejectedTradeEntity } from 'src/infra/postgres/entities/rejected-trade.entity';
-import { UserModel } from 'src/infra/postgres/entities/user.entity';
-import { DataSource } from 'typeorm';
+import { InjectDatabase } from 'src/infra/decorators/inject-database.decorator';
+import { Database } from 'src/infra/postgres/other/types';
+import { AcceptedTradeEntity, CancelledTradeEntity, PendingTradeEntity, RejectedTradeEntity, UserEntity } from 'src/infra/postgres/tables';
 import { User } from '../decorators/user.decorator';
 import { AcceptedTradeOutputDTO } from '../dtos/accepted-trades/accepted-trade.output.dto';
 import { CancelledTradeOuputDTO } from '../dtos/cancelled-trades/cancelled-trade.output.dto';
@@ -24,9 +21,10 @@ export class TradesController {
   public constructor(
     @InjectMapper()
     private readonly mapper: Mapper,
+    @InjectDatabase()
+    private readonly db: Database,
 
     private readonly pendingTradesUseCase: PendingTradesUseCase,
-    private readonly dataSource: DataSource,
   ) {}
 
   @ApiCreatedResponse({ type: PendingTradeOutputDTO })
@@ -34,19 +32,19 @@ export class TradesController {
   @Post()
   @UseGuards(JwtAuthGuard)
   public async createPendingTrade(
-    @User() user: UserModel,
+    @User() user: UserEntity,
     @Body() dto: CreatePendingTradeInputDTO,
   ) {
-    if (!dto.senderItemIds.length && !dto.receiverItemIds.length) {
-      throw new HttpException(
-        '`senderItemIds` and `receiverItemIds` cannot be empty simultaneously',
-        HttpStatus.BAD_REQUEST
-      );
-    }
+    // TODO: Return `tradesToSenderItems` and `tradesToReceiverItems` to the client
+    const { pendingTrade, tradesToSenderItems, tradesToReceiverItems } = await this.db.transaction(async (tx) => (
+      this.pendingTradesUseCase.createPendingTrade(user, dto, tx)
+    ));
 
-    const pendingTrade = await this.pendingTradesUseCase.createPendingTrade(user, dto);
-
-    return this.mapper.map(pendingTrade, PendingTradeEntity, PendingTradeOutputDTO);
+    return this.mapper.map<PendingTradeEntity, PendingTradeOutputDTO>(
+      pendingTrade,
+      'PendingTradeEntity',
+      'PendingTradeOutputDTO',
+    );
   }
 
   @ApiCreatedResponse({ type: AcceptedTradeOutputDTO })
@@ -54,12 +52,18 @@ export class TradesController {
   @Post(':id/accept')
   @UseGuards(JwtAuthGuard)
   public async acceptPendingTradeById(
-    @User() user: UserModel,
+    @User() user: UserEntity,
     @Param('id', new ParseUUIDPipe({ version: '4' })) id: UUIDv4,
   ) {
-    const acceptedTrade = await this.pendingTradesUseCase.acceptPendingTradeById(user, id, this.dataSource);
+    const acceptedTrade = await this.db.transaction(async (tx) => (
+      this.pendingTradesUseCase.acceptPendingTradeById(user, id, tx)
+    ));
 
-    return this.mapper.map(acceptedTrade, AcceptedTradeEntity, AcceptedTradeOutputDTO);
+    return this.mapper.map<AcceptedTradeEntity, AcceptedTradeOutputDTO>(
+      acceptedTrade,
+      'AcceptedTradeEntity',
+      'AcceptedTradeOutputDTO',
+    );
   }
 
   @ApiCreatedResponse({ type: CancelledTradeOuputDTO })
@@ -67,12 +71,18 @@ export class TradesController {
   @Post(':id/cancel')
   @UseGuards(JwtAuthGuard)
   public async cancelPendingTradeById(
-    @User() user: UserModel,
+    @User() user: UserEntity,
     @Param('id', new ParseUUIDPipe({ version: '4' })) id: UUIDv4,
   ) {
-    const cancelledTrade = await this.pendingTradesUseCase.cancelPendingTradeById(user, id, this.dataSource);
+    const cancelledTrade = await this.db.transaction(async (tx) => (
+      this.pendingTradesUseCase.cancelPendingTradeById(user, id, tx)
+    ));
 
-    return this.mapper.map(cancelledTrade, CancelledTradeEntity, CancelledTradeOuputDTO);
+    return this.mapper.map<CancelledTradeEntity, CancelledTradeOuputDTO>(
+      cancelledTrade,
+      'CancelledTradeEntity',
+      'CancelledTradeOuputDTO',
+    );
   }
 
   @ApiCreatedResponse({ type: RejectedTradeOutputDTO })
@@ -80,11 +90,17 @@ export class TradesController {
   @Post(':id/reject')
   @UseGuards(JwtAuthGuard)
   public async rejectPendingTradeById(
-    @User() user: UserModel,
+    @User() user: UserEntity,
     @Param('id', new ParseUUIDPipe({ version: '4' })) id: UUIDv4,
   ) {
-    const rejectedTrade = await this.pendingTradesUseCase.rejectPendingTradeById(user, id, this.dataSource);
+    const rejectedTrade = await this.db.transaction(async (tx) => (
+      this.pendingTradesUseCase.rejectPendingTradeById(user, id, tx)
+    ));
 
-    return this.mapper.map(rejectedTrade, RejectedTradeEntity, RejectedTradeOutputDTO);
+    return this.mapper.map<RejectedTradeEntity, RejectedTradeOutputDTO>(
+      rejectedTrade,
+      'RejectedTradeEntity',
+      'RejectedTradeOutputDTO'
+    );
   }
 }

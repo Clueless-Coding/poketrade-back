@@ -1,108 +1,80 @@
 import { Injectable } from '@nestjs/common';
-import { NodePgDatabase } from 'drizzle-orm/node-postgres';
-import { InjectDrizzle } from 'src/infra/postgres/postgres.module';
-import * as tables from 'src/infra/postgres/tables';
-import { BaseService } from './base.service';
-import { PgInsertValue } from 'drizzle-orm/pg-core';
-import {
-  TradeEntity as TradeEntityDrizzle,
-  Transaction,
-  UserItemEntity as UserItemEntityDrizzle,
-  PendingTradeEntity as PendingTradeEntityDrizzle,
-  CancelledTradeEntity as CancelledTradeEntityDrizzle,
-  AcceptedTradeEntity as AcceptedTradeEntityDrizzle,
-  RejectedTradeEntity as RejectedTradeEntityDrizzle,
-  EntityRelations,
-} from 'src/infra/postgres/other/types';
-import { tradeReceiverItems, tradeSenderItems } from 'src/infra/postgres/tables';
-import { ExtractTablesWithRelations } from 'drizzle-orm';
+import { Database } from 'src/infra/postgres/other/types';
+import { tradesTable, usersTable, TradeEntity, TradeStatus } from 'src/infra/postgres/tables';
+import { InjectDatabase } from 'src/infra/decorators/inject-database.decorator';
+import { and, eq, inArray, SQL } from 'drizzle-orm';
+import { Nullable, Optional, UUIDv4 } from 'src/common/types';
+import { alias } from 'drizzle-orm/pg-core';
 
+type Where = Partial<{
+  id: UUIDv4,
+  ids: Array<UUIDv4>
+  status: TradeStatus,
+}>
+
+type FindOptions = Partial<{
+  where: Where,
+}>
 
 @Injectable()
-export class TradesService extends BaseService<'trades'> {
+export class TradesService {
   public constructor(
-    @InjectDrizzle()
-    drizzle: NodePgDatabase<typeof tables>,
+    @InjectDatabase()
+    private readonly db: Database,
+  ) {}
+
+  private mapWhereToSQL(
+    where: Where,
+  ): Optional<SQL> {
+    return and(
+      where.id !== undefined
+        ? eq(tradesTable.id, where.id)
+        : undefined,
+      where.ids !== undefined
+        ? inArray(tradesTable.id, where.ids)
+        : undefined,
+      where.status !== undefined
+        ? eq(tradesTable.status, where.status)
+        : undefined,
+    );
+  }
+
+  public mapSelectBuilderRowToEntity(
+    row: Record<'trades' | 'senders' | 'receivers', any>,
   ) {
-    super('trades', drizzle);
-  }
-
-  public override async createOne(
-    values: PgInsertValue<typeof tables['trades']> & {
-      senderItems: Array<UserItemEntityDrizzle>,
-      receiverItems: Array<UserItemEntityDrizzle>,
-    },
-    tx?: Transaction,
-  ): Promise<TradeEntityDrizzle<{ senderItems: true, receiverItems: true }>> {
-    const trade = await super.createOne(values, tx);
-
-    const [senderItems, receiverItems] = await Promise.all([
-      (tx ?? super.drizzle)
-        .insert(tradeSenderItems)
-        .values(values.senderItems.map((senderItem) => ({
-          tradeId: trade.id,
-          userItemId: senderItem.id,
-        })))
-        .returning(),
-      (tx ?? super.drizzle)
-        .insert(tradeReceiverItems)
-        .values(values.receiverItems.map((receiverItem) => ({
-          tradeId: trade.id,
-          userItemId: receiverItem.id,
-        })))
-        .returning(),
-    ]);
-
     return {
-      ...trade,
-      senderItems,
-      receiverItems,
-    };
+      ...row.trades,
+      sender: row.senders,
+      receiver: row.receivers,
+    }
   }
 
-  public async createOnePending(
-    values: Omit<PgInsertValue<typeof tables['trades']> & {
-      senderItems: Array<UserItemEntityDrizzle>,
-      receiverItems: Array<UserItemEntityDrizzle>,
-    }, 'status'>,
-    tx?: Transaction,
-  ): Promise<PendingTradeEntityDrizzle<{ senderItems: true, receiverItems: true }>> {
-    return this.createOne({
-      ...values,
-      status: 'PENDING',
-    }, tx) as Promise<PendingTradeEntityDrizzle<{ senderItems: true, receiverItems: true }>>;
+  private baseSelectBuilder(
+    findOptions: FindOptions,
+  ) {
+    const { where = {} } = findOptions;
+
+    const sendersTable = alias(usersTable, 'senders');
+    const receiversTable = alias(usersTable, 'receivers');
+
+    return this.db
+      .select()
+      .from(tradesTable)
+      .innerJoin(sendersTable, eq(sendersTable.id, tradesTable.senderId))
+      .innerJoin(receiversTable, eq(receiversTable.id, tradesTable.receiverId))
+      .where(this.mapWhereToSQL(where));
   }
 
-  public async updateOneToCancelled<
-    TEntityRelations extends EntityRelations<ExtractTablesWithRelations<typeof tables>, ExtractTablesWithRelations<typeof tables>['trades']>,
-  >(
-    pendingTrade: PendingTradeEntityDrizzle<TEntityRelations>,
-    tx?: Transaction,
-  ): Promise<CancelledTradeEntityDrizzle<TEntityRelations>> {
-    return super.updateOne(pendingTrade, {
-      status: 'CANCELLED',
-    }, tx) as Promise<CancelledTradeEntityDrizzle<TEntityRelations>>;
-  }
-
-  public async updateOneToAccepted<
-    TEntityRelations extends EntityRelations<ExtractTablesWithRelations<typeof tables>, ExtractTablesWithRelations<typeof tables>['trades']>,
-  >(
-    pendingTrade: PendingTradeEntityDrizzle<TEntityRelations>,
-    tx?: Transaction,
-  ): Promise<AcceptedTradeEntityDrizzle<TEntityRelations>> {
-    return super.updateOne(pendingTrade, {
-      status: 'ACCEPTED',
-    }, tx) as Promise<AcceptedTradeEntityDrizzle<TEntityRelations>>;
-  }
-
-  public async updateOneToRejected<
-    TEntityRelations extends EntityRelations<ExtractTablesWithRelations<typeof tables>, ExtractTablesWithRelations<typeof tables>['trades']>,
-  >(
-    pendingTrade: PendingTradeEntityDrizzle<TEntityRelations>,
-    tx?: Transaction,
-  ): Promise<RejectedTradeEntityDrizzle<TEntityRelations>> {
-    return super.updateOne(pendingTrade, {
-      status: 'REJECTED',
-    }, tx) as Promise<RejectedTradeEntityDrizzle<TEntityRelations>>;
+  public async findOne(
+    findOptions: FindOptions,
+  ): Promise<Nullable<TradeEntity>> {
+    return this
+      .baseSelectBuilder(findOptions)
+      .limit(1)
+      .then(([row]) => (
+        row
+        ? this.mapSelectBuilderRowToEntity(row)
+        : null
+      ));
   }
 }

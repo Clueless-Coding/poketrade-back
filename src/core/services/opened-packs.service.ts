@@ -1,15 +1,35 @@
 import { Injectable } from '@nestjs/common';
-import { NodePgDatabase } from 'drizzle-orm/node-postgres';
-import { InjectDrizzle } from 'src/infra/postgres/postgres.module';
-import { BaseService } from './base.service';
-import * as tables from 'src/infra/postgres/tables';
+import { Database, Transaction } from 'src/infra/postgres/other/types';
+import { InjectDatabase } from 'src/infra/decorators/inject-database.decorator';
+import { CreateOpenedPackEntityValues, OpenedPackEntity, openedPacksTable } from 'src/infra/postgres/tables';
 
 @Injectable()
-export class OpenedPacksService extends BaseService<'openedPacks'> {
+export class OpenedPacksService {
   public constructor(
-    @InjectDrizzle()
-    drizzle: NodePgDatabase<typeof tables>,
-  ) {
-    super('openedPacks', drizzle);
+    @InjectDatabase()
+    private readonly db: Database,
+  ) {}
+
+  public async createOne(
+    values: CreateOpenedPackEntityValues,
+    tx?: Transaction,
+  ): Promise<OpenedPackEntity> {
+    const { user, pack, pokemon } = values;
+
+    return (tx ?? this.db)
+      .insert(openedPacksTable)
+      .values({
+        ...values,
+        userId: user.id,
+        packId: pack.id,
+        pokemonId: pokemon.id,
+      })
+      .returning()
+      .then(([openedPack]) => ({
+        ...openedPack!,
+        user,
+        pack,
+        pokemon,
+      }));
   }
 }

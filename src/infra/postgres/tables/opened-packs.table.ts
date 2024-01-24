@@ -1,12 +1,12 @@
 import { uuid, pgTable, integer, timestamp } from 'drizzle-orm/pg-core';
 import { baseIdColumn } from '../other/base-columns';
-import { users } from './users.table';
-import { packs } from './packs.table';
-import { pokemons } from './pokemons.table';
+import { UserEntity, usersTable } from './users.table';
+import { PackEntity, packsTable } from './packs.table';
+import { PokemonEntity, pokemonsTable } from './pokemons.table';
 import { UUIDv4 } from 'src/common/types';
 import { relations } from 'drizzle-orm';
 
-export const openedPacks = pgTable('opened_packs', {
+export const openedPacksTable = pgTable('opened_packs', {
   ...baseIdColumn,
   openedAt: timestamp('opened_at', { withTimezone: true })
     .notNull()
@@ -14,18 +14,38 @@ export const openedPacks = pgTable('opened_packs', {
   userId: uuid('user_id')
     .$type<UUIDv4>()
     .notNull()
-    .references(() => users.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
+    .references(() => usersTable.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
   packId: uuid('pack_id')
     .$type<UUIDv4>()
     .notNull()
-    .references(() => packs.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
+    .references(() => packsTable.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
   pokemonId: integer('pokemon_id')
     .notNull()
-    .references(() => pokemons.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
+    .references(() => pokemonsTable.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
 })
 
-export const openedPacksRelations = relations(openedPacks, ({ one }) => ({
-  user: one(users),
-  pack: one(packs),
-  pokemon: one(pokemons),
+export const openedPacksTableRelations = relations(openedPacksTable, ({ one }) => ({
+  user: one(usersTable, {
+    fields: [openedPacksTable.userId],
+    references: [usersTable.id],
+  }),
+  pack: one(packsTable, {
+    fields: [openedPacksTable.packId],
+    references: [packsTable.id],
+  }),
+  pokemon: one(pokemonsTable, {
+    fields: [openedPacksTable.pokemonId],
+    references: [pokemonsTable.id],
+  }),
 }))
+
+export type OpenedPackEntity = typeof openedPacksTable.$inferSelect & {
+  user: UserEntity,
+  pack: PackEntity,
+  pokemon: PokemonEntity,
+}
+export type CreateOpenedPackEntityValues = Omit<typeof openedPacksTable.$inferInsert, 'id' | 'openedAt' | 'userId' | 'packId' | 'pokemonId'> & {
+  user: UserEntity,
+  pack: PackEntity,
+  pokemon: PokemonEntity,
+}

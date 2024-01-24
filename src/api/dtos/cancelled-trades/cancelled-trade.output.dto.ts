@@ -1,9 +1,15 @@
-import { AutoMap } from '@automapper/classes';
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, OmitType } from '@nestjs/swagger';
 import { TradeOutputDTO } from '../trades/trade.output.dto';
 
-export class CancelledTradeOuputDTO extends TradeOutputDTO {
+export class CancelledTradeOuputDTO extends OmitType(TradeOutputDTO, [
+  'status',
+  'cancelledAt',
+  'acceptedAt',
+  'rejectedAt',
+]) {
   @ApiProperty()
-  @AutoMap()
+  status: 'CANCELLED';
+
+  @ApiProperty()
   cancelledAt: Date;
 }

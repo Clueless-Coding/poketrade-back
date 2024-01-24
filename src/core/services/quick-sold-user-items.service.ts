@@ -1,15 +1,34 @@
 import { Injectable } from '@nestjs/common';
-import { NodePgDatabase } from 'drizzle-orm/node-postgres';
-import { InjectDrizzle } from 'src/infra/postgres/postgres.module';
-import { BaseService } from './base.service';
-import * as tables from 'src/infra/postgres/tables';
+import { Database, Transaction } from 'src/infra/postgres/other/types';
+import { InjectDatabase } from 'src/infra/decorators/inject-database.decorator';
+import { QuickSoldUserItemEntity, quickSoldUserItemsTable, UserItemEntity } from 'src/infra/postgres/tables';
+import { UserItemsService } from './user-items.service';
 
 @Injectable()
-export class QuickSoldUserItemsService extends BaseService<'quickSoldUserItems'> {
+export class QuickSoldUserItemsService {
   public constructor(
-    @InjectDrizzle()
-    drizzle: NodePgDatabase<typeof tables>,
-  ) {
-    super('quickSoldUserItems', drizzle);
+    @InjectDatabase()
+    private readonly db: Database,
+
+    private readonly userItemsService: UserItemsService,
+  ) {}
+
+  public async createOne(
+    userItem: UserItemEntity,
+    tx?: Transaction,
+  ): Promise<QuickSoldUserItemEntity> {
+    const { user, pokemon } = userItem;
+
+    await this.userItemsService.deleteOne(userItem, tx);
+
+    return (tx ?? this.db)
+      .insert(quickSoldUserItemsTable)
+      .values(userItem)
+      .returning()
+      .then(([quickSoldUserItem]) => ({
+        ...quickSoldUserItem!,
+        user,
+        pokemon,
+      }))
   }
 }

@@ -142,9 +142,9 @@
         ]
       }
     },
-    "/api/users/me/inventory": {
+    "/api/users/me/items": {
       "get": {
-        "operationId": "UsersController_getMeInventory",
+        "operationId": "UsersController_getMeItems",
         "parameters": [
           {
             "name": "page",
@@ -176,7 +176,7 @@
                     "items": {
                       "type": "array",
                       "items": {
-                        "$ref": "#/components/schemas/UserInventoryEntryOutputDTO"
+                        "$ref": "#/components/schemas/UserItemOutputDTO"
                       }
                     },
                     "meta": {
@@ -226,9 +226,9 @@
         ]
       }
     },
-    "/api/users/me/inventory/{id}/quick-sell": {
+    "/api/users/me/items/{id}/quick-sell": {
       "post": {
-        "operationId": "UsersController_quickSellPokemonFromInventory",
+        "operationId": "UsersController_quickSellUserItem",
         "parameters": [
           {
             "name": "id",
@@ -245,7 +245,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/QuickSoldUserInventoryEntryOutputDTO"
+                  "$ref": "#/components/schemas/QuickSoldUserItemOutputDTO"
                 }
               }
             }
@@ -264,7 +264,50 @@
     "/api/packs": {
       "get": {
         "operationId": "PacksController_getPacks",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "id",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "name",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "nameLike",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 10,
+              "type": "number"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "",
@@ -634,7 +677,7 @@
           "image"
         ]
       },
-      "UserInventoryEntryOutputDTO": {
+      "UserItemOutputDTO": {
         "type": "object",
         "properties": {
           "id": {
@@ -654,33 +697,29 @@
           "pokemon"
         ]
       },
-      "QuickSoldUserInventoryEntryOutputDTO": {
+      "QuickSoldUserItemOutputDTO": {
         "type": "object",
         "properties": {
           "id": {
-            "type": "string"
-          },
-          "soldAt": {
-            "format": "date-time",
             "type": "string"
           },
           "receivedAt": {
             "format": "date-time",
             "type": "string"
           },
-          "user": {
-            "$ref": "#/components/schemas/UserOutputDTO"
-          },
           "pokemon": {
             "$ref": "#/components/schemas/PokemonOutputDTO"
+          },
+          "soldAt": {
+            "format": "date-time",
+            "type": "string"
           }
         },
         "required": [
           "id",
-          "soldAt",
           "receivedAt",
-          "user",
-          "pokemon"
+          "pokemon",
+          "soldAt"
         ]
       },
       "PackOutputDTO": {
@@ -775,7 +814,7 @@
       "CreatePendingTradeInputDTO": {
         "type": "object",
         "properties": {
-          "senderInventoryEntryIds": {
+          "senderItemIds": {
             "type": "array",
             "items": {
               "type": "string"
@@ -784,7 +823,7 @@
           "receiverId": {
             "type": "string"
           },
-          "receiverInventoryEntryIds": {
+          "receiverItemIds": {
             "type": "array",
             "items": {
               "type": "string"
@@ -792,9 +831,9 @@
           }
         },
         "required": [
-          "senderInventoryEntryIds",
+          "senderItemIds",
           "receiverId",
-          "receiverInventoryEntryIds"
+          "receiverItemIds"
         ]
       },
       "PendingTradeOutputDTO": {
@@ -811,37 +850,23 @@
             "format": "date-time",
             "type": "string"
           },
-          "status": {
-            "type": "string"
-          },
           "sender": {
             "$ref": "#/components/schemas/UserOutputDTO"
-          },
-          "senderInventoryEntries": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/UserInventoryEntryOutputDTO"
-            }
           },
           "receiver": {
             "$ref": "#/components/schemas/UserOutputDTO"
           },
-          "receiverInventoryEntries": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/UserInventoryEntryOutputDTO"
-            }
+          "status": {
+            "type": "string"
           }
         },
         "required": [
           "id",
           "createdAt",
           "updatedAt",
-          "status",
           "sender",
-          "senderInventoryEntries",
           "receiver",
-          "receiverInventoryEntries"
+          "status"
         ]
       },
       "AcceptedTradeOutputDTO": {
@@ -858,26 +883,14 @@
             "format": "date-time",
             "type": "string"
           },
-          "status": {
-            "type": "string"
-          },
           "sender": {
             "$ref": "#/components/schemas/UserOutputDTO"
-          },
-          "senderInventoryEntries": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/UserInventoryEntryOutputDTO"
-            }
           },
           "receiver": {
             "$ref": "#/components/schemas/UserOutputDTO"
           },
-          "receiverInventoryEntries": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/UserInventoryEntryOutputDTO"
-            }
+          "status": {
+            "type": "string"
           },
           "acceptedAt": {
             "format": "date-time",
@@ -888,11 +901,9 @@
           "id",
           "createdAt",
           "updatedAt",
-          "status",
           "sender",
-          "senderInventoryEntries",
           "receiver",
-          "receiverInventoryEntries",
+          "status",
           "acceptedAt"
         ]
       },
@@ -910,26 +921,14 @@
             "format": "date-time",
             "type": "string"
           },
-          "status": {
-            "type": "string"
-          },
           "sender": {
             "$ref": "#/components/schemas/UserOutputDTO"
-          },
-          "senderInventoryEntries": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/UserInventoryEntryOutputDTO"
-            }
           },
           "receiver": {
             "$ref": "#/components/schemas/UserOutputDTO"
           },
-          "receiverInventoryEntries": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/UserInventoryEntryOutputDTO"
-            }
+          "status": {
+            "type": "string"
           },
           "cancelledAt": {
             "format": "date-time",
@@ -940,11 +939,9 @@
           "id",
           "createdAt",
           "updatedAt",
-          "status",
           "sender",
-          "senderInventoryEntries",
           "receiver",
-          "receiverInventoryEntries",
+          "status",
           "cancelledAt"
         ]
       },
@@ -962,26 +959,14 @@
             "format": "date-time",
             "type": "string"
           },
-          "status": {
-            "type": "string"
-          },
           "sender": {
             "$ref": "#/components/schemas/UserOutputDTO"
-          },
-          "senderInventoryEntries": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/UserInventoryEntryOutputDTO"
-            }
           },
           "receiver": {
             "$ref": "#/components/schemas/UserOutputDTO"
           },
-          "receiverInventoryEntries": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/UserInventoryEntryOutputDTO"
-            }
+          "status": {
+            "type": "string"
           },
           "rejectedAt": {
             "format": "date-time",
@@ -992,11 +977,9 @@
           "id",
           "createdAt",
           "updatedAt",
-          "status",
           "sender",
-          "senderInventoryEntries",
           "receiver",
-          "receiverInventoryEntries",
+          "status",
           "rejectedAt"
         ]
       }

@@ -1,49 +1,35 @@
 import { Module } from '@nestjs/common';
 import { TradesService } from 'src/core/services/trades.service';
 import { TradesUseCase } from 'src/core/use-cases/trades.use-case';
-import { TradeEntity } from '../postgres/entities/trade.entity';
 import { PostgresModule } from '../postgres/postgres.module';
 import { UsersModule } from './users.module';
-import { UserInventoryEntriesModule } from './user-inventory-entries.module';
-import { PendingTradeEntity } from '../postgres/entities/pending-trade.entity';
-import { AcceptedTradeEntity } from '../postgres/entities/accepted-trade.entity';
+import { UserItemsModule } from './user-items.module';
 import { PendingTradesUseCase } from 'src/core/use-cases/pending-trades.use-case';
 import { PendingTradesService } from 'src/core/services/pending-trades.service';
-import { AcceptedTradesService } from 'src/core/services/accepted-trades.service';
-import { CancelledTradesService } from 'src/core/services/cancelled-trades.service';
-import { CancelledTradeEntity } from '../postgres/entities/cancelled-trade.entity';
-import { RejectedTradeEntity } from '../postgres/entities/rejected-trade.entity';
-import { RejectedTradesService } from 'src/core/services/rejected-trades.service';
+import { TradesToSenderItemsService } from 'src/core/services/trades-to-sender-items.service';
+import { TradesToReceiverItemsService } from 'src/core/services/trades-to-receiver-items.service';
 
 @Module({
   imports: [
-    PostgresModule.forFeature([
-      TradeEntity,
-      PendingTradeEntity,
-      AcceptedTradeEntity,
-      CancelledTradeEntity,
-      RejectedTradeEntity,
-    ]),
+    PostgresModule,
     UsersModule,
-    UserInventoryEntriesModule,
+    UserItemsModule,
   ],
   providers: [
     TradesUseCase,
     TradesService,
-    PendingTradesUseCase,
+    TradesToSenderItemsService,
+    TradesToReceiverItemsService,
     PendingTradesService,
-    AcceptedTradesService,
-    CancelledTradesService,
-    RejectedTradesService,
+    PendingTradesUseCase,
   ],
   exports: [
     TradesUseCase,
     TradesService,
-    PendingTradesUseCase,
+    TradesToSenderItemsService,
+    TradesToReceiverItemsService,
     PendingTradesService,
-    AcceptedTradesService,
-    CancelledTradesService,
-    RejectedTradesService,
+    PendingTradesUseCase,
   ],
 })
 export class TradesModule {}

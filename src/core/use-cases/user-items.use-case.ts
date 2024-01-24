@@ -1,36 +1,36 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { and, eq, ExtractTablesWithRelations, inArray } from 'drizzle-orm';
-import { UUIDv4 } from 'src/common/types';
-import { UserItemEntity, UserEntity, PokemonEntity, Transaction, EntityRelations } from 'src/infra/postgres/other/types';
+import { PaginationInputDTO } from 'src/api/dtos/pagination.input.dto';
+import { GetUserItemsInputDTO } from 'src/api/dtos/user-items/get-user-items.input.dto';
+import { PaginatedArray, UUIDv4 } from 'src/common/types';
+import { Transaction } from 'src/infra/postgres/other/types';
+import { PokemonEntity, QuickSoldUserItemEntity, UserEntity, UserItemEntity } from 'src/infra/postgres/tables';
+import { QuickSoldUserItemsService } from '../services/quick-sold-user-items.service';
 import { UserItemsService } from '../services/user-items.service';
-import { QuickSoldUserItemsUseCase } from './quick-sold-user-items.use-case';
 import { UsersUseCase } from './users.use-case';
-import * as tables from 'src/infra/postgres/tables';
-
 
 @Injectable()
 export class UserItemsUseCase {
   public constructor(
     private readonly userItemsService: UserItemsService,
+    private readonly quickSoldUserItemsService: QuickSoldUserItemsService,
 
     private readonly usersUseCase: UsersUseCase,
-    private readonly quickSoldUserItemsUseCase: QuickSoldUserItemsUseCase,
   ) {}
 
   public async getUserItem(
-    where: Partial<{ id: UUIDv4 }> = {},
-    errorMessage: string = 'User item not found',
-    errorStatus: HttpStatus = HttpStatus.NOT_FOUND,
-  ): Promise<UserItemEntity<{ user: true, pokemon: true }>> {
+    where: Partial<{ id: UUIDv4, user: UserEntity }> = {},
+    options: Partial<{
+      errorMessage: string,
+      errorStatus: HttpStatus,
+    }> = {},
+  ): Promise<UserItemEntity> {
+    const {
+      errorMessage = 'User item not found',
+      errorStatus = HttpStatus.NOT_FOUND,
+    } = options;
+
     const userItem = await this.userItemsService.findOne({
-      where: (table) => and(
-        // TODO: Maybe there is a better way to do that
-        ...(where.id ? [eq(table.id, where.id)] : []),
-      ),
-      with: {
-        user: true,
-        pokemon: true,
-      }
+      where
     });
 
     if (!userItem) {
@@ -42,37 +42,55 @@ export class UserItemsUseCase {
 
   public async getUserItemById(
     id: UUIDv4,
-    errorMessageFn: (id: UUIDv4) => string = (id) => `User item (\`${id}\`) not found`,
-    errorStatus: HttpStatus = HttpStatus.NOT_FOUND,
-  ): Promise<UserItemEntity<{ user: true, pokemon: true }>> {
-    return this.getUserItem({ id }, errorMessageFn(id), errorStatus)
+    options: Partial<{
+      errorMessageFn: (id: UUIDv4) => string,
+      errorStatus: HttpStatus,
+    }> = {},
+  ): Promise<UserItemEntity> {
+    const {
+      errorMessageFn = (id) => `User item (\`${id}\`) not found`,
+      errorStatus = HttpStatus.NOT_FOUND,
+    } = options;
+
+    return this.getUserItem({ id }, {
+      errorMessage: errorMessageFn(id),
+      errorStatus,
+    });
   }
 
-  // public async findManyUserItems(
-  //   where: Partial<{ id: UUIDv4 }> = {},
-  // ): Promise<Array<UserItemEntity<{ user: true, pokemon: true }>>> {
-  //   return this.userItemsService.findMany({
-  //     where: (table) => and(
-  //       ...(where.id ? [eq(table.id, where.id)] : []),
-  //     ),
-  //     with: {
-  //       user: true,
-  //       pokemon: true,
-  //     }
-  //   });
-  // }
+  public async getUserItemsWithPagination(
+    dto: GetUserItemsInputDTO,
+    paginationDTO: PaginationInputDTO,
+  ): Promise<PaginatedArray<UserItemEntity>> {
+    return this.userItemsService.findManyWithPagination({
+      paginationOptions: paginationDTO,
+      where: dto,
+    });
+  }
+
+  public async getUserItemsWithPaginationByUser(
+    user: UserEntity,
+    paginationDTO: PaginationInputDTO,
+  ): Promise<PaginatedArray<UserItemEntity>> {
+    return this.getUserItemsWithPagination({ userId: user.id }, paginationDTO);
+  }
 
   public async getUserItemsByIds(
     ids: Array<UUIDv4>,
-    errorMessageFn: (id: UUIDv4) => string = (id) => `User item (\`${id}\`) not found`,
-    errorStatus: HttpStatus = HttpStatus.NOT_FOUND,
-  ): Promise<Array<UserItemEntity<{ user: true, pokemon: true }>>> {
+    options: Partial<{
+      errorMessageFn: (id: UUIDv4) => string,
+      errorStatus: HttpStatus,
+    }>
+  ): Promise<Array<UserItemEntity>> {
+    if (!ids.length) return [];
+
+    const {
+      errorMessageFn = (id) => `User item (\`${id}\`) not found`,
+      errorStatus = HttpStatus.NOT_FOUND,
+    } = options;
+
     const userItems = await this.userItemsService.findMany({
-      where: (table) => inArray(table.id, ids),
-      with: {
-        user: true,
-        pokemon: true,
-      }
+      where: { ids }
     });
 
     for (const id of ids) {
@@ -90,74 +108,60 @@ export class UserItemsUseCase {
     user: UserEntity,
     pokemon: PokemonEntity,
     tx?: Transaction,
-  ): Promise<UserItemEntity<{ user: true, pokemon: true }>> {
-    return this.userItemsService
-      .createOne({
-        userId: user.id,
-        pokemonId: pokemon.id,
-      }, tx)
-      .then((userItem) => ({
-        ...userItem,
-        user,
-        pokemon,
-      }));
+  ): Promise<UserItemEntity> {
+    return this.userItemsService.createOne({ user, pokemon }, tx);
   }
 
   public async transferUserItemsToAnotherUser(
     fromUserItems: Array<UserItemEntity>,
     toUser: UserEntity,
     tx?: Transaction,
-  ) {
+  ): Promise<Array<UserItemEntity>> {
     if (!fromUserItems.length) return [];
 
-    const set = new Set<UUIDv4>(fromUserItems.map(({ id }) => id));
+    const set = new Set<UUIDv4>(fromUserItems.map(({ userId }) => userId));
     if (set.size > 1) {
       throw new HttpException('All of the items must have the same user', HttpStatus.CONFLICT);
     }
 
-    const fromUserId = fromUserItems[0]!.id;
+    const fromUserId = fromUserItems[0]!.userId;
     if (fromUserId === toUser.id) {
       throw new HttpException('You cannot transfer items to yourself', HttpStatus.CONFLICT);
     }
 
-    return this.userItemsService.updateMany(fromUserItems, { userId: toUser.id }, tx);
-  }
-
-  public async deleteUserItem<
-    TEntityRelations extends EntityRelations<ExtractTablesWithRelations<typeof tables>, ExtractTablesWithRelations<typeof tables>['userItems']> = {},
-  >(
-    userItem: UserItemEntity<TEntityRelations>,
-    tx?: Transaction,
-  ): Promise<UserItemEntity<TEntityRelations>> {
-    return this.userItemsService.deleteOne(userItem, tx);
-  }
-
-  public async deleteUserItemById(
-    id: UUIDv4,
-    tx?: Transaction,
-  ): Promise<UserItemEntity> {
-    const userItem = await this.getUserItemById(id);
-
-    return this.deleteUserItem(userItem, tx);
+    return this.userItemsService.updateMany(fromUserItems, { user: toUser }, tx);
   }
 
   public async quickSellUserItem(
     user: UserEntity,
-    userItem: UserItemEntity<{ user: true, pokemon: true }>,
-  ) {
-    if (user.id !== userItem.user!.id) {
+    userItem: UserItemEntity,
+    tx?: Transaction,
+  ): Promise<QuickSoldUserItemEntity> {
+    if (user.id !== userItem.user.id) {
       throw new HttpException('You cannot quick sell someone else\'s pokemon', HttpStatus.CONFLICT);
     }
 
-    const [updatedUser, deletedUserItem] = await Promise.all([
-      this.usersUseCase.replenishUserBalance(user, userItem.pokemon!.worth),
-      this.deleteUserItem(userItem),
-    ]);
+    const updatedUser = await this.usersUseCase.replenishUserBalance(
+      user,
+      userItem.pokemon.worth,
+      tx,
+    );
 
-    return this.quickSoldUserItemsUseCase.createQuickSoldUserItem(
-      userItem,
-      updatedUser,
-      deletedUserItem.pokemon!,
-    )
+    return this.quickSoldUserItemsService
+      .createOne(userItem, tx)
+      .then((quickSoldUserItem) => ({
+        ...quickSoldUserItem,
+        user: updatedUser,
+      }));
+  }
+
+  public async quickSellUserItemById(
+    user: UserEntity,
+    id: UUIDv4,
+    tx?: Transaction,
+  ): Promise<QuickSoldUserItemEntity> {
+    const userItem = await this.getUserItemById(id);
+
+    return this.quickSellUserItem(user, userItem, tx);
   }
 }

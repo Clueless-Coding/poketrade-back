@@ -1,18 +1,20 @@
-import { Controller, Get, Param, ParseUUIDPipe, Post, UseGuards } from '@nestjs/common';
+import { Controller, Get, Param, ParseUUIDPipe, Post, Query, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 import { User } from '../decorators/user.decorator';
-import { UserModel } from 'src/infra/postgres/entities/user.entity';
 import { PacksUseCase } from 'src/core/use-cases/packs.use-case';
 import { ApiConflictResponse, ApiCreatedResponse, ApiNotFoundResponse, ApiOkResponse, ApiSecurity, ApiTags } from '@nestjs/swagger';
-import { UUIDv4 } from 'src/common/types';
+import { PaginatedArray, UUIDv4 } from 'src/common/types';
 import { Mapper } from '@automapper/core';
-import { PackEntity } from 'src/infra/postgres/entities/pack.entity';
 import { PackOutputDTO } from '../dtos/packs/pack.output.dto';
-import { DataSource } from 'typeorm';
 import { InjectMapper } from '@automapper/nestjs';
 import { PackWithPokemonsOutputDTO } from '../dtos/packs/pack-with-pokemons.output.dto';
-import { OpenedPackEntity } from 'src/infra/postgres/entities/opened-pack.entity';
 import { OpenedPackOutputDTO } from '../dtos/packs/opened-pack.output.dto';
+import { Database } from 'src/infra/postgres/other/types';
+import { PaginationInputDTO } from '../dtos/pagination.input.dto';
+import { mapArrayWithPagination } from 'src/common/helpers/map-array-with-pagination.helper';
+import { OpenedPackEntity, PackEntity, UserEntity } from 'src/infra/postgres/tables';
+import { InjectDatabase } from 'src/infra/decorators/inject-database.decorator';
+import { GetPacksInputDTO } from '../dtos/packs/get-packs.input.dto';
 
 @ApiTags('Packs')
 @Controller('packs')
@@ -20,19 +22,28 @@ export class PacksController {
   public constructor(
     @InjectMapper()
     private readonly mapper: Mapper,
+    @InjectDatabase()
+    private readonly db: Database,
 
     private readonly packsUseCase: PacksUseCase,
-    private readonly dataSource: DataSource,
   ) {}
 
   @ApiOkResponse({ type: [PackOutputDTO] })
   @ApiSecurity('AccessToken')
   @Get()
   @UseGuards(JwtAuthGuard)
-  public async getPacks(): Promise<Array<PackOutputDTO>> {
-    const packs = await this.packsUseCase.getPacks();
+  public async getPacks(
+    @Query() dto: GetPacksInputDTO,
+    @Query() paginationDTO: PaginationInputDTO,
+  ): Promise<PaginatedArray<PackOutputDTO>> {
+    const packs = await this.packsUseCase.getPacksWithPagination(dto, paginationDTO);
 
-    return this.mapper.mapArray(packs, PackEntity, PackOutputDTO);
+    return mapArrayWithPagination<PackEntity, PackOutputDTO>(
+      this.mapper,
+      packs,
+      'PackEntity',
+      'PackOutputDTO',
+    )
   }
 
   @ApiOkResponse({ type: PackWithPokemonsOutputDTO })
@@ -45,7 +56,11 @@ export class PacksController {
   ): Promise<PackWithPokemonsOutputDTO> {
     const pack = await this.packsUseCase.getPack(id);
 
-    return this.mapper.map(pack, PackEntity, PackWithPokemonsOutputDTO);
+    return this.mapper.map<PackEntity, PackWithPokemonsOutputDTO>(
+      pack,
+      'PackEntity',
+      'PackOutputDTO',
+    );
   }
 
   @ApiCreatedResponse({ type: OpenedPackOutputDTO })
@@ -55,11 +70,17 @@ export class PacksController {
   @Post(':id/open')
   @UseGuards(JwtAuthGuard)
   public async openPack(
-    @User() user: UserModel,
+    @User() user: UserEntity,
     @Param('id', new ParseUUIDPipe({ version: '4' })) id: UUIDv4,
   ): Promise<OpenedPackOutputDTO> {
-    const openedPack = await this.packsUseCase.openPack(user, id, this.dataSource);
+    const openedPack = await this.db.transaction(async (tx) => (
+      this.packsUseCase.openPackById(user, id, tx)
+    ));
 
-    return this.mapper.map(openedPack, OpenedPackEntity, OpenedPackOutputDTO);
+    return this.mapper.map<OpenedPackEntity, OpenedPackOutputDTO>(
+      openedPack,
+      'OpenedPackEntity',
+      'OpenedPackOutputDTO'
+    );
   }
 }

@@ -6,7 +6,7 @@ import { RegisterOutputDTO } from 'src/api/dtos/auth/register.output.dto';
 import { JWT, UserTokenPayload } from 'src/common/types';
 import { UsersUseCase } from './users.use-case';
 import * as bcrypt from 'bcrypt';
-import { UserEntity } from 'src/infra/postgres/other/types';
+import { UserEntity } from 'src/infra/postgres/tables';
 
 @Injectable()
 export class AuthUseCase {

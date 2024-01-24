@@ -1,12 +1,11 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { UsersService } from '../services/users.service';
 import { CreateUserInputDTO } from 'src/api/dtos/users/create-user.input.dto';
-import { UpdateUserInputDTO } from 'src/api/dtos/users/update-user.input.dto';
-import { UUIDv4 } from 'src/common/types';
-import { EntityRelations, entityRelationsToWith, Transaction, UserEntity } from 'src/infra/postgres/other/types';
+import { PaginatedArray, UUIDv4 } from 'src/common/types';
+import { Transaction } from 'src/infra/postgres/other/types';
 import { GetUsersInputDTO } from 'src/api/dtos/users/get-users.input.dto';
-import { and, eq, ExtractTablesWithRelations, like } from 'drizzle-orm';
-import * as tables from 'src/infra/postgres/tables';
+import { UserEntity } from 'src/infra/postgres/tables';
+import { PaginationInputDTO } from 'src/api/dtos/pagination.input.dto';
 
 @Injectable()
 export class UsersUseCase {
@@ -14,91 +13,68 @@ export class UsersUseCase {
     private readonly usersService: UsersService,
   ) {}
 
-  public async getUser<
-    TEntityRelations extends EntityRelations<ExtractTablesWithRelations<typeof tables>, ExtractTablesWithRelations<typeof tables>['users']> = {},
-  >(
+  public async getUser(
     where: Partial<{ id: UUIDv4, name: string }> = {},
     options: Partial<{
-      entityRelations: TEntityRelations;
       errorMessage: string;
       errorStatus: HttpStatus;
     }> = {},
-  ): Promise<UserEntity<TEntityRelations>> {
+  ): Promise<UserEntity> {
+    const {
+      errorMessage = 'User not found',
+      errorStatus = HttpStatus.NOT_FOUND,
+    } = options;
     const user = await this.usersService.findOne({
-      where: (table) => and(
-        // TODO: Maybe there is a better way to do that
-        ...(where.id ? [eq(table.id, where.id)] : []),
-        ...(where.name ? [eq(table.name, where.name)] : []),
-      ),
-      with: entityRelationsToWith(options.entityRelations ?? {}),
-    }) as UserEntity<TEntityRelations>;
+      where,
+    });
 
     if (!user) {
-      throw new HttpException(
-        options.errorMessage ?? 'User not found',
-        options.errorStatus ?? HttpStatus.NOT_FOUND,
-      );
+      throw new HttpException(errorMessage, errorStatus);
     }
 
     return user;
   }
 
-  public async getUserById<
-    TEntityRelations extends EntityRelations<ExtractTablesWithRelations<typeof tables>, ExtractTablesWithRelations<typeof tables>['users']> = {},
-  >(
+  public async getUserById(
     id: UUIDv4,
-    config: {
-      entityRelations?: TEntityRelations
+    options: {
       errorMessageFn?: (id: UUIDv4) => string,
       errorStatus?: HttpStatus,
     } = {},
-  ): Promise<UserEntity<TEntityRelations>> {
+  ): Promise<UserEntity> {
+    const {
+      errorMessageFn = (id) => `User (\`${id}\`) not found`,
+      errorStatus = HttpStatus.NOT_FOUND,
+    } = options;
     return this.getUser({ id }, {
-      entityRelations: config.entityRelations,
-      errorMessage: config.errorMessageFn?.(id) ?? `User (\`${id}\`) not found`,
-      errorStatus: config.errorStatus
+      errorMessage: errorMessageFn(id),
+      errorStatus,
     });
   }
 
   public getUsersWithPagination(
     dto: GetUsersInputDTO,
-    paginationOptions: { page: number, limit: number },
-  ): Promise<{
-    items: Array<UserEntity>,
-    itemCount: number;
-    itemsPerPage: number;
-    currentPage: number;
-  }> {
-    return this.usersService.findManyWithPagination(paginationOptions, {
-      where: (table) => like(table.name, `%${dto.nameLike}%`)
-    })
+    paginationDTO: PaginationInputDTO,
+  ): Promise<PaginatedArray<UserEntity>> {
+    return this.usersService.findManyWithPagination({
+      paginationOptions: paginationDTO,
+      where: dto,
+    });
   }
 
   public async checkIfUserExists(
     where: Partial<{ id: UUIDv4, name: string }> = {},
   ): Promise<boolean> {
     return this.usersService.exists({
-      where: (table) => and(
-        // TODO: Maybe there is a better way to do that
-        ...(where.id ? [eq(table.id, where.id)] : []),
-        ...(where.name ? [eq(table.name, where.name)] : []),
-      )
+      where
     });
   }
 
   public async createUser(
     dto: CreateUserInputDTO,
     tx?: Transaction,
-  ): Promise<UserEntity> {
+  ) {
     return this.usersService.createOne(dto, tx);
-  }
-
-  public async updateUser(
-    user: UserEntity,
-    dto: UpdateUserInputDTO,
-    tx?: Transaction,
-  ): Promise<UserEntity> {
-    return this.usersService.updateOne(user, dto, tx);
   }
 
   public async replenishUserBalance(
@@ -106,7 +82,7 @@ export class UsersUseCase {
     amount: number,
     tx?: Transaction,
   ): Promise<UserEntity> {
-    return this.updateUser(user, { balance: user.balance + amount }, tx);
+    return this.usersService.updateOne(user, { balance: user.balance + amount }, tx);
   }
 
   public async spendUserBalance(
@@ -114,6 +90,6 @@ export class UsersUseCase {
     amount: number,
     tx?: Transaction,
   ): Promise<UserEntity> {
-    return this.updateUser(user, { balance: user.balance - amount }, tx);
+    return this.usersService.updateOne(user, { balance: user.balance - amount }, tx);
   }
 }

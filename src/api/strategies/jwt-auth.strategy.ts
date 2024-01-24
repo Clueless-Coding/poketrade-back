@@ -5,6 +5,7 @@ import { ExtractJwt, Strategy } from 'passport-jwt';
 import { UserTokenPayload } from 'src/common/types';
 import { UsersUseCase } from 'src/core/use-cases/users.use-case';
 import { EnvVariables } from 'src/infra/config/validation';
+import { UserEntity } from 'src/infra/postgres/tables';
 
 @Injectable()
 export class JwtAuthStrategy extends PassportStrategy(Strategy) {
@@ -21,7 +22,7 @@ export class JwtAuthStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  public async validate(tokenPayload: UserTokenPayload) {
+  public async validate(tokenPayload: UserTokenPayload): Promise<UserEntity> {
     return this.usersService.getUser({ id: tokenPayload.id }, {
       errorMessage: 'Unauthorized',
       errorStatus: HttpStatus.UNAUTHORIZED,

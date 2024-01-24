@@ -1,10 +1,10 @@
 import { Injectable } from "@nestjs/common";
 import { Seeder } from "nestjs-seeder";
-import { PokemonsServiceDrizzle } from 'src/core/services/pokemons.service';
+import { PokemonsService } from 'src/core/services/pokemons.service';
 
 @Injectable()
 export class PokemonsSeeder implements Seeder {
-  constructor(private readonly pokemonsService: PokemonsServiceDrizzle) {}
+  constructor(private readonly pokemonsService: PokemonsService) {}
 
   async seed() {
     // TODO: Maybe i can do that with a single request? Research on that
