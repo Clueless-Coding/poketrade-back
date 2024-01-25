@@ -15,6 +15,7 @@ import { mapArrayWithPagination } from 'src/common/helpers/map-array-with-pagina
 import { OpenedPackEntity, PackEntity, UserEntity } from 'src/infra/postgres/tables';
 import { InjectDatabase } from 'src/infra/decorators/inject-database.decorator';
 import { GetPacksInputDTO } from '../dtos/packs/get-packs.input.dto';
+import { ApiOkResponseWithPagination } from '../decorators/api-ok-response-with-pagination.decorator';
 
 @ApiTags('Packs')
 @Controller('packs')
@@ -28,7 +29,7 @@ export class PacksController {
     private readonly packsUseCase: PacksUseCase,
   ) {}
 
-  @ApiOkResponse({ type: [PackOutputDTO] })
+  @ApiOkResponseWithPagination({ type: PackOutputDTO })
   @ApiSecurity('AccessToken')
   @Get()
   @UseGuards(JwtAuthGuard)

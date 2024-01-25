@@ -34,16 +34,15 @@ export class TradesController {
   public async createPendingTrade(
     @User() user: UserEntity,
     @Body() dto: CreatePendingTradeInputDTO,
-  ) {
-    // TODO: Return `tradesToSenderItems` and `tradesToReceiverItems` to the client
-    const { pendingTrade, tradesToSenderItems, tradesToReceiverItems } = await this.db.transaction(async (tx) => (
+  ): Promise<PendingTradeOutputDTO> {
+    const pendingTrade = await this.db.transaction(async (tx) => (
       this.pendingTradesUseCase.createPendingTrade(user, dto, tx)
     ));
 
     return this.mapper.map<PendingTradeEntity, PendingTradeOutputDTO>(
       pendingTrade,
       'PendingTradeEntity',
-      'PendingTradeOutputDTO',
+      'CreatePendingTradeOutputDTO',
     );
   }
 

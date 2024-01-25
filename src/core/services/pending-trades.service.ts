@@ -4,7 +4,7 @@ import { zip } from 'lodash';
 import { Nullable, UUIDv4 } from 'src/common/types';
 import { InjectDatabase } from 'src/infra/decorators/inject-database.decorator';
 import { Database, Transaction } from 'src/infra/postgres/other/types';
-import { AcceptedTradeEntity, CancelledTradeEntity, CreatePendingTradeEntityValues, PendingTradeEntity, RejectedTradeEntity, tradesTable, tradesToReceiverItemsTable, tradesToSenderItemsTable, TradeToReceiverItemEntity, TradeToSenderItemEntity, usersTable } from 'src/infra/postgres/tables';
+import { AcceptedTradeEntity, CancelledTradeEntity, CreatePendingTradeEntityValues, PendingTradeEntity, RejectedTradeEntity, tradesTable, tradesToReceiverItemsTable, tradesToSenderItemsTable, TradeToReceiverItemEntity, TradeToSenderItemEntity } from 'src/infra/postgres/tables';
 import { TradesService } from './trades.service';
 
 type Where = Partial<{

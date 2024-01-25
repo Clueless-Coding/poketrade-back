@@ -4,7 +4,7 @@ import { UUIDv4 } from 'src/common/types';
 import { Transaction } from 'src/infra/postgres/other/types';
 import { UserItemsUseCase } from './user-items.use-case';
 import { UsersUseCase } from './users.use-case';
-import { AcceptedTradeEntity, CancelledTradeEntity, PendingTradeEntity, RejectedTradeEntity, TradeToReceiverItemEntity, TradeToSenderItemEntity, UserEntity } from 'src/infra/postgres/tables';
+import { AcceptedTradeEntity, CancelledTradeEntity, PendingTradeEntity, RejectedTradeEntity, UserEntity } from 'src/infra/postgres/tables';
 import { PendingTradesService } from '../services/pending-trades.service';
 import { TradesToSenderItemsService } from '../services/trades-to-sender-items.service';
 import { TradesToReceiverItemsService } from '../services/trades-to-receiver-items.service';
@@ -23,11 +23,7 @@ export class PendingTradesUseCase {
     sender: UserEntity,
     dto: CreatePendingTradeInputDTO,
     tx?: Transaction,
-  ): Promise<{
-    pendingTrade: PendingTradeEntity,
-    tradesToSenderItems: Array<TradeToSenderItemEntity>,
-    tradesToReceiverItems: Array<TradeToReceiverItemEntity>,
-  }> {
+  ): Promise<PendingTradeEntity> {
     if (!dto.senderItemIds.length && !dto.receiverItemIds.length) {
       throw new HttpException(
         '`senderItemIds` and `receiverItemIds` cannot be empty simultaneously',
@@ -78,12 +74,14 @@ export class PendingTradesUseCase {
       }
     }
 
-    return this.pendingTradesService.createOne({
-      sender,
-      senderItems,
-      receiver,
-      receiverItems,
-    }, tx);
+    return this.pendingTradesService
+      .createOne({
+        sender,
+        senderItems,
+        receiver,
+        receiverItems,
+      }, tx)
+      .then(({ pendingTrade }) => pendingTrade);
   }
 
   public async getPendingTrade(

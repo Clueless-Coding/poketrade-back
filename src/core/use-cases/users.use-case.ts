@@ -37,10 +37,10 @@ export class UsersUseCase {
 
   public async getUserById(
     id: UUIDv4,
-    options: {
-      errorMessageFn?: (id: UUIDv4) => string,
-      errorStatus?: HttpStatus,
-    } = {},
+    options: Partial<{
+      errorMessageFn: (id: UUIDv4) => string,
+      errorStatus: HttpStatus,
+    }> = {},
   ): Promise<UserEntity> {
     const {
       errorMessageFn = (id) => `User (\`${id}\`) not found`,

@@ -16,6 +16,7 @@ import { CancelledTradeOuputDTO } from '../dtos/cancelled-trades/cancelled-trade
 import { PendingTradeOutputDTO } from '../dtos/pending-trades/pending-trade.output.dto';
 import { RejectedTradeOutputDTO } from '../dtos/rejected-trades/rejected-trade.output.dto';
 import { TradeOutputDTO } from '../dtos/trades/trade.output.dto';
+import { UserItemOutputDTO } from '../dtos/user-items/user-item.output.dto';
 
 @Injectable()
 export class TradeProfile extends AutomapperProfile {
