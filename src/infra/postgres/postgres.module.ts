@@ -19,7 +19,7 @@ import { DRIZZLE_DB_TAG } from '../consts';
       inject: [ConfigService<EnvVariables>],
       useFactory: (configService: ConfigService<EnvVariables>) => ({
         pg: {
-          connection: 'client',
+          connection: 'pool',
           config: {
             user: configService.getOrThrow('POSTGRES_USER'),
             password: configService.getOrThrow('POSTGRES_PASSWORD'),
