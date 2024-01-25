@@ -1,20 +1,43 @@
 import { AutomapperProfile, InjectMapper } from '@automapper/nestjs';
 import { Injectable } from '@nestjs/common';
-import { Mapper, createMap } from '@automapper/core';
-import { UserEntity } from 'src/infra/postgres/entities/user.entity';
+import { Mapper, createMap, MappingProfile } from '@automapper/core';
 import { UserOutputDTO } from '../dtos/users/user.output.dto';
-import { UserWithInventoryEntriesOutputDTO } from '../dtos/users/user-with-inventory-entries.output.dto';
+import { PojosMetadataMap } from '@automapper/pojos';
+import { UserEntity } from 'src/infra/postgres/tables';
 
 @Injectable()
 export class UserProfile extends AutomapperProfile {
   public constructor(@InjectMapper() mapper: Mapper) {
     super(mapper);
+    this.createMetadataEntities();
+    this.createMetadataDTOs();
   }
 
-  public override get profile() {
+  public override get profile(): MappingProfile {
     return (mapper: Mapper) => {
-      createMap(mapper, UserEntity, UserOutputDTO);
-      createMap(mapper, UserEntity, UserWithInventoryEntriesOutputDTO);
+      createMap<UserEntity, UserOutputDTO>(
+        mapper,
+        'UserEntity',
+        'UserOutputDTO',
+      );
     };
+  }
+
+  private createMetadataEntities(): void {
+    PojosMetadataMap.create<UserEntity>('UserEntity', {
+      id: String,
+      createdAt: Date,
+      updatedAt: Date,
+      name: String,
+      balance: Number,
+    });
+  }
+
+  private createMetadataDTOs(): void {
+    PojosMetadataMap.create<UserOutputDTO>('UserOutputDTO', {
+      id: String,
+      name: String,
+      balance: Number,
+    });
   }
 }

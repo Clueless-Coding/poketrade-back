@@ -5,7 +5,7 @@ import { UUIDv4 } from "src/common/types";
 export class CreatePendingTradeInputDTO {
   @ApiProperty()
   @IsUUID(4, { each: true })
-  senderInventoryEntryIds: Array<UUIDv4>;
+  senderItemIds: Array<UUIDv4>;
 
   @ApiProperty()
   @IsUUID(4)
@@ -13,5 +13,5 @@ export class CreatePendingTradeInputDTO {
 
   @ApiProperty()
   @IsUUID(4, { each: true })
-  receiverInventoryEntryIds: Array<UUIDv4>;
+  receiverItemIds: Array<UUIDv4>;
 }

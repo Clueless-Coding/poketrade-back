@@ -1,0 +1,716 @@
+{
+  "id": "8abedc24-858d-4c0f-a25a-215fb7b1027d",
+  "prevId": "00000000-0000-0000-0000-000000000000",
+  "version": "5",
+  "dialect": "pg",
+  "tables": {
+    "users": {
+      "name": "users",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "hashed_password": {
+          "name": "hashed_password",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "balance": {
+          "name": "balance",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "users_name_unique": {
+          "name": "users_name_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "name"
+          ]
+        }
+      }
+    },
+    "pokemons": {
+      "name": "pokemons",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "worth": {
+          "name": "worth",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "height": {
+          "name": "height",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "weight": {
+          "name": "weight",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "image": {
+          "name": "image",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "packs": {
+      "name": "packs",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "price": {
+          "name": "price",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "image": {
+          "name": "image",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "packs_to_pokemons": {
+      "name": "packs_to_pokemons",
+      "schema": "",
+      "columns": {
+        "pack_id": {
+          "name": "pack_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "pokemon_id": {
+          "name": "pokemon_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "packs_to_pokemons_pack_id_index": {
+          "name": "packs_to_pokemons_pack_id_index",
+          "columns": [
+            "pack_id"
+          ],
+          "isUnique": false
+        },
+        "packs_to_pokemons_pokemon_id_index": {
+          "name": "packs_to_pokemons_pokemon_id_index",
+          "columns": [
+            "pokemon_id"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "packs_to_pokemons_pack_id_packs_id_fk": {
+          "name": "packs_to_pokemons_pack_id_packs_id_fk",
+          "tableFrom": "packs_to_pokemons",
+          "tableTo": "packs",
+          "columnsFrom": [
+            "pack_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
+        },
+        "packs_to_pokemons_pokemon_id_pokemons_id_fk": {
+          "name": "packs_to_pokemons_pokemon_id_pokemons_id_fk",
+          "tableFrom": "packs_to_pokemons",
+          "tableTo": "pokemons",
+          "columnsFrom": [
+            "pokemon_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
+        }
+      },
+      "compositePrimaryKeys": {
+        "packs_to_pokemons_pack_id_pokemon_id_pk": {
+          "name": "packs_to_pokemons_pack_id_pokemon_id_pk",
+          "columns": [
+            "pack_id",
+            "pokemon_id"
+          ]
+        }
+      },
+      "uniqueConstraints": {}
+    },
+    "opened_packs": {
+      "name": "opened_packs",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "opened_at": {
+          "name": "opened_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "pack_id": {
+          "name": "pack_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "pokemon_id": {
+          "name": "pokemon_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "opened_packs_user_id_users_id_fk": {
+          "name": "opened_packs_user_id_users_id_fk",
+          "tableFrom": "opened_packs",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
+        },
+        "opened_packs_pack_id_packs_id_fk": {
+          "name": "opened_packs_pack_id_packs_id_fk",
+          "tableFrom": "opened_packs",
+          "tableTo": "packs",
+          "columnsFrom": [
+            "pack_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
+        },
+        "opened_packs_pokemon_id_pokemons_id_fk": {
+          "name": "opened_packs_pokemon_id_pokemons_id_fk",
+          "tableFrom": "opened_packs",
+          "tableTo": "pokemons",
+          "columnsFrom": [
+            "pokemon_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "user_items": {
+      "name": "user_items",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "received_at": {
+          "name": "received_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "pokemon_id": {
+          "name": "pokemon_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "user_items_user_id_users_id_fk": {
+          "name": "user_items_user_id_users_id_fk",
+          "tableFrom": "user_items",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
+        },
+        "user_items_pokemon_id_pokemons_id_fk": {
+          "name": "user_items_pokemon_id_pokemons_id_fk",
+          "tableFrom": "user_items",
+          "tableTo": "pokemons",
+          "columnsFrom": [
+            "pokemon_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "quick_sold_user_items": {
+      "name": "quick_sold_user_items",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "received_at": {
+          "name": "received_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "pokemon_id": {
+          "name": "pokemon_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "sold_at": {
+          "name": "sold_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "quick_sold_user_items_user_id_users_id_fk": {
+          "name": "quick_sold_user_items_user_id_users_id_fk",
+          "tableFrom": "quick_sold_user_items",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
+        },
+        "quick_sold_user_items_pokemon_id_pokemons_id_fk": {
+          "name": "quick_sold_user_items_pokemon_id_pokemons_id_fk",
+          "tableFrom": "quick_sold_user_items",
+          "tableTo": "pokemons",
+          "columnsFrom": [
+            "pokemon_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "trades": {
+      "name": "trades",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "status": {
+          "name": "status",
+          "type": "trade_status",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "sender_id": {
+          "name": "sender_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "receiver_id": {
+          "name": "receiver_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "cancelled_at": {
+          "name": "cancelled_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "accepted_at": {
+          "name": "accepted_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "rejected_at": {
+          "name": "rejected_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "trades_status_index": {
+          "name": "trades_status_index",
+          "columns": [
+            "status"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "trades_sender_id_users_id_fk": {
+          "name": "trades_sender_id_users_id_fk",
+          "tableFrom": "trades",
+          "tableTo": "users",
+          "columnsFrom": [
+            "sender_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
+        },
+        "trades_receiver_id_users_id_fk": {
+          "name": "trades_receiver_id_users_id_fk",
+          "tableFrom": "trades",
+          "tableTo": "users",
+          "columnsFrom": [
+            "receiver_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "trades_to_sender_items": {
+      "name": "trades_to_sender_items",
+      "schema": "",
+      "columns": {
+        "trade_id": {
+          "name": "trade_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "sender_item_id": {
+          "name": "sender_item_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "trades_to_sender_items_trade_id_index": {
+          "name": "trades_to_sender_items_trade_id_index",
+          "columns": [
+            "trade_id"
+          ],
+          "isUnique": false
+        },
+        "trades_to_sender_items_sender_item_id_index": {
+          "name": "trades_to_sender_items_sender_item_id_index",
+          "columns": [
+            "sender_item_id"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "trades_to_sender_items_trade_id_trades_id_fk": {
+          "name": "trades_to_sender_items_trade_id_trades_id_fk",
+          "tableFrom": "trades_to_sender_items",
+          "tableTo": "trades",
+          "columnsFrom": [
+            "trade_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
+        },
+        "trades_to_sender_items_sender_item_id_user_items_id_fk": {
+          "name": "trades_to_sender_items_sender_item_id_user_items_id_fk",
+          "tableFrom": "trades_to_sender_items",
+          "tableTo": "trades",
+          "columnsFrom": [
+            "sender_item_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
+        }
+      },
+      "compositePrimaryKeys": {
+        "trades_to_sender_items_trade_id_sender_item_id_pk": {
+          "name": "trades_to_sender_items_trade_id_sender_item_id_pk",
+          "columns": [
+            "trade_id",
+            "sender_item_id"
+          ]
+        }
+      },
+      "uniqueConstraints": {}
+    },
+    "trades_to_receiver_items": {
+      "name": "trades_to_receiver_items",
+      "schema": "",
+      "columns": {
+        "trade_id": {
+          "name": "trade_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "receiver_item_id": {
+          "name": "receiver_item_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "trades_to_receiver_items_trade_id_index": {
+          "name": "trades_to_receiver_items_trade_id_index",
+          "columns": [
+            "trade_id"
+          ],
+          "isUnique": false
+        },
+        "trades_to_receiver_items_receiver_item_id_index": {
+          "name": "trades_to_receiver_items_receiver_item_id_index",
+          "columns": [
+            "receiver_item_id"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "trades_to_receiver_items_trade_id_trades_id_fk": {
+          "name": "trades_to_receiver_items_trade_id_trades_id_fk",
+          "tableFrom": "trades_to_receiver_items",
+          "tableTo": "trades",
+          "columnsFrom": [
+            "trade_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
+        },
+        "trades_to_receiver_items_receiver_item_id_user_items_id_fk": {
+          "name": "trades_to_receiver_items_receiver_item_id_user_items_id_fk",
+          "tableFrom": "trades_to_receiver_items",
+          "tableTo": "trades",
+          "columnsFrom": [
+            "receiver_item_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
+        }
+      },
+      "compositePrimaryKeys": {
+        "trades_to_receiver_items_trade_id_receiver_item_id_pk": {
+          "name": "trades_to_receiver_items_trade_id_receiver_item_id_pk",
+          "columns": [
+            "trade_id",
+            "receiver_item_id"
+          ]
+        }
+      },
+      "uniqueConstraints": {}
+    }
+  },
+  "enums": {
+    "trade_status": {
+      "name": "trade_status",
+      "values": {
+        "PENDING": "PENDING",
+        "CANCELLED": "CANCELLED",
+        "ACCEPTED": "ACCEPTED",
+        "REJECTED": "REJECTED"
+      }
+    }
+  },
+  "schemas": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

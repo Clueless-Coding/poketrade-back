@@ -1,45 +1,59 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { UserModel } from 'src/infra/postgres/entities/user.entity';
 import { UsersUseCase } from './users.use-case';
-import { UUIDv4 } from 'src/common/types';
+import { PaginatedArray, UUIDv4 } from 'src/common/types';
 import { PacksService } from '../services/packs.service';
-import { DataSource } from 'typeorm';
-import { PackModel } from 'src/infra/postgres/entities/pack.entity';
-import { randomChoice } from 'src/common/helpers/random-choice.helper';
-import { TransactionFor } from 'nest-transact';
-import { ModuleRef } from '@nestjs/core';
-import { OpenedPacksUseCase } from './opened-packs.use-case';
-import { UserInventoryEntriesUseCase } from './user-inventory-entries.use-case';
+import { UserItemsUseCase } from './user-items.use-case';
+import { Transaction } from 'src/infra/postgres/other/types';
+import { OpenedPackEntity, PackEntity, PokemonEntity, UserEntity } from 'src/infra/postgres/tables';
+import { GetPacksInputDTO } from 'src/api/dtos/packs/get-packs.input.dto';
+import { PaginationInputDTO } from 'src/api/dtos/pagination.input.dto';
+import { OpenedPacksService } from '../services/opened-packs.service';
 
 @Injectable()
-export class PacksUseCase extends TransactionFor<PacksUseCase> {
+export class PacksUseCase {
   public constructor(
     private readonly packsService: PacksService,
+    private readonly openedPacksService: OpenedPacksService,
+
     private readonly usersUseCase: UsersUseCase,
-    private readonly userInventoryEntriesUseCase: UserInventoryEntriesUseCase,
-    private readonly openedPacksUseCase: OpenedPacksUseCase,
+    private readonly userItemsUseCase: UserItemsUseCase,
+  ) {}
 
-    moduleRef: ModuleRef,
-  ) {
-    super(moduleRef);
+  public async getPacksWithPagination(
+    dto: GetPacksInputDTO,
+    paginationDTO: PaginationInputDTO,
+  ): Promise<PaginatedArray<PackEntity>> {
+    return this.packsService.findManyWithPagination({
+      paginationOptions: paginationDTO,
+      where: dto,
+    });
   }
 
-  public async getPacks(): Promise<Array<PackModel>> {
-    return this.packsService.find();
-  }
+  public async getPack(
+    where: Partial<{ id: UUIDv4, name: string }> = {},
+    options: Partial<{
+      errorMessage: string,
+      errorStatus: HttpStatus,
+    }> = {},
+  ): Promise<PackEntity> {
+    const {
+      errorMessage = 'Pack not found',
+      errorStatus= HttpStatus.NOT_FOUND,
+    } = options;
 
-  public async getPack(id: UUIDv4): Promise<PackModel<{ pokemons: true }>> {
-    const pack = await this.packsService.findOne({ id }, { pokemons: true });
+    const pack = await this.packsService.findOne({
+      where,
+    });
 
     if (!pack) {
-      throw new HttpException('Pack not found', HttpStatus.NOT_FOUND);
+      throw new HttpException(errorMessage, errorStatus);
     }
 
     return pack;
   }
 
-  private getRandomPokemonFromPack(pack: PackModel<{ pokemons: true }>) {
-    const pokemon = randomChoice(pack.pokemons);
+  public async getRandomPokemonFromPack(pack: PackEntity): Promise<PokemonEntity> {
+    const pokemon = await this.packsService.findRandomPokemonFromPack(pack);
 
     if (!pokemon) {
       throw new HttpException(
@@ -51,29 +65,43 @@ export class PacksUseCase extends TransactionFor<PacksUseCase> {
     return pokemon;
   }
 
-  private async _openPack(user: UserModel, id: UUIDv4) {
-    const pack = await this.getPack(id);
-
+  public async openPack(
+    user: UserEntity,
+    pack: PackEntity,
+    tx?: Transaction,
+  ): Promise<OpenedPackEntity> {
     if (user.balance < pack.price) {
       throw new HttpException('Insufficient balance', HttpStatus.CONFLICT);
     }
 
-    const pokemon = this.getRandomPokemonFromPack(pack);
+    const awaitedPromises = await Promise.all([
+      this.getRandomPokemonFromPack(pack),
+      this.usersUseCase.spendUserBalance(user, pack.price, tx),
+    ])
 
-    // TODO: Maybe use Promise.all?
-    user = await this.usersUseCase.spendUserBalance(user, pack.price);
+    const pokemon = awaitedPromises[0];
+    user = awaitedPromises[1];
 
-    const userPokemon = await this.userInventoryEntriesUseCase.createUserInventoryEntry(
+    const userItem = await this.userItemsUseCase.createUserItem(
       user,
       pokemon,
+      tx,
     );
 
-    return this.openedPacksUseCase.openPack(userPokemon.user, pack, pokemon);
+    return this.openedPacksService.createOne({
+      user: userItem.user,
+      pack,
+      pokemon: userItem.pokemon,
+    }, tx);
   }
 
-  public async openPack(user: UserModel, id: UUIDv4, dataSource: DataSource) {
-    return dataSource.transaction((manager) => {
-      return this.withTransaction(manager)._openPack(user, id);
-    })
+  public async openPackById(
+    user: UserEntity,
+    id: UUIDv4,
+    tx?: Transaction,
+  ): Promise<OpenedPackEntity> {
+    const pack = await this.getPack({ id });
+
+    return this.openPack(user, pack, tx);
   }
 }

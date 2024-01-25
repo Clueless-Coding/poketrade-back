@@ -1,52 +1,54 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { ModuleRef } from '@nestjs/core';
-import { TransactionFor } from 'nest-transact';
 import { CreatePendingTradeInputDTO } from 'src/api/dtos/pending-trades/create-pending-trade.input.dto';
 import { UUIDv4 } from 'src/common/types';
-import { AcceptedTradeModel } from 'src/infra/postgres/entities/accepted-trade.entity';
-import { CancelledTradeModel } from 'src/infra/postgres/entities/cancelled-trade.entity';
-import { PendingTradeEntity, PendingTradeModel } from 'src/infra/postgres/entities/pending-trade.entity';
-import { RejectedTradeModel } from 'src/infra/postgres/entities/rejected-trade.entity';
-import { UserModel } from 'src/infra/postgres/entities/user.entity';
-import { FindEntityRelationsOptions } from 'src/infra/postgres/other/types';
-import { DataSource, FindOptionsWhere } from 'typeorm';
-import { PendingTradesService } from '../services/pending-trades.service';
-import { UserInventoryEntriesUseCase } from './user-inventory-entries.use-case';
+import { Transaction } from 'src/infra/postgres/other/types';
+import { UserItemsUseCase } from './user-items.use-case';
 import { UsersUseCase } from './users.use-case';
+import { AcceptedTradeEntity, CancelledTradeEntity, PendingTradeEntity, RejectedTradeEntity, UserEntity } from 'src/infra/postgres/tables';
+import { PendingTradesService } from '../services/pending-trades.service';
+import { TradesToSenderItemsService } from '../services/trades-to-sender-items.service';
+import { TradesToReceiverItemsService } from '../services/trades-to-receiver-items.service';
 
 @Injectable()
-export class PendingTradesUseCase extends TransactionFor<PendingTradesUseCase> {
+export class PendingTradesUseCase {
   public constructor(
     private readonly pendingTradesService: PendingTradesService,
+    private readonly tradesToSenderItemsService: TradesToSenderItemsService,
+    private readonly tradesToReceiverItemsService: TradesToReceiverItemsService,
+    private readonly userItemsUseCase: UserItemsUseCase,
     private readonly usersUseCase: UsersUseCase,
-    private readonly userInventoryEntriesUseCase: UserInventoryEntriesUseCase,
-
-    moduleRef: ModuleRef,
-  ) {
-    super(moduleRef);
-  }
+  ) {}
 
   public async createPendingTrade(
-    sender: UserModel,
-    dto: CreatePendingTradeInputDTO
-  ): Promise<PendingTradeModel<{
-    sender: true,
-    senderInventoryEntries: { pokemon: true },
-    receiver: true,
-    receiverInventoryEntries: { pokemon: true },
-  }>> {
-    const [senderInventoryEntries, receiver, receiverInventoryEntries] = await Promise.all([
-      this.userInventoryEntriesUseCase.findManyUserInventoryEntriesByIds(
-        dto.senderInventoryEntryIds,
-        (id) => `Trade sender inventory entry (\`${id}\`) not found`,
+    sender: UserEntity,
+    dto: CreatePendingTradeInputDTO,
+    tx?: Transaction,
+  ): Promise<PendingTradeEntity> {
+    if (!dto.senderItemIds.length && !dto.receiverItemIds.length) {
+      throw new HttpException(
+        '`senderItemIds` and `receiverItemIds` cannot be empty simultaneously',
+        HttpStatus.BAD_REQUEST
+      );
+    }
+
+    const [senderItems, receiver, receiverItems] = await Promise.all([
+      this.userItemsUseCase.getUserItemsByIds(
+        dto.senderItemIds,
+        {
+          errorMessageFn: (id) => `Trade sender item (\`${id}\`) not found`,
+        },
       ),
-      this.usersUseCase.findUserById(
+      this.usersUseCase.getUserById(
         dto.receiverId,
-        (id) => `Trade receiver (\`${id}\`) not found`,
+        {
+          errorMessageFn: (id) => `Trade receiver (\`${id}\`) not found`,
+        },
       ),
-      this.userInventoryEntriesUseCase.findManyUserInventoryEntriesByIds(
-        dto.receiverInventoryEntryIds,
-        (id) => `Trade receiver inventory entry (\`${id}\`) not found`,
+      this.userItemsUseCase.getUserItemsByIds(
+        dto.receiverItemIds,
+        {
+          errorMessageFn: (id) => `Trade receiver item (\`${id}\`) not found`,
+        }
       ),
     ]);
 
@@ -54,300 +56,169 @@ export class PendingTradesUseCase extends TransactionFor<PendingTradesUseCase> {
       throw new HttpException('You cannot send trade to yourself', HttpStatus.CONFLICT);
     }
 
-    for (const senderInventoryEntry of senderInventoryEntries) {
-      if (senderInventoryEntry.user.id !== sender.id) {
+    for (const senderItem of senderItems) {
+      if (senderItem.user.id !== sender.id) {
         throw new HttpException(
-          `Trade sender inventory entry (\`${senderInventoryEntry.id}\`) does not belong to you`,
+          `Trade sender item (\`${senderItem.id}\`) does not belong to you`,
           HttpStatus.CONFLICT,
         );
       }
     }
 
-
-    for (const receiverInventoryEntry of receiverInventoryEntries) {
-      if (receiverInventoryEntry.user.id !== receiver.id) {
+    for (const receiverItem of receiverItems) {
+      if (receiverItem.user.id !== receiver.id) {
         throw new HttpException(
-          `Trade receiver inventory entry (\`${receiverInventoryEntry.id}\`) does not belong to them`,
+          `Trade receiver item (\`${receiverItem.id}\`) does not belong to them`,
           HttpStatus.CONFLICT,
         );
       }
     }
 
-    return this.pendingTradesService.createOne({
-      sender,
-      senderInventoryEntries,
-      receiver,
-      receiverInventoryEntries,
-    });
+    return this.pendingTradesService
+      .createOne({
+        sender,
+        senderItems,
+        receiver,
+        receiverItems,
+      }, tx)
+      .then(({ pendingTrade }) => pendingTrade);
   }
 
-  public async findPendingTrade<
-    T extends FindEntityRelationsOptions<PendingTradeEntity>,
-  >(
-    where: FindOptionsWhere<PendingTradeEntity>,
-    relations?: T,
-    errorMessage?: string,
-  ): Promise<PendingTradeModel<T>> {
-    const pendingTrade = await this.pendingTradesService.findOne(where, relations);
+  public async getPendingTrade(
+    where: Partial<{ id: UUIDv4 }> = {},
+    options: Partial<{
+      errorMessage: string;
+      errorStatus: HttpStatus;
+    }> = {},
+  ): Promise<PendingTradeEntity> {
+    const {
+      errorMessage = 'Pending trade not found',
+      errorStatus = HttpStatus.NOT_FOUND,
+    } = options;
+
+    const pendingTrade = await this.pendingTradesService.findOne({
+      where
+    });
 
     if (!pendingTrade) {
-      throw new HttpException(errorMessage ?? 'Pending trade not found', HttpStatus.NOT_FOUND);
+      throw new HttpException(errorMessage, errorStatus);
     }
 
     return pendingTrade;
   }
 
-  public async findPendingTradeById<
-    T extends FindEntityRelationsOptions<PendingTradeEntity>,
-  >(
+  public async getPendingTradeById(
     id: UUIDv4,
-    relations?: T,
-    errorMessageFn?: (id: UUIDv4) => string,
-  ): Promise<PendingTradeModel<T>> {
-    return this.findPendingTrade({ id }, relations, errorMessageFn?.(id) ?? `Pending trade (\`${id}\`) not found`);
-  }
+    options: Partial<{
+      errorMessageFn: (id: UUIDv4) => string,
+      errorStatus: HttpStatus,
+    }> = {},
+  ): Promise<PendingTradeEntity> {
+    const {
+      errorMessageFn = (id) => `Pending trade (\`${id}\`) not found`,
+      errorStatus = HttpStatus.NOT_FOUND,
+    } = options;
 
-  private async _acceptPendingTradeById(
-    user: UserModel,
-    id: UUIDv4
-  ): Promise<AcceptedTradeModel<{
-      sender: true,
-      senderInventoryEntries: { pokemon: true },
-      receiver: true,
-      receiverInventoryEntries: { pokemon: true },
-  }>> {
-    const pendingTrade = await this.findPendingTradeById(id, {
-      sender: true,
-      senderInventoryEntries: { pokemon: true },
-      receiver: true,
-      receiverInventoryEntries: { pokemon: true },
+    return this.getPendingTrade({ id }, {
+      errorMessage: errorMessageFn(id),
+      errorStatus,
     });
-
-    return this._acceptPendingTrade(user, pendingTrade);
   }
 
-  public async acceptPendingTradeById(
-    user: UserModel,
+  public async cancelPendingTrade(
+    user: UserEntity,
+    pendingTrade: PendingTradeEntity,
+    tx?: Transaction,
+  ): Promise<CancelledTradeEntity> {
+    if (user.id !== pendingTrade.sender.id) {
+      throw new HttpException('You cannot cancel a trade that is not yours', HttpStatus.CONFLICT);
+    }
+
+    return this.pendingTradesService.updateOneToCancelled(pendingTrade, tx);
+  }
+
+  public async cancelPendingTradeById(
+    user: UserEntity,
     id: UUIDv4,
-    dataSource: DataSource,
-  ): Promise<AcceptedTradeModel<{
-      sender: true,
-      senderInventoryEntries: { pokemon: true },
-      receiver: true,
-      receiverInventoryEntries: { pokemon: true },
-  }>> {
-    return dataSource.transaction((manager) => {
-      return this.withTransaction(manager)._acceptPendingTradeById(user, id);
-    })
+    tx?: Transaction,
+  ): Promise<CancelledTradeEntity> {
+    const pendingTrade = await this.getPendingTradeById(id);
+
+    return this.cancelPendingTrade(user, pendingTrade, tx);
   }
 
-  private async _acceptPendingTrade(
-    user: UserModel,
-    pendingTrade: PendingTradeModel<{
-      sender: true,
-      senderInventoryEntries: { pokemon: true },
-      receiver: true,
-      receiverInventoryEntries: { pokemon: true },
-    }>,
-  ): Promise<AcceptedTradeModel<{
-      sender: true,
-      senderInventoryEntries: { pokemon: true },
-      receiver: true,
-      receiverInventoryEntries: { pokemon: true },
-  }>> {
+  public async acceptPendingTrade(
+    user: UserEntity,
+    pendingTrade: PendingTradeEntity,
+    tx?: Transaction,
+  ): Promise<AcceptedTradeEntity> {
     const {
       sender,
-      senderInventoryEntries,
       receiver,
-      receiverInventoryEntries,
     } = pendingTrade;
 
     if (user.id !== receiver.id) {
       throw new HttpException('You are not a receiver of this trade', HttpStatus.CONFLICT);
     }
 
+    const [tradesToSenderItems, tradesToReceiverItems] = await Promise.all([
+      this.tradesToSenderItemsService.findMany({
+        where: {
+          tradeId: pendingTrade.id,
+        },
+      }),
+      this.tradesToReceiverItemsService.findMany({
+        where: {
+          tradeId: pendingTrade.id,
+        },
+      }),
+    ]);
+
     await Promise.all([
-      this.userInventoryEntriesUseCase.transferUserInventoryEntriesToAnotherUser(
-        senderInventoryEntries,
+      this.userItemsUseCase.transferUserItemsToAnotherUser(
+        tradesToSenderItems.map(({ senderItem }) => senderItem),
         receiver,
+        tx,
       ),
-      this.userInventoryEntriesUseCase.transferUserInventoryEntriesToAnotherUser(
-        receiverInventoryEntries,
+      this.userItemsUseCase.transferUserItemsToAnotherUser(
+        tradesToReceiverItems.map(({ receiverItem }) => receiverItem),
         sender,
+        tx,
       ),
     ]);
 
-    return this.pendingTradesService.updateToAccepted(pendingTrade);
+    return this.pendingTradesService.updateOneToAccepted(pendingTrade, tx);
   }
 
-  public async acceptPendingTrade(
-    user: UserModel,
-    pendingTrade: PendingTradeModel<{
-      sender: true,
-      senderInventoryEntries: { pokemon: true },
-      receiver: true,
-      receiverInventoryEntries: { pokemon: true },
-    }>,
-    dataSource: DataSource,
-  ): Promise<AcceptedTradeModel<{
-      sender: true,
-      senderInventoryEntries: { pokemon: true },
-      receiver: true,
-      receiverInventoryEntries: { pokemon: true },
-  }>> {
-    return dataSource.transaction((manager) => {
-      return this.withTransaction(manager)._acceptPendingTrade(user, pendingTrade);
-    })
-  }
-
-  private async _cancelPendingTradeById(
-    user: UserModel,
+  public async acceptPendingTradeById(
+    user: UserEntity,
     id: UUIDv4,
-  ): Promise<CancelledTradeModel<{
-      sender: true,
-      senderInventoryEntries: { pokemon: true },
-      receiver: true,
-      receiverInventoryEntries: { pokemon: true },
-  }>> {
-    const pendingTrade = await this.findPendingTradeById(id, {
-      sender: true,
-      senderInventoryEntries: { pokemon: true },
-      receiver: true,
-      receiverInventoryEntries: { pokemon: true },
-    })
+    tx?: Transaction,
+  ): Promise<AcceptedTradeEntity> {
+    const pendingTrade = await this.getPendingTradeById(id);
 
-    return this._cancelPendingTrade(user, pendingTrade);
+    return this.acceptPendingTrade(user, pendingTrade, tx);
   }
 
-  public async cancelPendingTradeById(
-    user: UserModel,
-    id: UUIDv4,
-    dataSource: DataSource,
-  ): Promise<CancelledTradeModel<{
-      sender: true,
-      senderInventoryEntries: { pokemon: true },
-      receiver: true,
-      receiverInventoryEntries: { pokemon: true },
-  }>> {
-    return dataSource.transaction((manager) => {
-      return this.withTransaction(manager)._cancelPendingTradeById(user, id);
-    })
-  }
-
-  private async _cancelPendingTrade(
-    user: UserModel,
-    pendingTrade: PendingTradeModel<{
-      sender: true,
-      senderInventoryEntries: { pokemon: true },
-      receiver: true,
-      receiverInventoryEntries: { pokemon: true },
-    }>
-  ): Promise<CancelledTradeModel<{
-      sender: true,
-      senderInventoryEntries: { pokemon: true },
-      receiver: true,
-      receiverInventoryEntries: { pokemon: true },
-  }>> {
-    if (user.id !== pendingTrade.sender.id) {
-      throw new HttpException('You cannot cancel a trade that is not yours', HttpStatus.CONFLICT);
-    }
-
-    return this.pendingTradesService.updateToCancelled(pendingTrade);
-  }
-
-  public async cancelPendingTrade(
-    user: UserModel,
-    pendingTrade: PendingTradeModel<{
-      sender: true,
-      senderInventoryEntries: { pokemon: true },
-      receiver: true,
-      receiverInventoryEntries: { pokemon: true },
-    }>,
-    dataSource: DataSource,
-  ): Promise<CancelledTradeModel<{
-      sender: true,
-      senderInventoryEntries: { pokemon: true },
-      receiver: true,
-      receiverInventoryEntries: { pokemon: true },
-  }>> {
-    return dataSource.transaction((manager) => {
-      return this.withTransaction(manager)._cancelPendingTrade(user, pendingTrade);
-    })
-  }
-
-  private async _rejectPendingTrade(
-    user: UserModel,
-    pendingTrade: PendingTradeModel<{
-      sender: true,
-      senderInventoryEntries: { pokemon: true },
-      receiver: true,
-      receiverInventoryEntries: { pokemon: true },
-    }>
-  ): Promise<RejectedTradeModel<{
-      sender: true,
-      senderInventoryEntries: { pokemon: true },
-      receiver: true,
-      receiverInventoryEntries: { pokemon: true },
-  }>> {
+  public async rejectPendingTrade(
+    user: UserEntity,
+    pendingTrade: PendingTradeEntity,
+    tx?: Transaction,
+  ): Promise<RejectedTradeEntity> {
     if (user.id !== pendingTrade.receiver.id) {
       throw new HttpException('You cannot reject a trade that is sent to you', HttpStatus.CONFLICT);
     }
 
-    return this.pendingTradesService.updateToRejected(pendingTrade);
-  }
-
-  public async rejectPendingTrade(
-    user: UserModel,
-    pendingTrade: PendingTradeModel<{
-      sender: true,
-      senderInventoryEntries: { pokemon: true },
-      receiver: true,
-      receiverInventoryEntries: { pokemon: true },
-    }>,
-    dataSource: DataSource,
-  ): Promise<RejectedTradeModel<{
-      sender: true,
-      senderInventoryEntries: { pokemon: true },
-      receiver: true,
-      receiverInventoryEntries: { pokemon: true },
-  }>> {
-    return dataSource.transaction((manager) => {
-      return this.withTransaction(manager)._rejectPendingTrade(user, pendingTrade);
-    })
-  }
-
-  private async _rejectPendingTradeById(
-    user: UserModel,
-    id: UUIDv4,
-  ): Promise<RejectedTradeModel<{
-      sender: true,
-      senderInventoryEntries: { pokemon: true },
-      receiver: true,
-      receiverInventoryEntries: { pokemon: true },
-  }>> {
-    const pendingTrade = await this.findPendingTradeById(id, {
-      sender: true,
-      senderInventoryEntries: { pokemon: true },
-      receiver: true,
-      receiverInventoryEntries: { pokemon: true },
-    })
-
-    return this._rejectPendingTrade(user, pendingTrade);
+    return this.pendingTradesService.updateOneToRejected(pendingTrade, tx);
   }
 
   public async rejectPendingTradeById(
-    user: UserModel,
+    user: UserEntity,
     id: UUIDv4,
-    dataSource: DataSource,
-  ): Promise<RejectedTradeModel<{
-    sender: true,
-    senderInventoryEntries: { pokemon: true },
-    receiver: true,
-    receiverInventoryEntries: { pokemon: true },
-  }>> {
-    return dataSource.transaction((manager) => {
-      return this.withTransaction(manager)._rejectPendingTradeById(user, id);
-    })
-  }
+    tx?: Transaction,
+  ) {
+    const pendingTrade = await this.getPendingTradeById(id);
 
+    return this.rejectPendingTrade(user, pendingTrade, tx);
+  }
 }

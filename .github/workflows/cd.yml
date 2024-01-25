@@ -22,4 +22,4 @@ jobs:
             cd $HOME/apps/poketrade-back/
             git pull origin main
             docker compose up --detach --build
-            docker compose exec app ./node_modules/typeorm/cli.js -d ./dist/infra/config/typeorm/ migration:run
+            docker compose exec app node ./dist/infra/postgres/migrations/run

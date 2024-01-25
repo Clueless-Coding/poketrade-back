@@ -1,24 +1,22 @@
 import { Controller, Get, Param, ParseUUIDPipe, Post, Query, UseGuards } from '@nestjs/common';
 import { UsersUseCase } from 'src/core/use-cases/users.use-case';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
-import { UserEntity, UserModel } from 'src/infra/postgres/entities/user.entity';
 import { User } from '../decorators/user.decorator';
 import { ApiOkResponse, ApiCreatedResponse, ApiSecurity, ApiTags } from '@nestjs/swagger';
 import { Mapper } from '@automapper/core';
 import { InjectMapper } from '@automapper/nestjs';
 import { UserOutputDTO } from '../dtos/users/user.output.dto';
-import { UserInventoryEntryEntity } from 'src/infra/postgres/entities/user-inventory-entry.entity';
-import { UserInventoryEntryOutputDTO } from '../dtos/user-inventory-entries/user-inventory-entry.output.dto';
 import { mapArrayWithPagination } from 'src/common/helpers/map-array-with-pagination.helper';
 import { PaginationInputDTO } from '../dtos/pagination.input.dto';
 import { ApiOkResponseWithPagination } from '../decorators/api-ok-response-with-pagination.decorator';
-import { UUIDv4 } from 'src/common/types';
-import { DataSource } from 'typeorm';
-import { Pagination } from 'nestjs-typeorm-paginate';
-import { UserInventoryEntriesUseCase } from 'src/core/use-cases/user-inventory-entries.use-case';
-import { QuickSoldUserInventoryEntryEntity } from 'src/infra/postgres/entities/quick-sold-user-inventory-entry.entity';
-import { QuickSoldUserInventoryEntryOutputDTO } from '../dtos/user-inventory-entries/quick-sold-user-inventory-entry.output.dto';
+import { PaginatedArray, UUIDv4 } from 'src/common/types';
 import { GetUsersInputDTO } from '../dtos/users/get-users.input.dto';
+import { UserItemsUseCase } from 'src/core/use-cases/user-items.use-case';
+import { Database } from 'src/infra/postgres/other/types';
+import { UserItemOutputDTO } from '../dtos/user-items/user-item.output.dto';
+import { QuickSoldUserItemOutputDTO } from '../dtos/user-items/quick-sold-user-item.output.dto';
+import { QuickSoldUserItemEntity, UserEntity, UserItemEntity } from 'src/infra/postgres/tables';
+import { InjectDatabase } from 'src/infra/decorators/inject-database.decorator';
 
 @ApiTags('Users')
 @Controller('users')
@@ -26,10 +24,11 @@ export class UsersController {
   public constructor(
     @InjectMapper()
     private readonly mapper: Mapper,
+    @InjectDatabase()
+    private readonly db: Database,
 
     private readonly usersUseCase: UsersUseCase,
-    private readonly userInventoryEntriesUseCase: UserInventoryEntriesUseCase,
-    private readonly dataSource: DataSource,
+    private readonly userItemsUseCase: UserItemsUseCase,
   ) {}
 
   @ApiOkResponse({ type: UserOutputDTO })
@@ -39,14 +38,14 @@ export class UsersController {
   public async getUsers(
     @Query() dto: GetUsersInputDTO,
     @Query() paginationDTO: PaginationInputDTO,
-  ): Promise<Pagination<UserOutputDTO>> {
-    const users = await this.usersUseCase.findUsers(dto, paginationDTO);
+  ): Promise<PaginatedArray<UserOutputDTO>> {
+    const users = await this.usersUseCase.getUsersWithPagination(dto, paginationDTO);
 
-    return mapArrayWithPagination(
+    return mapArrayWithPagination<UserEntity, UserOutputDTO>(
       this.mapper,
       users,
-      UserEntity,
-      UserOutputDTO,
+      'UserEntity',
+      'UserOutputDTO',
     )
   }
 
@@ -54,38 +53,48 @@ export class UsersController {
   @ApiSecurity('AccessToken')
   @Get('me')
   @UseGuards(JwtAuthGuard)
-  public async getMe(@User() user: UserModel): Promise<UserOutputDTO> {
-    return this.mapper.map(user, UserEntity, UserOutputDTO);
-  }
-
-  @ApiOkResponseWithPagination({ type: UserInventoryEntryOutputDTO })
-  @ApiSecurity('AccessToken')
-  @Get('me/inventory')
-  @UseGuards(JwtAuthGuard)
-  public async getMeInventory(
-    @User() user: UserModel,
-    @Query() paginationDto: PaginationInputDTO,
-  ): Promise<Pagination<UserInventoryEntryOutputDTO>> {
-    const inventoryWithPagination = await this.userInventoryEntriesUseCase.findUserInventoryEntriesByUser(user, paginationDto);
-
-    return mapArrayWithPagination(
-      this.mapper,
-      inventoryWithPagination,
-      UserInventoryEntryEntity,
-      UserInventoryEntryOutputDTO
+  public async getMe(@User() user: UserEntity): Promise<UserOutputDTO> {
+    return this.mapper.map<UserEntity, UserOutputDTO>(
+      user,
+      'UserEntity',
+      'UserOutputDTO',
     );
   }
 
-  @ApiCreatedResponse({ type: QuickSoldUserInventoryEntryOutputDTO })
+  @ApiOkResponseWithPagination({ type: UserItemOutputDTO })
   @ApiSecurity('AccessToken')
-  @Post('me/inventory/:id/quick-sell')
+  @Get('me/items')
   @UseGuards(JwtAuthGuard)
-  public async quickSellPokemonFromInventory(
-    @User() user: UserModel,
-    @Param('id', new ParseUUIDPipe({ version: '4' })) id: UUIDv4,
-  ): Promise<QuickSoldUserInventoryEntryOutputDTO> {
-    const quickSoldUserInventoryEntry = await this.userInventoryEntriesUseCase.quickSellUserInventoryEntryById(user, id, this.dataSource);
+  public async getMeItems(
+    @User() user: UserEntity,
+    @Query() paginationDto: PaginationInputDTO,
+  ): Promise<PaginatedArray<UserItemOutputDTO>> {
+    const userItemsWithPagination = await this.userItemsUseCase.getUserItemsWithPaginationByUser(user, paginationDto);
 
-    return this.mapper.map(quickSoldUserInventoryEntry, QuickSoldUserInventoryEntryEntity, QuickSoldUserInventoryEntryOutputDTO);
+    return mapArrayWithPagination<UserItemEntity, UserItemOutputDTO>(
+      this.mapper,
+      userItemsWithPagination,
+      'UserItemEntity',
+      'UserItemOutputDTO',
+    );
+  }
+
+  @ApiCreatedResponse({ type: QuickSoldUserItemOutputDTO })
+  @ApiSecurity('AccessToken')
+  @Post('me/items/:id/quick-sell')
+  @UseGuards(JwtAuthGuard)
+  public async quickSellUserItem(
+    @User() user: UserEntity,
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: UUIDv4,
+  ): Promise<QuickSoldUserItemOutputDTO> {
+    const quickSoldUserItem = await this.db.transaction(async (tx) => (
+      this.userItemsUseCase.quickSellUserItemById(user, id, tx)
+    ));
+
+    return this.mapper.map<QuickSoldUserItemEntity, QuickSoldUserItemOutputDTO>(
+      quickSoldUserItem,
+      'QuickSoldUserItemEntity',
+      'QuickSoldUserItemOutputDTO',
+    );
   }
 }

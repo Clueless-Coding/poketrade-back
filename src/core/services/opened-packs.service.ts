@@ -1,20 +1,35 @@
 import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { CreateOpenedPackEntityFields, OpenedPackEntity, OpenedPackModel } from 'src/infra/postgres/entities/opened-pack.entity';
-import { Repository } from 'typeorm';
+import { Database, Transaction } from 'src/infra/postgres/other/types';
+import { InjectDatabase } from 'src/infra/decorators/inject-database.decorator';
+import { CreateOpenedPackEntityValues, OpenedPackEntity, openedPacksTable } from 'src/infra/postgres/tables';
 
 @Injectable()
 export class OpenedPacksService {
   public constructor(
-    @InjectRepository(OpenedPackEntity)
-    private readonly openedPacksRepository: Repository<OpenedPackEntity>,
+    @InjectDatabase()
+    private readonly db: Database,
   ) {}
 
   public async createOne(
-    fields: CreateOpenedPackEntityFields,
-  ): Promise<OpenedPackModel<{ user: true, pack: true, pokemon: true }>> {
-    const openedPack = this.openedPacksRepository.create(fields);
+    values: CreateOpenedPackEntityValues,
+    tx?: Transaction,
+  ): Promise<OpenedPackEntity> {
+    const { user, pack, pokemon } = values;
 
-    return this.openedPacksRepository.save(openedPack);
+    return (tx ?? this.db)
+      .insert(openedPacksTable)
+      .values({
+        ...values,
+        userId: user.id,
+        packId: pack.id,
+        pokemonId: pokemon.id,
+      })
+      .returning()
+      .then(([openedPack]) => ({
+        ...openedPack!,
+        user,
+        pack,
+        pokemon,
+      }));
   }
 }

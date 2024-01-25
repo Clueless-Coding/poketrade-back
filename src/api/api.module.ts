@@ -13,15 +13,15 @@ import { PacksController } from './controllers/packs.controller';
 import { PacksModule } from 'src/infra/ioc/packs.module';
 import { PokemonsModule } from 'src/infra/ioc/pokemons.module';
 import { AutomapperModule } from '@automapper/nestjs';
-import { classes } from '@automapper/classes';
 import { UserProfile } from './profiles/user.profile';
 import { PokemonProfile } from './profiles/pokemon.profile';
 import { PackProfile } from './profiles/pack.profile';
-import { UserInventoryEntriesModule } from 'src/infra/ioc/user-inventory-entries.module';
-import { UserInventoryEntryProfile } from './profiles/user-inventory-entry.profile';
+import { UserItemsModule } from 'src/infra/ioc/user-items.module';
+import { UserItemProfile } from './profiles/user-item.profile';
 import { TradesController } from './controllers/trades.controller';
 import { TradesModule } from 'src/infra/ioc/trades.module';
 import { TradeProfile } from './profiles/trade.profile';
+import { pojos } from '@automapper/pojos';
 
 @Module({
   imports: [
@@ -34,14 +34,14 @@ import { TradeProfile } from './profiles/trade.profile';
       global: true,
     }),
     AutomapperModule.forRoot({
-      strategyInitializer: classes(),
+      strategyInitializer: pojos(),
     }),
     PassportModule,
 
     AuthModule,
     PokemonsModule,
     UsersModule,
-    UserInventoryEntriesModule,
+    UserItemsModule,
     PacksModule,
     TradesModule,
   ],
@@ -52,7 +52,7 @@ import { TradeProfile } from './profiles/trade.profile';
 
     // profiles
     UserProfile,
-    UserInventoryEntryProfile,
+    UserItemProfile,
     PokemonProfile,
     PackProfile,
     TradeProfile,

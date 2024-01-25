@@ -1,13 +1,11 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { UsersService } from '../services/users.service';
-import { UserEntity, UserModel } from 'src/infra/postgres/entities/user.entity';
 import { CreateUserInputDTO } from 'src/api/dtos/users/create-user.input.dto';
-import { UpdateUserInputDTO } from 'src/api/dtos/users/update-user.input.dto';
-import { UUIDv4 } from 'src/common/types';
-import { FindEntityRelationsOptions } from 'src/infra/postgres/other/types';
-import { FindOptionsWhere, Like } from 'typeorm';
-import { IPaginationOptions, Pagination } from 'nestjs-typeorm-paginate';
+import { PaginatedArray, UUIDv4 } from 'src/common/types';
+import { Transaction } from 'src/infra/postgres/other/types';
 import { GetUsersInputDTO } from 'src/api/dtos/users/get-users.input.dto';
+import { UserEntity } from 'src/infra/postgres/tables';
+import { PaginationInputDTO } from 'src/api/dtos/pagination.input.dto';
 
 @Injectable()
 export class UsersUseCase {
@@ -15,82 +13,83 @@ export class UsersUseCase {
     private readonly usersService: UsersService,
   ) {}
 
-  // TODO: Rename all methods in use cases starting with find to starting with get
-  public async findUser(
-    where: FindOptionsWhere<UserEntity>,
-    errorMessage?: string,
-  ): Promise<UserModel> {
-    const user = await this.usersService.findOne(where);
+  public async getUser(
+    where: Partial<{ id: UUIDv4, name: string }> = {},
+    options: Partial<{
+      errorMessage: string;
+      errorStatus: HttpStatus;
+    }> = {},
+  ): Promise<UserEntity> {
+    const {
+      errorMessage = 'User not found',
+      errorStatus = HttpStatus.NOT_FOUND,
+    } = options;
+    const user = await this.usersService.findOne({
+      where,
+    });
 
     if (!user) {
-      throw new HttpException(errorMessage ?? 'User not found', HttpStatus.NOT_FOUND);
+      throw new HttpException(errorMessage, errorStatus);
     }
 
     return user;
   }
 
-  public async findUserById(
+  public async getUserById(
     id: UUIDv4,
-    errorMessageFn?: (id: UUIDv4) => string,
-  ): Promise<UserModel> {
-    return this.findUser({ id }, errorMessageFn?.(id) ?? `User (\`${id}\`) not found`);
+    options: Partial<{
+      errorMessageFn: (id: UUIDv4) => string,
+      errorStatus: HttpStatus,
+    }> = {},
+  ): Promise<UserEntity> {
+    const {
+      errorMessageFn = (id) => `User (\`${id}\`) not found`,
+      errorStatus = HttpStatus.NOT_FOUND,
+    } = options;
+    return this.getUser({ id }, {
+      errorMessage: errorMessageFn(id),
+      errorStatus,
+    });
   }
 
-  public async findUsers(
+  public getUsersWithPagination(
     dto: GetUsersInputDTO,
-    paginationOptions: IPaginationOptions
-  ): Promise<Pagination<UserModel>> {
-    const where: FindOptionsWhere<UserEntity> = {
-      ...(dto.nameLike && { name: Like(`%${dto.nameLike}%`) }),
-    };
-
-    return this.usersService.findManyWithPagination(
-      paginationOptions,
-      where,
-    );
+    paginationDTO: PaginationInputDTO,
+  ): Promise<PaginatedArray<UserEntity>> {
+    return this.usersService.findManyWithPagination({
+      paginationOptions: paginationDTO,
+      where: dto,
+    });
   }
 
-  public async checkIfUserExistsByName(name: string) {
-    return this.usersService.exist({ name });
+  public async checkIfUserExists(
+    where: Partial<{ id: UUIDv4, name: string }> = {},
+  ): Promise<boolean> {
+    return this.usersService.exists({
+      where
+    });
   }
 
-  public async preload<
-    T extends FindEntityRelationsOptions<UserEntity>,
-  >(
-    user: UserModel,
-    relations?: T,
-  ): Promise<UserModel<T>> {
-    return this.usersService.preload(user, relations);
-  }
-
-  public async createUser(dto: CreateUserInputDTO): Promise<UserModel> {
-    return this.usersService.createOne(dto);
-  }
-
-  public async updateUser<
-    T extends FindEntityRelationsOptions<UserEntity>,
-  >(
-    user: UserModel<T>,
-    dto: UpdateUserInputDTO
-  ): Promise<UserModel<T>> {
-    return this.usersService.updateOne(user, dto);
-  }
-
-  public async replenishUserBalance<
-    T extends FindEntityRelationsOptions<UserEntity>,
-  >(
-    user: UserModel<T>,
-    amount: number,
+  public async createUser(
+    dto: CreateUserInputDTO,
+    tx?: Transaction,
   ) {
-    return this.updateUser(user, { balance: user.balance + amount });
+    return this.usersService.createOne(dto, tx);
   }
 
-  public async spendUserBalance<
-    T extends FindEntityRelationsOptions<UserEntity>,
-  >(
-    user: UserModel<T>,
+  public async replenishUserBalance(
+    user: UserEntity,
     amount: number,
-  ) {
-    return this.updateUser(user, { balance: user.balance - amount });
+    tx?: Transaction,
+  ): Promise<UserEntity> {
+    return this.usersService.updateOne(user, { balance: user.balance + amount }, tx);
+  }
+
+  public async spendUserBalance(
+    user: UserEntity,
+    amount: number,
+    tx?: Transaction,
+  ): Promise<UserEntity> {
+    return this.usersService.updateOne(user, { balance: user.balance - amount }, tx);
   }
 }

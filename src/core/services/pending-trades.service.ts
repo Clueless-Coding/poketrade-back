@@ -1,110 +1,179 @@
 import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Nullable } from 'src/common/types';
-import { AcceptedTradeModel } from 'src/infra/postgres/entities/accepted-trade.entity';
-import { CancelledTradeModel } from 'src/infra/postgres/entities/cancelled-trade.entity';
-import { CreatePendingTradeEntityFields, PendingEntityFindRelationsOptionsFromCreateFields, PendingTradeEntity, PendingTradeModel } from 'src/infra/postgres/entities/pending-trade.entity';
-import { RejectedTradeModel } from 'src/infra/postgres/entities/rejected-trade.entity';
-import { TradeStatus } from 'src/infra/postgres/entities/trade.entity';
-import { FindEntityRelationsOptions } from 'src/infra/postgres/other/types';
-import { FindOptionsWhere, Repository } from 'typeorm';
-import { AcceptedTradesService } from './accepted-trades.service';
-import { CancelledTradesService } from './cancelled-trades.service';
-import { RejectedTradesService } from './rejected-trades.service';
+import { sql } from 'drizzle-orm';
+import { zip } from 'lodash';
+import { Nullable, UUIDv4 } from 'src/common/types';
+import { InjectDatabase } from 'src/infra/decorators/inject-database.decorator';
+import { Database, Transaction } from 'src/infra/postgres/other/types';
+import { AcceptedTradeEntity, CancelledTradeEntity, CreatePendingTradeEntityValues, PendingTradeEntity, RejectedTradeEntity, tradesTable, tradesToReceiverItemsTable, tradesToSenderItemsTable, TradeToReceiverItemEntity, TradeToSenderItemEntity } from 'src/infra/postgres/tables';
+import { TradesService } from './trades.service';
+
+type Where = Partial<{
+  id: UUIDv4,
+  ids: Array<UUIDv4>,
+}>;
+
+type FindOptions = Partial<{
+  where: Where,
+}>;
 
 @Injectable()
 export class PendingTradesService {
   public constructor(
-    @InjectRepository(PendingTradeEntity)
-    private readonly pendingTradesRepository: Repository<PendingTradeEntity>,
+    @InjectDatabase()
+    private readonly db: Database,
 
-    private readonly acceptedTradesService: AcceptedTradesService,
-    private readonly cancelledTradesService: CancelledTradesService,
-    private readonly rejectedTradesService: RejectedTradesService,
+    private readonly tradesService: TradesService,
   ) {}
 
-  public async findOne<
-    T extends FindEntityRelationsOptions<PendingTradeEntity> = {}
-  >(
-    where?: FindOptionsWhere<PendingTradeEntity>,
-    relations?: T,
-  ) {
-    return this.pendingTradesRepository.findOne({
-      where,
-      relations,
-    }) as Promise<Nullable<PendingTradeModel<T>>>;
+  public async findOne(
+    findOptions: FindOptions,
+  ): Promise<Nullable<PendingTradeEntity>> {
+    const status = 'PENDING';
+
+    return this.tradesService
+      .findOne({
+        ...findOptions,
+        where: {
+          ...findOptions.where,
+          status
+        }
+      })
+      .then((trade) => (
+        trade ? {
+          ...trade,
+          status: status as typeof status,
+        } : null
+      ))
   }
 
-  public async createOne<
-    T extends CreatePendingTradeEntityFields,
-  >(
-    fields: T,
-  ): Promise<PendingTradeModel<PendingEntityFindRelationsOptionsFromCreateFields<T>>> {
-    const pendingTrade = this.pendingTradesRepository.create({
-      ...fields,
-      status: TradeStatus.PENDING,
-    });
 
-    return this.pendingTradesRepository.save(
-      pendingTrade
-    ) as unknown as Promise<PendingTradeModel<PendingEntityFindRelationsOptionsFromCreateFields<T>>>;
+  public async createOne(
+    values: CreatePendingTradeEntityValues,
+    tx?: Transaction,
+  ): Promise<{
+    pendingTrade: PendingTradeEntity,
+    tradesToSenderItems: Array<TradeToSenderItemEntity>,
+    tradesToReceiverItems: Array<TradeToReceiverItemEntity>,
+  }> {
+    const status = 'PENDING';
+    const { sender, senderItems, receiver, receiverItems } = values;
+
+    const pendingTrade = await (tx ?? this.db)
+      .insert(tradesTable)
+      .values({
+        ...values,
+        status,
+        senderId: sender.id,
+        receiverId: receiver.id,
+      })
+      .returning()
+      .then(([trade]) => ({
+        ...trade!,
+        status: trade!.status as typeof status,
+        sender,
+        receiver,
+      }));
+
+    const [tradesToSenderItems, tradesToReceiverItems] = await Promise.all([
+      senderItems.length ? (tx ?? this.db)
+        .insert(tradesToSenderItemsTable)
+        .values(senderItems.map((senderItem) => ({
+          tradeId: pendingTrade.id,
+          senderItemId: senderItem.id,
+        })))
+        .returning()
+        .then((tradesToSenderItems) => zip(senderItems, tradesToSenderItems).map(([senderItem, tradeToSenderItem]) => ({
+          ...tradeToSenderItem!,
+          trade: pendingTrade,
+          senderItem: senderItem!,
+        }))) : [],
+      receiverItems.length ? (tx ?? this.db)
+        .insert(tradesToReceiverItemsTable)
+        .values(receiverItems.map((receiverItem) => ({
+          tradeId: pendingTrade.id,
+          receiverItemId: receiverItem.id,
+        })))
+        .returning()
+        .then((tradesToReceiverItems) => zip(receiverItems, tradesToReceiverItems).map(([receiverItem, tradeToReceiverItem]) => ({
+          ...tradeToReceiverItem!,
+          trade: pendingTrade,
+          receiverItem: receiverItem!,
+        }))) : [],
+    ]);
+
+    return {
+      pendingTrade,
+      tradesToSenderItems,
+      tradesToReceiverItems,
+    };
   }
 
-  public async updateToAccepted<
-    T extends Required<FindEntityRelationsOptions<PendingTradeEntity>>,
-  >(
-    pendingTrade: PendingTradeModel<T>,
-  ): Promise<AcceptedTradeModel<T>> {
-    // TODO: Research more how to easily switch entity from one to another
-    // right now this is the only way I could find out
-    const pendingTradeId = pendingTrade.id;
-    await this.deleteOne(pendingTrade);
+  public async updateOneToCancelled(
+    pendingTrade: PendingTradeEntity,
+    tx?: Transaction,
+  ): Promise<CancelledTradeEntity> {
+    const status = 'CANCELLED';
+    const { sender, receiver } = pendingTrade;
 
-    return this.acceptedTradesService.createOne({
-        ...pendingTrade,
-        id: pendingTradeId,
-    }) as Promise<AcceptedTradeModel<T>>;
+    return (tx ?? this.db)
+      .update(tradesTable)
+      .set({
+        status,
+        cancelledAt: sql<Date>`now()`,
+      })
+      .returning()
+      .then(([trade]) => ({
+        ...trade!,
+        status: trade!.status as typeof status,
+        cancelledAt: trade!.cancelledAt!,
+        sender,
+        receiver,
+      }));
   }
 
-  public async updateToCancelled<
-    T extends Required<FindEntityRelationsOptions<PendingTradeEntity>>
-  >(
-    pendingTrade: PendingTradeModel<T>,
-  ): Promise<CancelledTradeModel<T>> {
-    // TODO: Research more how to easily switch entity from one to another
-    // right now this is the only way I could find out
-    const pendingTradeId = pendingTrade.id;
-    await this.deleteOne(pendingTrade);
+  public async updateOneToAccepted(
+    pendingTrade: PendingTradeEntity,
+    tx?: Transaction,
+  ): Promise<AcceptedTradeEntity> {
+    const status = 'ACCEPTED';
+    const { sender, receiver } = pendingTrade;
 
-    return this.cancelledTradesService.createOne({
-        ...pendingTrade,
-        id: pendingTradeId,
-    }) as Promise<CancelledTradeModel<T>>;
+    return (tx ?? this.db)
+      .update(tradesTable)
+      .set({
+        status,
+        acceptedAt: sql<Date>`now()`,
+      })
+      .returning()
+      .then(([trade]) => ({
+        ...trade!,
+        status: trade!.status as typeof status,
+        acceptedAt: trade!.acceptedAt!,
+        sender,
+        receiver,
+      }));
   }
 
-  public async updateToRejected<
-    T extends Required<FindEntityRelationsOptions<PendingTradeEntity>>,
-  >(
-    pendingTrade: PendingTradeModel<T>,
-  ): Promise<RejectedTradeModel<T>> {
-    // TODO: Research more how to easily switch entity from one to another
-    // right now this is the only way I could find out
-    const pendingTradeId = pendingTrade.id;
-    await this.deleteOne(pendingTrade);
+  public async updateOneToRejected(
+    pendingTrade: PendingTradeEntity,
+    tx?: Transaction,
+  ): Promise<RejectedTradeEntity> {
+    const status = 'REJECTED';
+    const { sender, receiver } = pendingTrade;
 
-    return this.rejectedTradesService.createOne({
-        ...pendingTrade,
-        id: pendingTradeId,
-    }) as Promise<RejectedTradeModel<T>>;
-  }
-
-  public async deleteOne<
-    T extends FindEntityRelationsOptions<PendingTradeEntity>,
-  >(
-    pendingTrade: PendingTradeModel<T>,
-  ): Promise<PendingTradeModel<T>> {
-    return this.pendingTradesRepository.remove(
-      pendingTrade as unknown as PendingTradeEntity,
-    ) as unknown as Promise<PendingTradeModel<T>>;
+    return (tx ?? this.db)
+      .update(tradesTable)
+      .set({
+        status,
+        rejectedAt: sql<Date>`now()`,
+      })
+      .returning()
+      .then(([trade]) => ({
+        ...trade!,
+        status: trade!.status as typeof status,
+        rejectedAt: trade!.rejectedAt!,
+        sender,
+        receiver,
+      }));
   }
 }
