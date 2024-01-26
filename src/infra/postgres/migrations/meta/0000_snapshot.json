@@ -1,5 +1,5 @@
 {
-  "id": "324b09b2-2f95-4212-abab-868bed3d8ecd",
+  "id": "3926f27e-c35d-493e-9728-1ad2879fb300",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "5",
   "dialect": "pg",
@@ -455,23 +455,11 @@
           "primaryKey": false,
           "notNull": true
         },
-        "cancelled_at": {
-          "name": "cancelled_at",
+        "statused_at": {
+          "name": "statused_at",
           "type": "timestamp with time zone",
           "primaryKey": false,
-          "notNull": false
-        },
-        "accepted_at": {
-          "name": "accepted_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "rejected_at": {
-          "name": "rejected_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
+          "notNull": true
         }
       },
       "indexes": {

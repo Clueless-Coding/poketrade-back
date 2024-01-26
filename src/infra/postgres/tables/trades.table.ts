@@ -26,9 +26,8 @@ export const tradesTable = pgTable('trades', {
     .$type<UUIDv4>()
     .notNull()
     .references(() => usersTable.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
-  cancelledAt: timestamp('cancelled_at', { withTimezone: true }),
-  acceptedAt: timestamp('accepted_at', { withTimezone: true }),
-  rejectedAt: timestamp('rejected_at', { withTimezone: true }),
+  statusedAt: timestamp('statused_at', { withTimezone: true })
+    .notNull(),
 }, (table) => ({
   statusIdx: index().on(table.status),
 }));
@@ -53,47 +52,27 @@ export type TradeEntity = typeof tradesTable.$inferSelect & {
   receiver: UserEntity,
 };
 
-export type PendingTradeEntity = Omit<TradeEntity,
-  | 'status'
-  | 'cancelledAt'
-  | 'acceptedAt'
-  | 'rejectedAt'> & {
+export type PendingTradeEntity = Omit<TradeEntity, 'status'> & {
   status: 'PENDING'
 };
+export type CancelledTradeEntity = Omit<TradeEntity, 'status'> & {
+  status: 'CANCELLED',
+};
+export type AcceptedTradeEntity = Omit<TradeEntity, 'status'> & {
+  status: 'ACCEPTED',
+};
+export type RejectedTradeEntity = Omit<TradeEntity, 'status'> & {
+  status: 'REJECTED',
+};
+
 export type CreatePendingTradeEntityValues = Omit<
   typeof tradesTable.$inferInsert,
   | 'status'
-  | 'cancelledAt'
-  | 'acceptedAt'
-  | 'rejectedAt'
+  | 'statusedAt'
   | 'senderId'
   | 'receiverId'> & {
   sender: UserEntity,
   senderItems: Array<UserItemEntity>,
   receiver: UserEntity,
   receiverItems: Array<UserItemEntity>,
-};
-export type CancelledTradeEntity = Omit<TradeEntity,
-  | 'status'
-  | 'cancelledAt'
-  | 'acceptedAt'
-  | 'rejectedAt'> & {
-  status: 'CANCELLED',
-  cancelledAt: Date,
-};
-export type AcceptedTradeEntity = Omit<TradeEntity,
-  | 'status'
-  | 'cancelledAt'
-  | 'acceptedAt'
-  | 'rejectedAt'> & {
-  status: 'ACCEPTED',
-  acceptedAt: Date,
-};
-export type RejectedTradeEntity = Omit<TradeEntity,
-  |'status'
-  | 'cancelledAt'
-  | 'acceptedAt'
-  | 'rejectedAt'> & {
-  status: 'REJECTED',
-  rejectedAt: Date,
 };

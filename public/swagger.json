@@ -886,6 +886,10 @@
             "format": "date-time",
             "type": "string"
           },
+          "statusedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
           "sender": {
             "$ref": "#/components/schemas/UserOutputDTO"
           },
@@ -900,6 +904,7 @@
           "id",
           "createdAt",
           "updatedAt",
+          "statusedAt",
           "sender",
           "receiver",
           "status"
@@ -919,6 +924,10 @@
             "format": "date-time",
             "type": "string"
           },
+          "statusedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
           "sender": {
             "$ref": "#/components/schemas/UserOutputDTO"
           },
@@ -927,20 +936,16 @@
           },
           "status": {
             "type": "string"
-          },
-          "acceptedAt": {
-            "format": "date-time",
-            "type": "string"
           }
         },
         "required": [
           "id",
           "createdAt",
           "updatedAt",
+          "statusedAt",
           "sender",
           "receiver",
-          "status",
-          "acceptedAt"
+          "status"
         ]
       },
       "CancelledTradeOuputDTO": {
@@ -957,6 +962,10 @@
             "format": "date-time",
             "type": "string"
           },
+          "statusedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
           "sender": {
             "$ref": "#/components/schemas/UserOutputDTO"
           },
@@ -965,20 +974,16 @@
           },
           "status": {
             "type": "string"
-          },
-          "cancelledAt": {
-            "format": "date-time",
-            "type": "string"
           }
         },
         "required": [
           "id",
           "createdAt",
           "updatedAt",
+          "statusedAt",
           "sender",
           "receiver",
-          "status",
-          "cancelledAt"
+          "status"
         ]
       },
       "RejectedTradeOutputDTO": {
@@ -995,6 +1000,10 @@
             "format": "date-time",
             "type": "string"
           },
+          "statusedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
           "sender": {
             "$ref": "#/components/schemas/UserOutputDTO"
           },
@@ -1003,20 +1012,16 @@
           },
           "status": {
             "type": "string"
-          },
-          "rejectedAt": {
-            "format": "date-time",
-            "type": "string"
           }
         },
         "required": [
           "id",
           "createdAt",
           "updatedAt",
+          "statusedAt",
           "sender",
           "receiver",
-          "status",
-          "rejectedAt"
+          "status"
         ]
       }
     }

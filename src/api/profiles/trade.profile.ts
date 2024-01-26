@@ -1,6 +1,6 @@
-import { createMap, forMember, mapFrom, Mapper, MappingProfile } from '@automapper/core';
+import { createMap, Mapper, MappingProfile } from '@automapper/core';
 import { AutomapperProfile, InjectMapper } from '@automapper/nestjs';
-import { PojoMetadata, PojosMetadataMap } from '@automapper/pojos';
+import { PojosMetadataMap } from '@automapper/pojos';
 import { Injectable } from '@nestjs/common';
 import {
   AcceptedTradeEntity,
@@ -16,7 +16,6 @@ import { CancelledTradeOuputDTO } from '../dtos/cancelled-trades/cancelled-trade
 import { PendingTradeOutputDTO } from '../dtos/pending-trades/pending-trade.output.dto';
 import { RejectedTradeOutputDTO } from '../dtos/rejected-trades/rejected-trade.output.dto';
 import { TradeOutputDTO } from '../dtos/trades/trade.output.dto';
-import { UserItemOutputDTO } from '../dtos/user-items/user-item.output.dto';
 
 @Injectable()
 export class TradeProfile extends AutomapperProfile {
@@ -72,27 +71,16 @@ export class TradeProfile extends AutomapperProfile {
       createdAt: Date,
       updatedAt: Date,
       status: String,
-      cancelledAt: Date,
-      acceptedAt: Date,
-      rejectedAt: Date,
+      statusedAt: Date,
       sender: 'UserEntity',
       receiver: 'UserEntity',
     };
     PojosMetadataMap.create<TradeEntity>('TradeEntity', tradeEntityProperties);
 
-    let cancelledAt, acceptedAt, rejectedAt;
-    let pendingTradeEntityProperties, cancelledTradeEntityProperties, acceptedTradeEntityProperties, rejectedTradeEntityProperties;
-    ({ cancelledAt, acceptedAt, rejectedAt, ...pendingTradeEntityProperties } = tradeEntityProperties);
-    PojosMetadataMap.create<PendingTradeEntity>('PendingTradeEntity', pendingTradeEntityProperties);
-
-    ({ acceptedAt, rejectedAt, ...cancelledTradeEntityProperties } = tradeEntityProperties);
-    PojosMetadataMap.create<CancelledTradeEntity>('CancelledTradeEntity', cancelledTradeEntityProperties);
-
-    ({ cancelledAt, rejectedAt, ...acceptedTradeEntityProperties } = tradeEntityProperties);
-    PojosMetadataMap.create<AcceptedTradeEntity>('AcceptedTradeEntity', acceptedTradeEntityProperties);
-
-    ({ cancelledAt, acceptedAt, ...rejectedTradeEntityProperties } = tradeEntityProperties);
-    PojosMetadataMap.create<RejectedTradeEntity>('RejectedTradeEntity', rejectedTradeEntityProperties);
+    PojosMetadataMap.create<PendingTradeEntity>('PendingTradeEntity', tradeEntityProperties);
+    PojosMetadataMap.create<CancelledTradeEntity>('CancelledTradeEntity', tradeEntityProperties);
+    PojosMetadataMap.create<AcceptedTradeEntity>('AcceptedTradeEntity', tradeEntityProperties);
+    PojosMetadataMap.create<RejectedTradeEntity>('RejectedTradeEntity', tradeEntityProperties);
   }
 
   private createMetadataDTOs(): void {
@@ -101,26 +89,15 @@ export class TradeProfile extends AutomapperProfile {
       createdAt: Date,
       updatedAt: Date,
       status: String,
-      cancelledAt: Date,
-      acceptedAt: Date,
-      rejectedAt: Date,
+      statusedAt: Date,
       sender: 'UserOutputDTO',
       receiver: 'UserOutputDTO',
     };
     PojosMetadataMap.create<TradeOutputDTO>('TradeOutputDTO', tradeOutputDTOProperties);
 
-    let cancelledAt, acceptedAt, rejectedAt;
-    let pendingTradeOutputDTOProperties, cancelledTradeOutputDTOProperties, acceptedTradeOutputDTOProperties, rejectedTradeOutputDTOProperties;
-    ({ cancelledAt, acceptedAt, rejectedAt, ...pendingTradeOutputDTOProperties } = tradeOutputDTOProperties);
-    PojosMetadataMap.create<PendingTradeOutputDTO>('PendingTradeOutputDTO', pendingTradeOutputDTOProperties);
-
-    ({ acceptedAt, rejectedAt, ...cancelledTradeOutputDTOProperties } = tradeOutputDTOProperties);
-    PojosMetadataMap.create<CancelledTradeOuputDTO>('CancelledTradeOutputDTO', cancelledTradeOutputDTOProperties);
-
-    ({ cancelledAt, rejectedAt, ...acceptedTradeOutputDTOProperties } = tradeOutputDTOProperties);
-    PojosMetadataMap.create<AcceptedTradeOutputDTO>('AcceptedTradeOutputDTO', acceptedTradeOutputDTOProperties);
-
-    ({ cancelledAt, acceptedAt, ...rejectedTradeOutputDTOProperties } = tradeOutputDTOProperties);
-    PojosMetadataMap.create<RejectedTradeOutputDTO>('RejectedTradeOutputDTO', rejectedTradeOutputDTOProperties);
+    PojosMetadataMap.create<PendingTradeOutputDTO>('PendingTradeOutputDTO', tradeOutputDTOProperties);
+    PojosMetadataMap.create<CancelledTradeOuputDTO>('CancelledTradeOutputDTO', tradeOutputDTOProperties);
+    PojosMetadataMap.create<AcceptedTradeOutputDTO>('AcceptedTradeOutputDTO', tradeOutputDTOProperties);
+    PojosMetadataMap.create<RejectedTradeOutputDTO>('RejectedTradeOutputDTO', tradeOutputDTOProperties);
   }
 }

@@ -53,9 +53,7 @@ CREATE TABLE IF NOT EXISTS "trades" (
 	"status" "trades_status" NOT NULL,
 	"sender_id" uuid NOT NULL,
 	"receiver_id" uuid NOT NULL,
-	"cancelled_at" timestamp with time zone,
-	"accepted_at" timestamp with time zone,
-	"rejected_at" timestamp with time zone
+	"statused_at" timestamp with time zone NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "user_items" (

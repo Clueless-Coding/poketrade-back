@@ -128,6 +128,7 @@ export class TradesService {
       .values({
         ...values,
         status,
+        statusedAt: sql<Date>`now()`,
         senderId: sender.id,
         receiverId: receiver.id,
       })
@@ -174,13 +175,12 @@ export class TradesService {
       .update(tradesTable)
       .set({
         status,
-        cancelledAt: sql<Date>`now()`,
+        statusedAt: sql<Date>`now()`,
       })
       .returning()
       .then(([trade]) => ({
         ...trade!,
         status: trade!.status as typeof status,
-        cancelledAt: trade!.cancelledAt!,
         sender,
         receiver,
       }));
@@ -197,13 +197,12 @@ export class TradesService {
       .update(tradesTable)
       .set({
         status,
-        acceptedAt: sql<Date>`now()`,
+        statusedAt: sql<Date>`now()`,
       })
       .returning()
       .then(([trade]) => ({
         ...trade!,
         status: trade!.status as typeof status,
-        acceptedAt: trade!.acceptedAt!,
         sender,
         receiver,
       }));
@@ -220,13 +219,12 @@ export class TradesService {
       .update(tradesTable)
       .set({
         status,
-        rejectedAt: sql<Date>`now()`,
+        statusedAt: sql<Date>`now()`,
       })
       .returning()
       .then(([trade]) => ({
         ...trade!,
         status: trade!.status as typeof status,
-        rejectedAt: trade!.rejectedAt!,
         sender,
         receiver,
       }));
