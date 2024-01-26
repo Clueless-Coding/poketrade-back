@@ -4,7 +4,7 @@ import { UUIDv4 } from 'src/common/types';
 import { TradeEntity, tradesTable } from './trades.table';
 import { UserItemEntity, userItemsTable } from './user-items.table';
 
-const userTypeEnum = pgEnum('trades_to_user_items_user_type', [
+export const userTypeEnum = pgEnum('trades_to_user_items_user_type', [
   'SENDER',
   'RECEIVER',
 ]);

@@ -7,7 +7,7 @@ import { tradesToSenderItemsTable } from './trades-to-sender-items.table';
 import { UserItemEntity } from './user-items.table';
 import { UserEntity, usersTable } from './users.table';
 
-const statusEnum = pgEnum('trades_status', [
+export const statusEnum = pgEnum('trades_status', [
   'PENDING',
   'CANCELLED',
   'ACCEPTED',

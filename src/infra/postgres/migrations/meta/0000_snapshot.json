@@ -1,5 +1,5 @@
 {
-  "id": "3926f27e-c35d-493e-9728-1ad2879fb300",
+  "id": "e31caf1d-fceb-4f96-8a26-68e9afaf4f0d",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "5",
   "dialect": "pg",
@@ -768,7 +768,24 @@
       "uniqueConstraints": {}
     }
   },
-  "enums": {},
+  "enums": {
+    "trades_to_user_items_user_type": {
+      "name": "trades_to_user_items_user_type",
+      "values": {
+        "SENDER": "SENDER",
+        "RECEIVER": "RECEIVER"
+      }
+    },
+    "trades_status": {
+      "name": "trades_status",
+      "values": {
+        "PENDING": "PENDING",
+        "CANCELLED": "CANCELLED",
+        "ACCEPTED": "ACCEPTED",
+        "REJECTED": "REJECTED"
+      }
+    }
+  },
   "schemas": {},
   "_meta": {
     "columns": {},

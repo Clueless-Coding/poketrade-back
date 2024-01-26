@@ -1,3 +1,15 @@
+DO $$ BEGIN
+ CREATE TYPE "trades_to_user_items_user_type" AS ENUM('SENDER', 'RECEIVER');
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ CREATE TYPE "trades_status" AS ENUM('PENDING', 'CANCELLED', 'ACCEPTED', 'REJECTED');
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "opened_packs" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"opened_at" timestamp with time zone DEFAULT now() NOT NULL,

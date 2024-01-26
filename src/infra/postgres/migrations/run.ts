@@ -20,7 +20,7 @@ const {
   await client.connect();
   const db = drizzle(client, { schema: tables });
 
-  await migrate(db, { migrationsFolder: './src/infra/postgres/migrations/' })
+  await migrate(db, { migrationsFolder: __dirname });
 
   await client.end();
 })();
