@@ -5,8 +5,7 @@ import { PostgresModule } from '../postgres/postgres.module';
 import { UsersModule } from './users.module';
 import { UserItemsModule } from './user-items.module';
 import { PendingTradesUseCase } from 'src/core/use-cases/pending-trades.use-case';
-import { TradesToSenderItemsService } from 'src/core/services/trades-to-sender-items.service';
-import { TradesToReceiverItemsService } from 'src/core/services/trades-to-receiver-items.service';
+import { TradesToUserItemsService } from 'src/core/services/trades-to-user-items.service';
 
 @Module({
   imports: [
@@ -17,15 +16,13 @@ import { TradesToReceiverItemsService } from 'src/core/services/trades-to-receiv
   providers: [
     TradesUseCase,
     TradesService,
-    TradesToSenderItemsService,
-    TradesToReceiverItemsService,
+    TradesToUserItemsService,
     PendingTradesUseCase,
   ],
   exports: [
     TradesUseCase,
     TradesService,
-    TradesToSenderItemsService,
-    TradesToReceiverItemsService,
+    TradesToUserItemsService,
     PendingTradesUseCase,
   ],
 })

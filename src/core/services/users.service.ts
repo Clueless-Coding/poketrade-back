@@ -6,7 +6,7 @@ import { CreateUserEntityValues, UpdateUserEntityValues, UserEntity, usersTable 
 import { and, eq, inArray, like, SQL } from 'drizzle-orm';
 import { mapArrayToPaginatedArray } from 'src/common/helpers/map-array-to-paginated-array.helper';
 
-type Where = Partial<{
+type FindUsersWhere = Partial<{
   id: UUIDv4,
   ids: Array<UUIDv4>,
   name: string,
@@ -14,7 +14,7 @@ type Where = Partial<{
 }>;
 
 type FindUsersOptions = Partial<{
-  where: Where,
+  where: FindUsersWhere,
   extraFields: Record<string, SQL>,
 }>
 
@@ -22,31 +22,33 @@ type FindUsersWithPaginationOptions = FindUsersOptions & {
   paginationOptions: PaginationOptions,
 }
 
+
+export const mapFindUsersWhereToSQL = (
+  where: FindUsersWhere,
+): Optional<SQL> => {
+  return and(
+    where.id !== undefined
+      ? eq(usersTable.id, where.id)
+      : undefined,
+    where.ids !== undefined
+      ? inArray(usersTable.id, where.ids)
+      : undefined,
+    where.name !== undefined
+      ? eq(usersTable.name, where.name)
+      : undefined,
+    where.nameLike !== undefined
+      ? like(usersTable.name, `%${where.nameLike}%`)
+      : undefined,
+  );
+}
+
+
 @Injectable()
 export class UsersService {
   public constructor(
     @InjectDatabase()
     private readonly db: Database,
   ) {}
-
-  private mapWhereToSQL(
-    where: Where
-  ): Optional<SQL> {
-    return and(
-      where.id !== undefined
-        ? eq(usersTable.id, where.id)
-        : undefined,
-      where.ids !== undefined
-        ? inArray(usersTable.id, where.ids)
-        : undefined,
-      where.name !== undefined
-        ? eq(usersTable.name, where.name)
-        : undefined,
-      where.nameLike !== undefined
-        ? like(usersTable.name, `%${where.nameLike}%`)
-        : undefined,
-    )
-  }
 
   private baseSelectBuilder(
     findUsersOptions: FindUsersOptions,
@@ -56,7 +58,7 @@ export class UsersService {
     return this.db
       .select()
       .from(usersTable)
-      .where(this.mapWhereToSQL(where));
+      .where(mapFindUsersWhereToSQL(where));
   }
 
   public async findUsers(

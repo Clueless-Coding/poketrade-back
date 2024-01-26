@@ -7,7 +7,7 @@ import { and, eq, inArray, like, SQL } from 'drizzle-orm';
 import { mapArrayToPaginatedArray } from 'src/common/helpers/map-array-to-paginated-array.helper';
 import { zip } from 'lodash';
 
-type Where = Partial<{
+type FindUserItemsWhere = Partial<{
   id: UUIDv4,
   ids: Array<UUIDv4>,
   userId: UUIDv4,
@@ -19,12 +19,55 @@ type Where = Partial<{
 }>;
 
 type FindUserItemsOptions = Partial<{
-  where: Where,
+  where: FindUserItemsWhere,
 }>
 
 type FindUserItemsWithPaginationOptions = FindUserItemsOptions & {
   paginationOptions: PaginationOptions,
 }
+
+export const mapFindUserItemsWhereToSQL = (
+  where: FindUserItemsWhere
+): Optional<SQL> => {
+  return and(
+    where.id !== undefined
+      ? eq(userItemsTable.id, where.id)
+      : undefined,
+    where.ids !== undefined
+      ? inArray(userItemsTable.id, where.ids)
+      : undefined,
+
+    where.userId !== undefined
+      ? eq(userItemsTable.userId, where.userId)
+      : undefined,
+    where.userName !== undefined
+      ? eq(usersTable.name, where.userName)
+      : undefined,
+    where.userNameLike !== undefined
+      ? like(usersTable.name, `%${where.userNameLike}%`)
+      : undefined,
+
+    where.pokemonId !== undefined
+      ? eq(userItemsTable.pokemonId, where.pokemonId)
+      : undefined,
+    where.pokemonName !== undefined
+      ? eq(pokemonsTable.name, where.pokemonName)
+      : undefined,
+    where.pokemonNameLike !== undefined
+      ? like(pokemonsTable.name, `%${where.pokemonNameLike}%`)
+      : undefined,
+  );
+};
+
+export const mapUserItemsRowToEntity = (
+  row: Record<'user_items' | 'users' | 'pokemons', any>,
+) => {
+  return {
+    ...row.user_items,
+    user: row.users,
+    pokemon: row.pokemons,
+  };
+};
 
 @Injectable()
 export class UserItemsService {
@@ -32,39 +75,6 @@ export class UserItemsService {
     @InjectDatabase()
     private readonly db: Database,
   ) {}
-
-  private mapWhereToSQL(
-    where: Where
-  ): Optional<SQL> {
-    return and(
-      where.id !== undefined
-        ? eq(userItemsTable.id, where.id)
-        : undefined,
-      where.ids !== undefined
-        ? inArray(userItemsTable.id, where.ids)
-        : undefined,
-
-      where.userId !== undefined
-        ? eq(userItemsTable.userId, where.userId)
-        : undefined,
-      where.userName !== undefined
-        ? eq(usersTable.name, where.userName)
-        : undefined,
-      where.userNameLike !== undefined
-        ? like(usersTable.name, `%${where.userNameLike}%`)
-        : undefined,
-
-      where.pokemonId !== undefined
-        ? eq(userItemsTable.pokemonId, where.pokemonId)
-        : undefined,
-      where.pokemonName !== undefined
-        ? eq(pokemonsTable.name, where.pokemonName)
-        : undefined,
-      where.pokemonNameLike !== undefined
-        ? like(pokemonsTable.name, `%${where.pokemonNameLike}%`)
-        : undefined,
-    )
-  }
 
   private baseSelectBuilder(
     findUserItemsOptions: FindUserItemsOptions,
@@ -76,17 +86,7 @@ export class UserItemsService {
       .from(userItemsTable)
       .innerJoin(usersTable, eq(userItemsTable.userId, usersTable.id))
       .innerJoin(pokemonsTable, eq(userItemsTable.pokemonId, pokemonsTable.id))
-      .where(this.mapWhereToSQL(where));
-  }
-
-  public mapSelectBuilderRowToEntity(
-  row: Record<'user_items' | 'users' | 'pokemons', any>,
-  ) {
-    return {
-      ...row.user_items,
-      user: row.users,
-      pokemon: row.pokemons,
-    }
+      .where(mapFindUserItemsWhereToSQL(where));
   }
 
   public async findUserItems(
@@ -94,7 +94,7 @@ export class UserItemsService {
   ): Promise<Array<UserItemEntity>> {
     return this
       .baseSelectBuilder(findUserItemsOptions)
-      .then((rows) => rows.map((row) => this.mapSelectBuilderRowToEntity(row)));
+      .then((rows) => rows.map((row) => mapUserItemsRowToEntity(row)));
   }
 
   public async findUserItemsWithPagination(
@@ -109,7 +109,7 @@ export class UserItemsService {
       .offset(offset)
       .limit(limit)
       .then((rows) => mapArrayToPaginatedArray(
-        rows.map((row) => this.mapSelectBuilderRowToEntity(row)),
+        rows.map((row) => mapUserItemsRowToEntity(row)),
         { page, limit },
       ));
   }
@@ -122,7 +122,7 @@ export class UserItemsService {
       .limit(1)
       .then(([row]) => (
         row
-          ? this.mapSelectBuilderRowToEntity(row)
+          ? mapUserItemsRowToEntity(row)
           : null
       ));
   }

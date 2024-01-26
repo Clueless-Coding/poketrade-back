@@ -5,16 +5,14 @@ import { Transaction } from 'src/infra/postgres/other/types';
 import { UserItemsUseCase } from './user-items.use-case';
 import { UsersUseCase } from './users.use-case';
 import { AcceptedTradeEntity, CancelledTradeEntity, PendingTradeEntity, RejectedTradeEntity, UserEntity } from 'src/infra/postgres/tables';
-import { TradesToSenderItemsService } from '../services/trades-to-sender-items.service';
-import { TradesToReceiverItemsService } from '../services/trades-to-receiver-items.service';
 import { TradesService } from '../services/trades.service';
+import { TradesToUserItemsService } from '../services/trades-to-user-items.service';
 
 @Injectable()
 export class PendingTradesUseCase {
   public constructor(
     private readonly tradesService: TradesService,
-    private readonly tradesToSenderItemsService: TradesToSenderItemsService,
-    private readonly tradesToReceiverItemsService: TradesToReceiverItemsService,
+    private readonly tradesToUserItemsService: TradesToUserItemsService,
     private readonly userItemsUseCase: UserItemsUseCase,
     private readonly usersUseCase: UsersUseCase,
   ) {}
@@ -162,12 +160,12 @@ export class PendingTradesUseCase {
     }
 
     const [tradesToSenderItems, tradesToReceiverItems] = await Promise.all([
-      this.tradesToSenderItemsService.findTradesToSenderItems({
+      this.tradesToUserItemsService.findTradesToSenderItems({
         where: {
           tradeId: pendingTrade.id,
         },
       }),
-      this.tradesToReceiverItemsService.findTradesToReceiverItems({
+      this.tradesToUserItemsService.findTradesToReceiverItems({
         where: {
           tradeId: pendingTrade.id,
         },

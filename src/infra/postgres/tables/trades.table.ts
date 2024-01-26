@@ -7,7 +7,7 @@ import { tradesToSenderItemsTable } from './trades-to-sender-items.table';
 import { UserItemEntity } from './user-items.table';
 import { UserEntity, usersTable } from './users.table';
 
-export const tradeStatusEnum = pgEnum('trade_status', [
+const statusEnum = pgEnum('trades_status', [
   'PENDING',
   'CANCELLED',
   'ACCEPTED',
@@ -16,7 +16,7 @@ export const tradeStatusEnum = pgEnum('trade_status', [
 
 export const tradesTable = pgTable('trades', {
   ...baseColumns,
-  status: tradeStatusEnum('status')
+  status: statusEnum('status')
     .notNull(),
   senderId: uuid('sender_id')
     .$type<UUIDv4>()
@@ -46,7 +46,7 @@ export const tradesTableRelations = relations(tradesTable, ({ one, many }) => ({
   tradesToReceiverItems: many(tradesToReceiverItemsTable),
 }))
 
-export type TradeStatus = typeof tradeStatusEnum.enumValues[number];
+export type TradeStatus = typeof statusEnum.enumValues[number];
 
 export type TradeEntity = typeof tradesTable.$inferSelect & {
   sender: UserEntity,
@@ -54,7 +54,7 @@ export type TradeEntity = typeof tradesTable.$inferSelect & {
 };
 
 export type PendingTradeEntity = Omit<TradeEntity,
-  |'status'
+  | 'status'
   | 'cancelledAt'
   | 'acceptedAt'
   | 'rejectedAt'> & {
@@ -74,7 +74,7 @@ export type CreatePendingTradeEntityValues = Omit<
   receiverItems: Array<UserItemEntity>,
 };
 export type CancelledTradeEntity = Omit<TradeEntity,
-  |'status'
+  | 'status'
   | 'cancelledAt'
   | 'acceptedAt'
   | 'rejectedAt'> & {
@@ -82,7 +82,7 @@ export type CancelledTradeEntity = Omit<TradeEntity,
   cancelledAt: Date,
 };
 export type AcceptedTradeEntity = Omit<TradeEntity,
-  |'status'
+  | 'status'
   | 'cancelledAt'
   | 'acceptedAt'
   | 'rejectedAt'> & {
@@ -97,8 +97,3 @@ export type RejectedTradeEntity = Omit<TradeEntity,
   status: 'REJECTED',
   rejectedAt: Date,
 };
-// export type TradeEntity =
-//   | PendingTradeEntity
-//   | CancelledTradeEntity
-//   | AcceptedTradeEntity
-//   | RejectedTradeEntity

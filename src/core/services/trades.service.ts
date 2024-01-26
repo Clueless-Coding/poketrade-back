@@ -9,8 +9,6 @@ import {
   CreatePendingTradeEntityValues,
   TradeToSenderItemEntity,
   TradeToReceiverItemEntity,
-  tradesToSenderItemsTable,
-  tradesToReceiverItemsTable,
   CancelledTradeEntity,
   AcceptedTradeEntity,
   RejectedTradeEntity,
@@ -19,54 +17,56 @@ import { InjectDatabase } from 'src/infra/decorators/inject-database.decorator';
 import { and, eq, inArray, sql, SQL } from 'drizzle-orm';
 import { Nullable, Optional, UUIDv4 } from 'src/common/types';
 import { alias } from 'drizzle-orm/pg-core';
-import { zip } from 'lodash';
+import { TradesToUserItemsService } from './trades-to-user-items.service';
 
-type Where = Partial<{
+type FindTradesWhere = Partial<{
   id: UUIDv4,
   ids: Array<UUIDv4>
   status: TradeStatus,
 }>
 
 type FindTradesOptions = Partial<{
-  where: Where,
+  where: FindTradesWhere,
 }>
 
 type FindPendingTradesOptions = Omit<FindTradesOptions, 'where'> & Partial<{
-  where: Omit<Where, 'status'>,
+  where: Omit<FindTradesWhere, 'status'>,
 }>;
+
+export const mapFindTradesWhereToSQL = (
+  where: FindTradesWhere,
+): Optional<SQL> => {
+  return and(
+    where.id !== undefined
+      ? eq(tradesTable.id, where.id)
+      : undefined,
+    where.ids !== undefined
+      ? inArray(tradesTable.id, where.ids)
+      : undefined,
+    where.status !== undefined
+      ? eq(tradesTable.status, where.status)
+      : undefined,
+  );
+}
+
+export const mapTradesRowToEntity = (
+  row: Record<'trades' | 'senders' | 'receivers', any>,
+) => {
+  return {
+    ...row.trades,
+    sender: row.senders,
+    receiver: row.receivers,
+  }
+};
 
 @Injectable()
 export class TradesService {
   public constructor(
     @InjectDatabase()
     private readonly db: Database,
+
+    private readonly tradesToUserItemsService: TradesToUserItemsService,
   ) {}
-
-  private mapWhereToSQL(
-    where: Where,
-  ): Optional<SQL> {
-    return and(
-      where.id !== undefined
-        ? eq(tradesTable.id, where.id)
-        : undefined,
-      where.ids !== undefined
-        ? inArray(tradesTable.id, where.ids)
-        : undefined,
-      where.status !== undefined
-        ? eq(tradesTable.status, where.status)
-        : undefined,
-    );
-  }
-
-  public mapSelectBuilderRowToEntity(
-    row: Record<'trades' | 'senders' | 'receivers', any>,
-  ) {
-    return {
-      ...row.trades,
-      sender: row.senders,
-      receiver: row.receivers,
-    }
-  }
 
   private baseSelectBuilder(
     findTradesOptions: FindTradesOptions,
@@ -81,7 +81,7 @@ export class TradesService {
       .from(tradesTable)
       .innerJoin(sendersTable, eq(sendersTable.id, tradesTable.senderId))
       .innerJoin(receiversTable, eq(receiversTable.id, tradesTable.receiverId))
-      .where(this.mapWhereToSQL(where));
+      .where(mapFindTradesWhereToSQL(where));
   }
 
   public async findTrade(
@@ -92,7 +92,7 @@ export class TradesService {
       .limit(1)
       .then(([row]) => (
         row
-        ? this.mapSelectBuilderRowToEntity(row)
+        ? mapTradesRowToEntity(row)
         : null
       ));
   }
@@ -146,30 +146,20 @@ export class TradesService {
       }));
 
     const [tradesToSenderItems, tradesToReceiverItems] = await Promise.all([
-      senderItems.length ? (tx ?? this.db)
-        .insert(tradesToSenderItemsTable)
-        .values(senderItems.map((senderItem) => ({
-          tradeId: pendingTrade.id,
-          senderItemId: senderItem.id,
-        })))
-        .returning()
-        .then((tradesToSenderItems) => zip(senderItems, tradesToSenderItems).map(([senderItem, tradeToSenderItem]) => ({
-          ...tradeToSenderItem!,
+      this.tradesToUserItemsService.createTradesToSenderItems(
+        senderItems.map((senderItem) => ({
           trade: pendingTrade,
-          senderItem: senderItem!,
-        }))) : [],
-      receiverItems.length ? (tx ?? this.db)
-        .insert(tradesToReceiverItemsTable)
-        .values(receiverItems.map((receiverItem) => ({
-          tradeId: pendingTrade.id,
-          receiverItemId: receiverItem.id,
-        })))
-        .returning()
-        .then((tradesToReceiverItems) => zip(receiverItems, tradesToReceiverItems).map(([receiverItem, tradeToReceiverItem]) => ({
-          ...tradeToReceiverItem!,
+          senderItem,
+        })),
+        tx,
+      ),
+      this.tradesToUserItemsService.createTradesToReceiverItems(
+        receiverItems.map((receiverItem) => ({
           trade: pendingTrade,
-          receiverItem: receiverItem!,
-        }))) : [],
+          receiverItem,
+        })),
+        tx,
+      ),
     ]);
 
     return {
