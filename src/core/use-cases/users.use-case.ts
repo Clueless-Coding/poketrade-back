@@ -24,7 +24,7 @@ export class UsersUseCase {
       errorMessage = 'User not found',
       errorStatus = HttpStatus.NOT_FOUND,
     } = options;
-    const user = await this.usersService.findOne({
+    const user = await this.usersService.findUser({
       where,
     });
 
@@ -56,7 +56,7 @@ export class UsersUseCase {
     dto: GetUsersInputDTO,
     paginationDTO: PaginationInputDTO,
   ): Promise<PaginatedArray<UserEntity>> {
-    return this.usersService.findManyWithPagination({
+    return this.usersService.findUsersWithPagination({
       paginationOptions: paginationDTO,
       where: dto,
     });
@@ -65,16 +65,16 @@ export class UsersUseCase {
   public async checkIfUserExists(
     where: Partial<{ id: UUIDv4, name: string }> = {},
   ): Promise<boolean> {
-    return this.usersService.exists({
-      where
-    });
+    return this.usersService
+      .findUser({ where })
+      .then((user) => Boolean(user));
   }
 
   public async createUser(
     dto: CreateUserInputDTO,
     tx?: Transaction,
   ) {
-    return this.usersService.createOne(dto, tx);
+    return this.usersService.createUser(dto, tx);
   }
 
   public async replenishUserBalance(
@@ -82,7 +82,7 @@ export class UsersUseCase {
     amount: number,
     tx?: Transaction,
   ): Promise<UserEntity> {
-    return this.usersService.updateOne(user, { balance: user.balance + amount }, tx);
+    return this.usersService.updateUser(user, { balance: user.balance + amount }, tx);
   }
 
   public async spendUserBalance(
@@ -90,6 +90,6 @@ export class UsersUseCase {
     amount: number,
     tx?: Transaction,
   ): Promise<UserEntity> {
-    return this.usersService.updateOne(user, { balance: user.balance - amount }, tx);
+    return this.usersService.updateUser(user, { balance: user.balance - amount }, tx);
   }
 }

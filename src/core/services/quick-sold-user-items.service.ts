@@ -13,22 +13,25 @@ export class QuickSoldUserItemsService {
     private readonly userItemsService: UserItemsService,
   ) {}
 
-  public async createOne(
+  public async createQuickSoldUserItem(
     userItem: UserItemEntity,
     tx?: Transaction,
   ): Promise<QuickSoldUserItemEntity> {
     const { user, pokemon } = userItem;
 
-    await this.userItemsService.deleteOne(userItem, tx);
+    const [ , quickSoldUserItem] = await Promise.all([
+      this.userItemsService.deleteUserItem(userItem, tx),
+      (tx ?? this.db)
+        .insert(quickSoldUserItemsTable)
+        .values(userItem)
+        .returning()
+        .then(([quickSoldUserItem]) => ({
+          ...quickSoldUserItem!,
+          user,
+          pokemon,
+        })),
+    ]);
 
-    return (tx ?? this.db)
-      .insert(quickSoldUserItemsTable)
-      .values(userItem)
-      .returning()
-      .then(([quickSoldUserItem]) => ({
-        ...quickSoldUserItem!,
-        user,
-        pokemon,
-      }))
+    return quickSoldUserItem;
   }
 }

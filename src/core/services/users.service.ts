@@ -13,12 +13,12 @@ type Where = Partial<{
   nameLike: string,
 }>;
 
-type FindOptions = Partial<{
+type FindUsersOptions = Partial<{
   where: Where,
   extraFields: Record<string, SQL>,
 }>
 
-type FindWithPaginationOptions = FindOptions & {
+type FindUsersWithPaginationOptions = FindUsersOptions & {
   paginationOptions: PaginationOptions,
 }
 
@@ -49,9 +49,9 @@ export class UsersService {
   }
 
   private baseSelectBuilder(
-    findOptions: FindOptions,
+    findUsersOptions: FindUsersOptions,
   ) {
-    const { where = {} } = findOptions;
+    const { where = {} } = findUsersOptions;
 
     return this.db
       .select()
@@ -59,18 +59,18 @@ export class UsersService {
       .where(this.mapWhereToSQL(where));
   }
 
-  public async findMany(
-    findOptions: FindOptions,
+  public async findUsers(
+    findUsersOptions: FindUsersOptions,
   ): Promise<Array<UserEntity>> {
-    return this.baseSelectBuilder(findOptions);
+    return this.baseSelectBuilder(findUsersOptions);
   }
 
-  public async findManyWithPagination(
-    findWithPaginationOptions: FindWithPaginationOptions,
+  public async findUsersWithPagination(
+    findUsersWithPaginationOptions: FindUsersWithPaginationOptions,
   ): Promise<PaginatedArray<UserEntity>> {
     const {
       paginationOptions: { page, limit },
-    } = findWithPaginationOptions;
+    } = findUsersWithPaginationOptions;
     // TODO: check for boundaries
     const offset = (page - 1) * limit;
 
@@ -85,29 +85,21 @@ export class UsersService {
     // const totalPages = Math.ceil(totalItems / offset);
 
     return this
-      .baseSelectBuilder(findWithPaginationOptions)
+      .baseSelectBuilder(findUsersWithPaginationOptions)
       .offset(offset)
       .limit(limit)
       .then((users) => mapArrayToPaginatedArray(users, { page, limit }));
   }
 
-  public async findOne(
-    findOptions: FindOptions,
+  public async findUser(
+    findUsersOptions: FindUsersOptions,
   ): Promise<Nullable<UserEntity>> {
-    return this.baseSelectBuilder(findOptions)
+    return this.baseSelectBuilder(findUsersOptions)
       .limit(1)
       .then(([user]) => user ?? null);
   }
 
-  public async exists(
-    findOptions: FindOptions = {},
-  ): Promise<boolean> {
-    return this
-      .findOne(findOptions)
-      .then((user) => Boolean(user));
-  }
-
-  public async createOne(
+  public async createUser(
     values: CreateUserEntityValues,
     tx?: Transaction,
   ): Promise<UserEntity> {
@@ -118,7 +110,7 @@ export class UsersService {
       .then(([user]) => user!);
   }
 
-  public async updateOne(
+  public async updateUser(
     user: UserEntity,
     values: UpdateUserEntityValues,
     tx?: Transaction,

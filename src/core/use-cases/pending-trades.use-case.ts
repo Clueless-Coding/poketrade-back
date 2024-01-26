@@ -5,14 +5,14 @@ import { Transaction } from 'src/infra/postgres/other/types';
 import { UserItemsUseCase } from './user-items.use-case';
 import { UsersUseCase } from './users.use-case';
 import { AcceptedTradeEntity, CancelledTradeEntity, PendingTradeEntity, RejectedTradeEntity, UserEntity } from 'src/infra/postgres/tables';
-import { PendingTradesService } from '../services/pending-trades.service';
 import { TradesToSenderItemsService } from '../services/trades-to-sender-items.service';
 import { TradesToReceiverItemsService } from '../services/trades-to-receiver-items.service';
+import { TradesService } from '../services/trades.service';
 
 @Injectable()
 export class PendingTradesUseCase {
   public constructor(
-    private readonly pendingTradesService: PendingTradesService,
+    private readonly tradesService: TradesService,
     private readonly tradesToSenderItemsService: TradesToSenderItemsService,
     private readonly tradesToReceiverItemsService: TradesToReceiverItemsService,
     private readonly userItemsUseCase: UserItemsUseCase,
@@ -74,8 +74,8 @@ export class PendingTradesUseCase {
       }
     }
 
-    return this.pendingTradesService
-      .createOne({
+    return this.tradesService
+      .createPendingTrade({
         sender,
         senderItems,
         receiver,
@@ -96,7 +96,7 @@ export class PendingTradesUseCase {
       errorStatus = HttpStatus.NOT_FOUND,
     } = options;
 
-    const pendingTrade = await this.pendingTradesService.findOne({
+    const pendingTrade = await this.tradesService.findPendingTrade({
       where
     });
 
@@ -134,7 +134,7 @@ export class PendingTradesUseCase {
       throw new HttpException('You cannot cancel a trade that is not yours', HttpStatus.CONFLICT);
     }
 
-    return this.pendingTradesService.updateOneToCancelled(pendingTrade, tx);
+    return this.tradesService.updatePendingTradeToCancelledTrade(pendingTrade, tx);
   }
 
   public async cancelPendingTradeById(
@@ -162,12 +162,12 @@ export class PendingTradesUseCase {
     }
 
     const [tradesToSenderItems, tradesToReceiverItems] = await Promise.all([
-      this.tradesToSenderItemsService.findMany({
+      this.tradesToSenderItemsService.findTradesToSenderItems({
         where: {
           tradeId: pendingTrade.id,
         },
       }),
-      this.tradesToReceiverItemsService.findMany({
+      this.tradesToReceiverItemsService.findTradesToReceiverItems({
         where: {
           tradeId: pendingTrade.id,
         },
@@ -187,7 +187,7 @@ export class PendingTradesUseCase {
       ),
     ]);
 
-    return this.pendingTradesService.updateOneToAccepted(pendingTrade, tx);
+    return this.tradesService.updatePendingTradeToAcceptedTrade(pendingTrade, tx);
   }
 
   public async acceptPendingTradeById(
@@ -209,7 +209,7 @@ export class PendingTradesUseCase {
       throw new HttpException('You cannot reject a trade that is sent to you', HttpStatus.CONFLICT);
     }
 
-    return this.pendingTradesService.updateOneToRejected(pendingTrade, tx);
+    return this.tradesService.updatePendingTradeToRejectedTrade(pendingTrade, tx);
   }
 
   public async rejectPendingTradeById(

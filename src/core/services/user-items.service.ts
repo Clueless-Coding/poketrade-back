@@ -18,11 +18,11 @@ type Where = Partial<{
   pokemonNameLike: string,
 }>;
 
-type FindOptions = Partial<{
+type FindUserItemsOptions = Partial<{
   where: Where,
 }>
 
-type FindWithPaginationOptions = FindOptions & {
+type FindUserItemsWithPaginationOptions = FindUserItemsOptions & {
   paginationOptions: PaginationOptions,
 }
 
@@ -67,9 +67,9 @@ export class UserItemsService {
   }
 
   private baseSelectBuilder(
-    findOptions: FindOptions,
+    findUserItemsOptions: FindUserItemsOptions,
   ) {
-    const { where = {} } = findOptions;
+    const { where = {} } = findUserItemsOptions;
 
     return this.db
       .select()
@@ -89,23 +89,23 @@ export class UserItemsService {
     }
   }
 
-  public async findMany(
-    findOptions: FindOptions,
+  public async findUserItems(
+    findUserItemsOptions: FindUserItemsOptions,
   ): Promise<Array<UserItemEntity>> {
     return this
-      .baseSelectBuilder(findOptions)
+      .baseSelectBuilder(findUserItemsOptions)
       .then((rows) => rows.map((row) => this.mapSelectBuilderRowToEntity(row)));
   }
 
-  public async findManyWithPagination(
-    findWithPaginationOptions: FindWithPaginationOptions,
+  public async findUserItemsWithPagination(
+    findUserItemsWithPaginationOptions: FindUserItemsWithPaginationOptions,
   ): Promise<PaginatedArray<UserItemEntity>> {
-    const { paginationOptions: { page, limit } } = findWithPaginationOptions;
+    const { paginationOptions: { page, limit } } = findUserItemsWithPaginationOptions;
     // TODO: check for boundaries
     const offset = (page - 1) * limit;
 
     return this
-      .baseSelectBuilder(findWithPaginationOptions)
+      .baseSelectBuilder(findUserItemsWithPaginationOptions)
       .offset(offset)
       .limit(limit)
       .then((rows) => mapArrayToPaginatedArray(
@@ -114,11 +114,11 @@ export class UserItemsService {
       ));
   }
 
-  public async findOne(
-    findOptions: FindOptions,
+  public async findUserItem(
+    findUserItemsOptions: FindUserItemsOptions,
   ): Promise<Nullable<UserItemEntity>> {
     return this
-      .baseSelectBuilder(findOptions)
+      .baseSelectBuilder(findUserItemsOptions)
       .limit(1)
       .then(([row]) => (
         row
@@ -127,7 +127,7 @@ export class UserItemsService {
       ));
   }
 
-  public async createOne(
+  public async createUserItem(
     values: CreateUserItemEntityValues,
     tx?: Transaction,
   ): Promise<UserItemEntity> {
@@ -148,7 +148,7 @@ export class UserItemsService {
       }));
   }
 
-  public async updateMany(
+  public async updateUserItems(
     userItems: Array<UserItemEntity>,
     values: UpdateUserItemEntityValues,
     tx?: Transaction,
@@ -173,17 +173,17 @@ export class UserItemsService {
       })));
   }
 
-  public async updateOne(
+  public async updateUserItem(
     userItem: UserItemEntity,
     values: UpdateUserItemEntityValues,
     tx?: Transaction,
   ): Promise<UserItemEntity> {
     return this
-      .updateMany([userItem], values, tx)
+      .updateUserItems([userItem], values, tx)
       .then(([userItem]) => userItem!);
   }
 
-  public async deleteOne(
+  public async deleteUserItem(
     userItem: UserItemEntity,
     tx?: Transaction,
   ): Promise<UserItemEntity> {

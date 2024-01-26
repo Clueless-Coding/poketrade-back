@@ -23,7 +23,7 @@ export class PacksUseCase {
     dto: GetPacksInputDTO,
     paginationDTO: PaginationInputDTO,
   ): Promise<PaginatedArray<PackEntity>> {
-    return this.packsService.findManyWithPagination({
+    return this.packsService.findPacksWithPagination({
       paginationOptions: paginationDTO,
       where: dto,
     });
@@ -41,7 +41,7 @@ export class PacksUseCase {
       errorStatus= HttpStatus.NOT_FOUND,
     } = options;
 
-    const pack = await this.packsService.findOne({
+    const pack = await this.packsService.findPack({
       where,
     });
 
@@ -88,7 +88,7 @@ export class PacksUseCase {
       tx,
     );
 
-    return this.openedPacksService.createOne({
+    return this.openedPacksService.createOpenedPack({
       user: userItem.user,
       pack,
       pokemon: userItem.pokemon,

@@ -24,10 +24,10 @@ export class PokemonsSeeder implements Seeder {
         image: apiPokemon['sprites']['other']['official-artwork']['front_default'],
     }));
 
-    return this.pokemonsService.createMany(createPokemonDTOs);
+    return this.pokemonsService.createPokemons(createPokemonDTOs);
   }
 
   async drop() {
-    return this.pokemonsService.deleteAll();
+    return this.pokemonsService.deleteAllPokemons();
   }
 }

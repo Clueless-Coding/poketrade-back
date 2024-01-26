@@ -5,7 +5,6 @@ import { PostgresModule } from '../postgres/postgres.module';
 import { UsersModule } from './users.module';
 import { UserItemsModule } from './user-items.module';
 import { PendingTradesUseCase } from 'src/core/use-cases/pending-trades.use-case';
-import { PendingTradesService } from 'src/core/services/pending-trades.service';
 import { TradesToSenderItemsService } from 'src/core/services/trades-to-sender-items.service';
 import { TradesToReceiverItemsService } from 'src/core/services/trades-to-receiver-items.service';
 
@@ -20,7 +19,6 @@ import { TradesToReceiverItemsService } from 'src/core/services/trades-to-receiv
     TradesService,
     TradesToSenderItemsService,
     TradesToReceiverItemsService,
-    PendingTradesService,
     PendingTradesUseCase,
   ],
   exports: [
@@ -28,7 +26,6 @@ import { TradesToReceiverItemsService } from 'src/core/services/trades-to-receiv
     TradesService,
     TradesToSenderItemsService,
     TradesToReceiverItemsService,
-    PendingTradesService,
     PendingTradesUseCase,
   ],
 })

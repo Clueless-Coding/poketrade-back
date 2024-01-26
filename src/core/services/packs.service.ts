@@ -13,11 +13,11 @@ type Where = Partial<{
   nameLike: string,
 }>;
 
-type FindOptions = Partial<{
+type FindPacksOptions = Partial<{
   where: Where,
 }>
 
-type FindWithPaginationOptions = FindOptions & {
+type FindPacksWithPaginationOptions = FindPacksOptions & {
   paginationOptions: PaginationOptions,
 }
 
@@ -48,9 +48,9 @@ export class PacksService {
   }
 
   private baseSelectBuilder(
-    findOptions: FindOptions,
+    findPacksOptions: FindPacksOptions,
   ) {
-    const { where = {} } = findOptions;
+    const { where = {} } = findPacksOptions;
 
     return this.db
       .select()
@@ -58,26 +58,26 @@ export class PacksService {
       .where(this.mapWhereToSql(where));
   }
 
-  public async findManyWithPagination(
-    findWithPaginationOptions: FindWithPaginationOptions,
+  public async findPacksWithPagination(
+    findPacksWithPaginationOptions: FindPacksWithPaginationOptions,
   ): Promise<PaginatedArray<PackEntity>> {
     const {
       paginationOptions: { page, limit },
-    } = findWithPaginationOptions;
+    } = findPacksWithPaginationOptions;
     // TODO: check for boundaries
     const offset = (page - 1) * limit;
 
     return this
-      .baseSelectBuilder(findWithPaginationOptions)
+      .baseSelectBuilder(findPacksWithPaginationOptions)
       .offset(offset)
       .limit(limit)
       .then((packs) => mapArrayToPaginatedArray(packs, { page, limit }))
   }
 
-  public async findOne(
-    findOptions: FindOptions,
+  public async findPack(
+    findPacksOptions: FindPacksOptions,
   ): Promise<Nullable<PackEntity>> {
-    return this.baseSelectBuilder(findOptions)
+    return this.baseSelectBuilder(findPacksOptions)
       .limit(1)
       .then(([pack]) => pack ?? null);
   }

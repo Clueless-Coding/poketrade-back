@@ -10,7 +10,7 @@ export class OpenedPacksService {
     private readonly db: Database,
   ) {}
 
-  public async createOne(
+  public async createOpenedPack(
     values: CreateOpenedPackEntityValues,
     tx?: Transaction,
   ): Promise<OpenedPackEntity> {

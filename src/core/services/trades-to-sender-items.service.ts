@@ -13,7 +13,7 @@ type Where = Partial<{
   senderItemId: UUIDv4,
 }>
 
-type FindOptions = Partial<{
+type FindTradesToSenderItemsOptions = Partial<{
   where: Where,
 }>
 
@@ -41,9 +41,9 @@ export class TradesToSenderItemsService {
   }
 
   private baseSelectBuilder(
-    findOptions: FindOptions,
+    findTradesToSenderItemsOptions: FindTradesToSenderItemsOptions,
   ) {
-    const { where = {} } = findOptions;
+    const { where = {} } = findTradesToSenderItemsOptions;
 
     const sendersTable = alias(usersTable, 'senders');
     const receiversTable = alias(usersTable, 'receivers');
@@ -78,11 +78,11 @@ export class TradesToSenderItemsService {
     }
   }
 
-  public async findMany(
-    findOptions: FindOptions,
+  public async findTradesToSenderItems(
+    findTradesToSenderItemsOptions: FindTradesToSenderItemsOptions,
   ): Promise<Array<TradeToSenderItemEntity>> {
     return this
-      .baseSelectBuilder(findOptions)
+      .baseSelectBuilder(findTradesToSenderItemsOptions)
       .then((rows) => rows.map((row) => this.mapSelectBuilderRowToEntity(row)));
   }
 }

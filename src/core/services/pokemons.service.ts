@@ -10,7 +10,7 @@ export class PokemonsService {
     private readonly db: Database,
   ) {}
 
-  public async createMany(
+  public async createPokemons(
     values: Array<CreatePokemonEntityValues>,
     tx?: Transaction,
   ): Promise<Array<PokemonEntity>> {
@@ -22,7 +22,7 @@ export class PokemonsService {
       .returning()
   }
 
-  public async deleteAll(
+  public async deleteAllPokemons(
     tx?: Transaction,
   ): Promise<Array<PokemonEntity>> {
     return (tx ?? this.db)

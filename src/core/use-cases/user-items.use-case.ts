@@ -29,7 +29,7 @@ export class UserItemsUseCase {
       errorStatus = HttpStatus.NOT_FOUND,
     } = options;
 
-    const userItem = await this.userItemsService.findOne({
+    const userItem = await this.userItemsService.findUserItem({
       where
     });
 
@@ -62,7 +62,7 @@ export class UserItemsUseCase {
     dto: GetUserItemsInputDTO,
     paginationDTO: PaginationInputDTO,
   ): Promise<PaginatedArray<UserItemEntity>> {
-    return this.userItemsService.findManyWithPagination({
+    return this.userItemsService.findUserItemsWithPagination({
       paginationOptions: paginationDTO,
       where: dto,
     });
@@ -89,7 +89,7 @@ export class UserItemsUseCase {
       errorStatus = HttpStatus.NOT_FOUND,
     } = options;
 
-    const userItems = await this.userItemsService.findMany({
+    const userItems = await this.userItemsService.findUserItems({
       where: { ids }
     });
 
@@ -109,7 +109,7 @@ export class UserItemsUseCase {
     pokemon: PokemonEntity,
     tx?: Transaction,
   ): Promise<UserItemEntity> {
-    return this.userItemsService.createOne({ user, pokemon }, tx);
+    return this.userItemsService.createUserItem({ user, pokemon }, tx);
   }
 
   public async transferUserItemsToAnotherUser(
@@ -129,7 +129,7 @@ export class UserItemsUseCase {
       throw new HttpException('You cannot transfer items to yourself', HttpStatus.CONFLICT);
     }
 
-    return this.userItemsService.updateMany(fromUserItems, { user: toUser }, tx);
+    return this.userItemsService.updateUserItems(fromUserItems, { user: toUser }, tx);
   }
 
   public async quickSellUserItem(
@@ -148,7 +148,7 @@ export class UserItemsUseCase {
     );
 
     return this.quickSoldUserItemsService
-      .createOne(userItem, tx)
+      .createQuickSoldUserItem(userItem, tx)
       .then((quickSoldUserItem) => ({
         ...quickSoldUserItem,
         user: updatedUser,

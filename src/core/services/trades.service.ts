@@ -1,10 +1,25 @@
 import { Injectable } from '@nestjs/common';
-import { Database } from 'src/infra/postgres/other/types';
-import { tradesTable, usersTable, TradeEntity, TradeStatus } from 'src/infra/postgres/tables';
+import { Database, Transaction } from 'src/infra/postgres/other/types';
+import {
+  tradesTable,
+  usersTable,
+  TradeEntity,
+  TradeStatus,
+  PendingTradeEntity,
+  CreatePendingTradeEntityValues,
+  TradeToSenderItemEntity,
+  TradeToReceiverItemEntity,
+  tradesToSenderItemsTable,
+  tradesToReceiverItemsTable,
+  CancelledTradeEntity,
+  AcceptedTradeEntity,
+  RejectedTradeEntity,
+} from 'src/infra/postgres/tables';
 import { InjectDatabase } from 'src/infra/decorators/inject-database.decorator';
-import { and, eq, inArray, SQL } from 'drizzle-orm';
+import { and, eq, inArray, sql, SQL } from 'drizzle-orm';
 import { Nullable, Optional, UUIDv4 } from 'src/common/types';
 import { alias } from 'drizzle-orm/pg-core';
+import { zip } from 'lodash';
 
 type Where = Partial<{
   id: UUIDv4,
@@ -12,9 +27,13 @@ type Where = Partial<{
   status: TradeStatus,
 }>
 
-type FindOptions = Partial<{
+type FindTradesOptions = Partial<{
   where: Where,
 }>
+
+type FindPendingTradesOptions = Omit<FindTradesOptions, 'where'> & Partial<{
+  where: Omit<Where, 'status'>,
+}>;
 
 @Injectable()
 export class TradesService {
@@ -50,9 +69,9 @@ export class TradesService {
   }
 
   private baseSelectBuilder(
-    findOptions: FindOptions,
+    findTradesOptions: FindTradesOptions,
   ) {
-    const { where = {} } = findOptions;
+    const { where = {} } = findTradesOptions;
 
     const sendersTable = alias(usersTable, 'senders');
     const receiversTable = alias(usersTable, 'receivers');
@@ -65,16 +84,167 @@ export class TradesService {
       .where(this.mapWhereToSQL(where));
   }
 
-  public async findOne(
-    findOptions: FindOptions,
+  public async findTrade(
+    findTradesOptions: FindTradesOptions,
   ): Promise<Nullable<TradeEntity>> {
     return this
-      .baseSelectBuilder(findOptions)
+      .baseSelectBuilder(findTradesOptions)
       .limit(1)
       .then(([row]) => (
         row
         ? this.mapSelectBuilderRowToEntity(row)
         : null
       ));
+  }
+
+  public async findPendingTrade(
+    findPendingTradesOptions: FindPendingTradesOptions,
+  ): Promise<Nullable<PendingTradeEntity>> {
+    const status = 'PENDING';
+
+    return this
+      .findTrade({
+        ...findPendingTradesOptions,
+        where: {
+          ...findPendingTradesOptions.where,
+          status
+        }
+      })
+      .then((trade) => (
+        trade ? {
+          ...trade,
+          status: status as typeof status,
+        } : null
+      ))
+  }
+
+  public async createPendingTrade(
+    values: CreatePendingTradeEntityValues,
+    tx?: Transaction,
+  ): Promise<{
+    pendingTrade: PendingTradeEntity,
+    tradesToSenderItems: Array<TradeToSenderItemEntity>,
+    tradesToReceiverItems: Array<TradeToReceiverItemEntity>,
+  }> {
+    const status = 'PENDING';
+    const { sender, senderItems, receiver, receiverItems } = values;
+
+    const pendingTrade = await (tx ?? this.db)
+      .insert(tradesTable)
+      .values({
+        ...values,
+        status,
+        senderId: sender.id,
+        receiverId: receiver.id,
+      })
+      .returning()
+      .then(([trade]) => ({
+        ...trade!,
+        status: trade!.status as typeof status,
+        sender,
+        receiver,
+      }));
+
+    const [tradesToSenderItems, tradesToReceiverItems] = await Promise.all([
+      senderItems.length ? (tx ?? this.db)
+        .insert(tradesToSenderItemsTable)
+        .values(senderItems.map((senderItem) => ({
+          tradeId: pendingTrade.id,
+          senderItemId: senderItem.id,
+        })))
+        .returning()
+        .then((tradesToSenderItems) => zip(senderItems, tradesToSenderItems).map(([senderItem, tradeToSenderItem]) => ({
+          ...tradeToSenderItem!,
+          trade: pendingTrade,
+          senderItem: senderItem!,
+        }))) : [],
+      receiverItems.length ? (tx ?? this.db)
+        .insert(tradesToReceiverItemsTable)
+        .values(receiverItems.map((receiverItem) => ({
+          tradeId: pendingTrade.id,
+          receiverItemId: receiverItem.id,
+        })))
+        .returning()
+        .then((tradesToReceiverItems) => zip(receiverItems, tradesToReceiverItems).map(([receiverItem, tradeToReceiverItem]) => ({
+          ...tradeToReceiverItem!,
+          trade: pendingTrade,
+          receiverItem: receiverItem!,
+        }))) : [],
+    ]);
+
+    return {
+      pendingTrade,
+      tradesToSenderItems,
+      tradesToReceiverItems,
+    };
+  }
+
+  public async updatePendingTradeToCancelledTrade(
+    pendingTrade: PendingTradeEntity,
+    tx?: Transaction,
+  ): Promise<CancelledTradeEntity> {
+    const status = 'CANCELLED';
+    const { sender, receiver } = pendingTrade;
+
+    return (tx ?? this.db)
+      .update(tradesTable)
+      .set({
+        status,
+        cancelledAt: sql<Date>`now()`,
+      })
+      .returning()
+      .then(([trade]) => ({
+        ...trade!,
+        status: trade!.status as typeof status,
+        cancelledAt: trade!.cancelledAt!,
+        sender,
+        receiver,
+      }));
+  }
+
+  public async updatePendingTradeToAcceptedTrade(
+    pendingTrade: PendingTradeEntity,
+    tx?: Transaction,
+  ): Promise<AcceptedTradeEntity> {
+    const status = 'ACCEPTED';
+    const { sender, receiver } = pendingTrade;
+
+    return (tx ?? this.db)
+      .update(tradesTable)
+      .set({
+        status,
+        acceptedAt: sql<Date>`now()`,
+      })
+      .returning()
+      .then(([trade]) => ({
+        ...trade!,
+        status: trade!.status as typeof status,
+        acceptedAt: trade!.acceptedAt!,
+        sender,
+        receiver,
+      }));
+  }
+
+  public async updatePendingTradeToRejectedTrade(
+    pendingTrade: PendingTradeEntity,
+    tx?: Transaction,
+  ): Promise<RejectedTradeEntity> {
+    const status = 'REJECTED';
+    const { sender, receiver } = pendingTrade;
+
+    return (tx ?? this.db)
+      .update(tradesTable)
+      .set({
+        status,
+        rejectedAt: sql<Date>`now()`,
+      })
+      .returning()
+      .then(([trade]) => ({
+        ...trade!,
+        status: trade!.status as typeof status,
+        rejectedAt: trade!.rejectedAt!,
+        sender,
+        receiver,
+      }));
   }
 }
