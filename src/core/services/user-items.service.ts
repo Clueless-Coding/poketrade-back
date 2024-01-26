@@ -30,32 +30,16 @@ export const mapFindUserItemsWhereToSQL = (
   where: FindUserItemsWhere
 ): Optional<SQL> => {
   return and(
-    where.id !== undefined
-      ? eq(userItemsTable.id, where.id)
-      : undefined,
-    where.ids !== undefined
-      ? inArray(userItemsTable.id, where.ids)
-      : undefined,
+    where.id !== undefined ? eq(userItemsTable.id, where.id) : undefined,
+    where.ids !== undefined ? inArray(userItemsTable.id, where.ids) : undefined,
 
-    where.userId !== undefined
-      ? eq(userItemsTable.userId, where.userId)
-      : undefined,
-    where.userName !== undefined
-      ? eq(usersTable.name, where.userName)
-      : undefined,
-    where.userNameLike !== undefined
-      ? like(usersTable.name, `%${where.userNameLike}%`)
-      : undefined,
+    where.userId !== undefined ? eq(userItemsTable.userId, where.userId) : undefined,
+    where.userName !== undefined ? eq(usersTable.name, where.userName) : undefined,
+    where.userNameLike !== undefined ? like(usersTable.name, `%${where.userNameLike}%`) : undefined,
 
-    where.pokemonId !== undefined
-      ? eq(userItemsTable.pokemonId, where.pokemonId)
-      : undefined,
-    where.pokemonName !== undefined
-      ? eq(pokemonsTable.name, where.pokemonName)
-      : undefined,
-    where.pokemonNameLike !== undefined
-      ? like(pokemonsTable.name, `%${where.pokemonNameLike}%`)
-      : undefined,
+    where.pokemonId !== undefined ? eq(userItemsTable.pokemonId, where.pokemonId) : undefined,
+    where.pokemonName !== undefined ? eq(pokemonsTable.name, where.pokemonName) : undefined,
+    where.pokemonNameLike !== undefined ? like(pokemonsTable.name, `%${where.pokemonNameLike}%`) : undefined,
   );
 };
 

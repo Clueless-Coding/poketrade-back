@@ -25,18 +25,10 @@ export const mapFindPokemonsWhereToSql = (
   where: FindPokemonsWhere
 ): Optional<SQL> => {
   return and(
-    where.id !== undefined
-      ? eq(packsTable.id, where.id)
-      : undefined,
-    where.ids !== undefined
-      ? inArray(packsTable.id, where.ids)
-      : undefined,
-    where.name !== undefined
-      ? eq(packsTable.name, where.name)
-      : undefined,
-    where.nameLike !== undefined
-      ? like(packsTable.name, `%${where.nameLike}%`)
-      : undefined,
+    where.id !== undefined ? eq(packsTable.id, where.id) : undefined,
+    where.ids !== undefined ? inArray(packsTable.id, where.ids) : undefined,
+    where.name !== undefined ? eq(packsTable.name, where.name) : undefined,
+    where.nameLike !== undefined ? like(packsTable.name, `%${where.nameLike}%`) : undefined,
   );
 }
 

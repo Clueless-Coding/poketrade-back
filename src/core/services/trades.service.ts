@@ -37,15 +37,9 @@ export const mapFindTradesWhereToSQL = (
   where: FindTradesWhere,
 ): Optional<SQL> => {
   return and(
-    where.id !== undefined
-      ? eq(tradesTable.id, where.id)
-      : undefined,
-    where.ids !== undefined
-      ? inArray(tradesTable.id, where.ids)
-      : undefined,
-    where.status !== undefined
-      ? eq(tradesTable.status, where.status)
-      : undefined,
+    where.id !== undefined ? eq(tradesTable.id, where.id) : undefined,
+    where.ids !== undefined ? inArray(tradesTable.id, where.ids) : undefined,
+    where.status !== undefined ? eq(tradesTable.status, where.status) : undefined,
   );
 }
 

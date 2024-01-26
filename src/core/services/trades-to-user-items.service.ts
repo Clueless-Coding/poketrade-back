@@ -5,7 +5,20 @@ import { zip } from 'lodash';
 import { Optional, UUIDv4 } from 'src/common/types';
 import { InjectDatabase } from 'src/infra/decorators/inject-database.decorator';
 import { Database, Transaction } from 'src/infra/postgres/other/types';
-import { CreateTradeToReceiverItemEntityValues, CreateTradeToSenderItemEntityValues, CreateTradeToUserItemEntityValues, pokemonsTable, tradesTable, tradesToUserItemsTable, TradeToReceiverItemEntity, TradeToSenderItemEntity, TradeToUserItemEntity, TradeToUserItemUserType, userItemsTable, usersTable } from 'src/infra/postgres/tables';
+import {
+  CreateTradeToReceiverItemEntityValues,
+  CreateTradeToSenderItemEntityValues,
+  CreateTradeToUserItemEntityValues,
+  pokemonsTable,
+  tradesTable,
+  tradesToUserItemsTable,
+  TradeToReceiverItemEntity,
+  TradeToSenderItemEntity,
+  TradeToUserItemEntity,
+  TradeToUserItemUserType,
+  userItemsTable,
+  usersTable,
+} from 'src/infra/postgres/tables';
 import { mapTradesRowToEntity } from './trades.service';
 import { mapUserItemsRowToEntity } from './user-items.service';
 
@@ -31,15 +44,9 @@ export const mapFindTradesToUserItemsWhereToSQL = (
   where: FindTradesToUserItemsWhere,
 ): Optional<SQL> => {
   return and(
-    where.tradeId !== undefined
-      ? eq(tradesToUserItemsTable.tradeId, where.tradeId)
-      : undefined,
-    where.userType !== undefined
-      ? eq(tradesToUserItemsTable.userType, where.userType)
-      : undefined,
-    where.userItemId !== undefined
-      ? eq(tradesToUserItemsTable.userItemId, where.userItemId)
-      : undefined,
+    where.tradeId !== undefined ? eq(tradesToUserItemsTable.tradeId, where.tradeId) : undefined,
+    where.userType !== undefined ? eq(tradesToUserItemsTable.userType, where.userType) : undefined,
+    where.userItemId !== undefined ? eq(tradesToUserItemsTable.userItemId, where.userItemId) : undefined,
   );
 };
 

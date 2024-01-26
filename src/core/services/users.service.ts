@@ -22,23 +22,14 @@ type FindUsersWithPaginationOptions = FindUsersOptions & {
   paginationOptions: PaginationOptions,
 }
 
-
 export const mapFindUsersWhereToSQL = (
   where: FindUsersWhere,
 ): Optional<SQL> => {
   return and(
-    where.id !== undefined
-      ? eq(usersTable.id, where.id)
-      : undefined,
-    where.ids !== undefined
-      ? inArray(usersTable.id, where.ids)
-      : undefined,
-    where.name !== undefined
-      ? eq(usersTable.name, where.name)
-      : undefined,
-    where.nameLike !== undefined
-      ? like(usersTable.name, `%${where.nameLike}%`)
-      : undefined,
+    where.id !== undefined ? eq(usersTable.id, where.id) : undefined,
+    where.ids !== undefined ? inArray(usersTable.id, where.ids) : undefined,
+    where.name !== undefined ? eq(usersTable.name, where.name) : undefined,
+    where.nameLike !== undefined ? like(usersTable.name, `%${where.nameLike}%`) : undefined,
   );
 }
 
