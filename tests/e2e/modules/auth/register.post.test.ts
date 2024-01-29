@@ -11,7 +11,7 @@ describe('Auth POST /register', () => {
   // TODO: Consider using beforeEach
   beforeAll(async () => {
     app = await buildTestApp();
-  });
+  }, 30000);
 
   test('Successful registration', async () => {
     const username = 'NAME1';

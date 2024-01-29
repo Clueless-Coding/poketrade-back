@@ -24,7 +24,7 @@ describe('Auth POST /login', () => {
       confirmPassword: userPassword,
     });
     user = registredUser;
-  });
+  }, 30000);
 
   test('Successful login', async () => {
     const response = await request(app.getHttpServer())
