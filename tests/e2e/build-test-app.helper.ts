@@ -1,47 +1,41 @@
-import { DrizzlePGModule } from '@knaadh/nestjs-drizzle-pg';
 import { Database } from 'src/infra/postgres/other/types';
 import { migrate } from 'drizzle-orm/node-postgres/migrator';
 import { Test } from '@nestjs/testing';
-import { AppModule } from 'src/app.module';
-import { PostgresModule } from 'src/infra/postgres/postgres.module';
-import { INestApplication, Module, ValidationPipe } from '@nestjs/common';
+import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { PostgreSqlContainer } from '@testcontainers/postgresql';
 import { DRIZZLE_DB_TAG } from 'src/infra/consts';
-import * as tables from 'src/infra/postgres/tables';
+import { join } from 'node:path';
+import { ConfigModule } from '@nestjs/config';
+import { ApiModule } from 'src/api/api.module';
 
 export const buildTestApp = async (): Promise<INestApplication> => {
   const postgresContainer = new PostgreSqlContainer()
   const startedPostgresContainer = await postgresContainer.start();
 
-  @Module({
-    imports: [
-      DrizzlePGModule.register({
-        tag: DRIZZLE_DB_TAG,
-        pg: {
-          connection: 'client',
-          config: {
-            connectionString: startedPostgresContainer.getConnectionUri(),
-          }
-        },
-        config: {
-          schema: tables,
-        },
-      })
-    ]
-  })
-  class TestPostgresModule {}
-
   const moduleFixture = await Test
     .createTestingModule({
-      imports: [AppModule],
+      imports: [
+        ConfigModule.forRoot({
+          isGlobal: true,
+          envFilePath: '.env.test',
+          load: [() => ({
+            JWT_SECRET: 'test',
+            JWT_EXPIRES_IN: '24h',
+            POSTGRES_USER: startedPostgresContainer.getUsername(),
+            POSTGRES_PASSWORD: startedPostgresContainer.getPassword(),
+            POSTGRES_HOST: startedPostgresContainer.getHost(),
+            POSTGRES_DB: startedPostgresContainer.getDatabase(),
+            POSTGRES_PORT: startedPostgresContainer.getPort(),
+          })],
+        }),
+        ApiModule,
+      ],
     })
-    .overrideModule(PostgresModule)
-    .useModule(TestPostgresModule)
     .compile();
 
   await migrate(
     moduleFixture.get<Database>(DRIZZLE_DB_TAG),
-    { migrationsFolder: 'src/infra/postgres/migrations' },
+    { migrationsFolder: join('src', 'infra', 'postgres', 'migrations') },
   );
   // TODO: Run pokemon seeder
 

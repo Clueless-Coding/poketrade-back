@@ -17,8 +17,9 @@ export class EnvVariables {
   @IsString()
   HOST: string = '127.0.0.1';
 
+  @IsOptional()
   @IsPortNumber()
-  PORT: number;
+  PORT: number = 3000;
 
   @IsString()
   POSTGRES_HOST: string;
