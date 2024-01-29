@@ -3,8 +3,9 @@ import { plainToInstance } from 'class-transformer';
 import { IsPortNumber } from 'src/common/decorators/is-port-number.decorator';
 
 export enum NodeEnv {
-  DEV = 'DEV',
-  PROD = 'PROD',
+  DEV = 'dev',
+  PROD = 'prod',
+  TEST = 'test',
 }
 
 export class EnvVariables {

@@ -55,7 +55,7 @@ export class PacksController {
   public async getPack(
     @Param('id', new ParseUUIDPipe({ version: '4' })) id: UUIDv4,
   ): Promise<PackWithPokemonsOutputDTO> {
-    const pack = await this.packsUseCase.getPack(id);
+    const pack = await this.packsUseCase.getPack({ id });
 
     return this.mapper.map<PackEntity, PackWithPokemonsOutputDTO>(
       pack,

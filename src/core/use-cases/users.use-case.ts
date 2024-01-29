@@ -70,7 +70,7 @@ export class UsersUseCase {
       .then((user) => Boolean(user));
   }
 
-  public async createUser(
+  public async createUserByRegistration(
     dto: CreateUserInputDTO,
     tx?: Transaction,
   ) {

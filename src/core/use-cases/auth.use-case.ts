@@ -1,8 +1,6 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { LoginOutputDTO } from 'src/api/dtos/auth/login.output.dto';
-import { RegisterInputDTO } from 'src/api/dtos/auth/register.input.dto';
-import { RegisterOutputDTO } from 'src/api/dtos/auth/register.output.dto';
+import { RegisterUserInputDTO } from 'src/api/dtos/auth/register-user.input.dto';
 import { JWT, UserTokenPayload } from 'src/common/types';
 import { UsersUseCase } from './users.use-case';
 import * as bcrypt from 'bcrypt';
@@ -23,13 +21,15 @@ export class AuthUseCase {
     return this.jwtService.signAsync(userTokenPayload) as Promise<JWT>;
   }
 
-  public async login(user: UserEntity): Promise<LoginOutputDTO> {
+  public async loginUser(user: UserEntity): Promise<{ accessToken: JWT }> {
     const accessToken = await this.generateAccessToken(user);
 
     return { accessToken };
   }
 
-  public async register(dto: RegisterInputDTO): Promise<RegisterOutputDTO> {
+  public async registerUser(
+    dto: RegisterUserInputDTO
+  ): Promise<{ user: UserEntity, accessToken: JWT }> {
     if (dto.password !== dto.confirmPassword) {
       throw new HttpException('Passwords does not match', HttpStatus.BAD_REQUEST);
     }
@@ -38,13 +38,13 @@ export class AuthUseCase {
       throw new HttpException('User with this name already exists', HttpStatus.CONFLICT);
     }
 
-    const user = await this.usersUseCase.createUser({
+    const user = await this.usersUseCase.createUserByRegistration({
       name: dto.username,
       hashedPassword: await bcrypt.hash(dto.password, 10),
     });
 
     const accessToken = await this.generateAccessToken(user);
 
-    return { accessToken };
+    return { user, accessToken };
   }
 }
