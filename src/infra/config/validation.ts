@@ -3,8 +3,9 @@ import { plainToInstance } from 'class-transformer';
 import { IsPortNumber } from 'src/common/decorators/is-port-number.decorator';
 
 export enum NodeEnv {
-  DEV = 'DEV',
-  PROD = 'PROD',
+  DEV = 'dev',
+  PROD = 'prod',
+  TEST = 'test',
 }
 
 export class EnvVariables {
@@ -16,8 +17,9 @@ export class EnvVariables {
   @IsString()
   HOST: string = '127.0.0.1';
 
+  @IsOptional()
   @IsPortNumber()
-  PORT: number;
+  PORT: number = 3000;
 
   @IsString()
   POSTGRES_HOST: string;

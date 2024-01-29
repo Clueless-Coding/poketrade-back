@@ -3,14 +3,14 @@
   "paths": {
     "/api/auth/login": {
       "post": {
-        "operationId": "AuthController_login",
+        "operationId": "AuthController_loginUser",
         "parameters": [],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/LoginInputDTO"
+                "$ref": "#/components/schemas/LoginUserInputDTO"
               }
             }
           }
@@ -21,7 +21,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/LoginOutputDTO"
+                  "$ref": "#/components/schemas/LoginUserOutputDTO"
                 }
               }
             }
@@ -34,14 +34,14 @@
     },
     "/api/auth/register": {
       "post": {
-        "operationId": "AuthController_register",
+        "operationId": "AuthController_registerUser",
         "parameters": [],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/RegisterInputDTO"
+                "$ref": "#/components/schemas/RegisterUserInputDTO"
               }
             }
           }
@@ -52,7 +52,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/RegisterOutputDTO"
+                  "$ref": "#/components/schemas/RegisterUserOutputDTO"
                 }
               }
             }
@@ -607,7 +607,7 @@
       }
     },
     "schemas": {
-      "LoginInputDTO": {
+      "LoginUserInputDTO": {
         "type": "object",
         "properties": {
           "username": {
@@ -620,47 +620,6 @@
         "required": [
           "username",
           "password"
-        ]
-      },
-      "LoginOutputDTO": {
-        "type": "object",
-        "properties": {
-          "accessToken": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "accessToken"
-        ]
-      },
-      "RegisterInputDTO": {
-        "type": "object",
-        "properties": {
-          "username": {
-            "type": "string"
-          },
-          "password": {
-            "type": "string"
-          },
-          "confirmPassword": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "username",
-          "password",
-          "confirmPassword"
-        ]
-      },
-      "RegisterOutputDTO": {
-        "type": "object",
-        "properties": {
-          "accessToken": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "accessToken"
         ]
       },
       "UserOutputDTO": {
@@ -680,6 +639,55 @@
           "id",
           "name",
           "balance"
+        ]
+      },
+      "LoginUserOutputDTO": {
+        "type": "object",
+        "properties": {
+          "user": {
+            "$ref": "#/components/schemas/UserOutputDTO"
+          },
+          "accessToken": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "user",
+          "accessToken"
+        ]
+      },
+      "RegisterUserInputDTO": {
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          },
+          "confirmPassword": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "username",
+          "password",
+          "confirmPassword"
+        ]
+      },
+      "RegisterUserOutputDTO": {
+        "type": "object",
+        "properties": {
+          "user": {
+            "$ref": "#/components/schemas/UserOutputDTO"
+          },
+          "accessToken": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "user",
+          "accessToken"
         ]
       },
       "PokemonOutputDTO": {
