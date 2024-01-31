@@ -42,7 +42,7 @@ export class TradesController {
     return this.mapper.map<PendingTradeEntity, PendingTradeOutputDTO>(
       pendingTrade,
       'PendingTradeEntity',
-      'CreatePendingTradeOutputDTO',
+      'PendingTradeOutputDTO',
     );
   }
 

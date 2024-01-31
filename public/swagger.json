@@ -588,6 +588,58 @@
           }
         ]
       }
+    },
+    "/api/centrifugo/token/connection": {
+      "post": {
+        "operationId": "CentrifugoController_generateCentrifugoConnectionToken",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenerateCentrifugoConnectionTokenOutputDTO"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Centrifugo"
+        ],
+        "security": [
+          {
+            "AccessToken": []
+          }
+        ]
+      }
+    },
+    "/api/centrifugo/token/subscription": {
+      "post": {
+        "operationId": "CentrifugoController_generateCentrifugoSubscriptionToken",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenerateCentrifugoSubscriptionTokenOutputDTO"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Centrifugo"
+        ],
+        "security": [
+          {
+            "AccessToken": []
+          }
+        ]
+      }
     }
   },
   "info": {
@@ -1030,6 +1082,28 @@
           "sender",
           "receiver",
           "status"
+        ]
+      },
+      "GenerateCentrifugoConnectionTokenOutputDTO": {
+        "type": "object",
+        "properties": {
+          "connectionToken": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "connectionToken"
+        ]
+      },
+      "GenerateCentrifugoSubscriptionTokenOutputDTO": {
+        "type": "object",
+        "properties": {
+          "subscriptionToken": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "subscriptionToken"
         ]
       }
     }

@@ -23,7 +23,7 @@ export class JwtAuthStrategy extends PassportStrategy(Strategy) {
   }
 
   public async validate(tokenPayload: UserTokenPayload): Promise<UserEntity> {
-    return this.usersService.getUser({ id: tokenPayload.id }, {
+    return this.usersService.getUser({ id: tokenPayload.sub }, {
       errorMessage: 'Unauthorized',
       errorStatus: HttpStatus.UNAUTHORIZED,
     });

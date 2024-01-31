@@ -7,6 +7,8 @@ import { UsersUseCase } from './users.use-case';
 import { AcceptedTradeEntity, CancelledTradeEntity, PendingTradeEntity, RejectedTradeEntity, UserEntity } from 'src/infra/postgres/tables';
 import { TradesService } from '../services/trades.service';
 import { TradesToUserItemsService } from '../services/trades-to-user-items.service';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { PENDING_TRADE_ACCEPTED_EVENT, PENDING_TRADE_CREATED_EVENT } from 'src/common/events';
 
 @Injectable()
 export class PendingTradesUseCase {
@@ -15,6 +17,7 @@ export class PendingTradesUseCase {
     private readonly tradesToUserItemsService: TradesToUserItemsService,
     private readonly userItemsUseCase: UserItemsUseCase,
     private readonly usersUseCase: UsersUseCase,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   public async createPendingTrade(
@@ -79,7 +82,10 @@ export class PendingTradesUseCase {
         receiver,
         receiverItems,
       }, tx)
-      .then(({ pendingTrade }) => pendingTrade);
+      .then(({ pendingTrade }) => {
+        this.eventEmitter.emit(PENDING_TRADE_CREATED_EVENT, pendingTrade);
+        return pendingTrade;
+      });
   }
 
   public async getPendingTrade(
@@ -185,7 +191,12 @@ export class PendingTradesUseCase {
       ),
     ]);
 
-    return this.tradesService.updatePendingTradeToAcceptedTrade(pendingTrade, tx);
+    return this.tradesService
+      .updatePendingTradeToAcceptedTrade(pendingTrade, tx)
+      .then((acceptedTrade) => {
+        this.eventEmitter.emit(PENDING_TRADE_ACCEPTED_EVENT, acceptedTrade);
+        return acceptedTrade;
+      });
   }
 
   public async acceptPendingTradeById(

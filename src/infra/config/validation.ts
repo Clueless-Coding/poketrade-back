@@ -1,4 +1,4 @@
-import { IsEnum, IsOptional, IsString, validateSync } from 'class-validator';
+import { IsEnum, IsOptional, IsString, IsUrl, validateSync } from 'class-validator';
 import { plainToInstance } from 'class-transformer';
 import { IsPortNumber } from 'src/common/decorators/is-port-number.decorator';
 
@@ -41,6 +41,15 @@ export class EnvVariables {
 
   @IsString()
   JWT_EXPIRES_IN: string;
+
+  @IsString()
+  CENTRIFUGO_API_URL: string;
+
+  @IsString()
+  CENTRIFUGO_API_KEY: string;
+
+  @IsString()
+  CENTRIFUGO_TOKEN_HMAC_SECRET_KEY: string;
 }
 
 export const validate = (config: Record<string, unknown>) => {

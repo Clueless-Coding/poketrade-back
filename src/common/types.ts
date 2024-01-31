@@ -9,7 +9,7 @@ export type RemovePropertiesWith<T extends Record<string, unknown>, U> = {
 export type RemovePropertiesWithNever<T extends Record<string, unknown>> = RemovePropertiesWith<T, never>;
 
 export type UserTokenPayload = {
-  id: UUIDv4;
+  sub: UUIDv4;
 };
 
 export type PaginatedArray<T> = {

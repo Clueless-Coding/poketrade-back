@@ -1,7 +1,7 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { RegisterUserInputDTO } from 'src/api/dtos/auth/register-user.input.dto';
-import { JWT, UserTokenPayload } from 'src/common/types';
+import { JWT } from 'src/common/types';
 import { UsersUseCase } from './users.use-case';
 import * as bcrypt from 'bcrypt';
 import { UserEntity } from 'src/infra/postgres/tables';
@@ -14,11 +14,7 @@ export class AuthUseCase {
   ) {}
 
   private async generateAccessToken(user: UserEntity): Promise<JWT> {
-    const userTokenPayload: UserTokenPayload = {
-      id: user.id,
-    };
-
-    return this.jwtService.signAsync(userTokenPayload) as Promise<JWT>;
+    return this.jwtService.signAsync({}, { subject: user.id }) as Promise<JWT>;
   }
 
   public async loginUser(user: UserEntity): Promise<{ accessToken: JWT }> {

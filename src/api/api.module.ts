@@ -22,6 +22,9 @@ import { TradesController } from './controllers/trades.controller';
 import { TradesModule } from 'src/infra/ioc/trades.module';
 import { TradeProfile } from './profiles/trade.profile';
 import { pojos } from '@automapper/pojos';
+import { EventEmitterModule } from '@nestjs/event-emitter';
+import { CentrifugoModule } from 'src/infra/centrifugo/centrifugo.module';
+import { CentrifugoController } from './controllers/centrifugo.controller';
 
 @Module({
   imports: [
@@ -37,6 +40,9 @@ import { pojos } from '@automapper/pojos';
       strategyInitializer: pojos(),
     }),
     PassportModule,
+
+    EventEmitterModule.forRoot(),
+    CentrifugoModule,
 
     AuthModule,
     PokemonsModule,
@@ -62,6 +68,7 @@ import { pojos } from '@automapper/pojos';
     UsersController,
     PacksController,
     TradesController,
+    CentrifugoController,
   ],
 })
 export class ApiModule {}
