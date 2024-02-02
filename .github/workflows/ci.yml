@@ -7,8 +7,6 @@ jobs:
   build:
     name: Continuous Integration
     runs-on: ubuntu-latest
-    env:
-      ENV_TEST: ${{ secrets.ENV_TEST }}
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v2
@@ -22,5 +20,5 @@ jobs:
       - run: pnpm build
       - name: Run tests
         run: |
-          echo $ENV_TEST > .env.test
+          echo "${{ secrets.ENV_TEST }}" > .env.test
           pnpm test -- --forceExit
