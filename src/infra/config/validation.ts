@@ -1,4 +1,4 @@
-import { IsEnum, IsOptional, IsString, IsUrl, validateSync } from 'class-validator';
+import { IsEnum, IsOptional, IsString, validateSync } from 'class-validator';
 import { plainToInstance } from 'class-transformer';
 import { IsPortNumber } from 'src/common/decorators/is-port-number.decorator';
 
