@@ -1,9 +1,11 @@
 name: Continuous Deployment
 
 on:
-  push:
-    branches:
-      - main
+  workflow_run:
+    workflows: ["Continuous Integration"]
+    branches: [main]
+    types:
+      - completed
 
 # TODO: Build docker image and publish it to ghcr. Then pull it in deploy job
 # https://medium.com/@odenigbo67/docker-ci-cd-in-vpc-vps-environments-automating-deployment-with-github-actions-via-ssh-or-web-e2192bb75a69
