@@ -2,7 +2,7 @@ import { Controller, HttpCode, HttpStatus, Post, UseGuards } from '@nestjs/commo
 import { CentrifugoService } from 'src/infra/centrifugo/centrifugo.service';
 import { User } from '../decorators/user.decorator';
 import { UserEntity } from 'src/infra/postgres/tables';
-import { JwtAuthGuard } from '../guards/jwt-auth.guard';
+import { AccessTokenAuthGuard } from '../guards/access-token-auth.guard';
 import { ApiCreatedResponse, ApiSecurity, ApiTags } from '@nestjs/swagger';
 import { GenerateCentrifugoConnectionTokenOutputDTO } from '../dtos/centrifugo/generate-centrifugo-connection-token.output.dto';
 import { GenerateCentrifugoSubscriptionTokenOutputDTO } from '../dtos/centrifugo/generate-centrifugo-subscription-token.output.dto';
@@ -18,7 +18,7 @@ export class CentrifugoController {
   @ApiSecurity('AccessToken')
   @Post('token/connection')
   @HttpCode(HttpStatus.CREATED)
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(AccessTokenAuthGuard)
   public async generateCentrifugoConnectionToken(
     @User() user: UserEntity,
   ): Promise<GenerateCentrifugoConnectionTokenOutputDTO> {
@@ -31,7 +31,7 @@ export class CentrifugoController {
   @ApiSecurity('AccessToken')
   @Post('token/subscription')
   @HttpCode(HttpStatus.CREATED)
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(AccessTokenAuthGuard)
   public async generateCentrifugoSubscriptionToken(
     @User() user: UserEntity,
   ): Promise<GenerateCentrifugoSubscriptionTokenOutputDTO> {

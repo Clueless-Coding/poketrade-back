@@ -13,7 +13,7 @@ import { CancelledTradeOuputDTO } from '../dtos/cancelled-trades/cancelled-trade
 import { CreatePendingTradeInputDTO } from '../dtos/pending-trades/create-pending-trade.input.dto';
 import { PendingTradeOutputDTO } from '../dtos/pending-trades/pending-trade.output.dto';
 import { RejectedTradeOutputDTO } from '../dtos/rejected-trades/rejected-trade.output.dto';
-import { JwtAuthGuard } from '../guards/jwt-auth.guard';
+import { AccessTokenAuthGuard } from '../guards/access-token-auth.guard';
 
 @ApiTags('Trades')
 @Controller('trades')
@@ -30,7 +30,7 @@ export class TradesController {
   @ApiCreatedResponse({ type: PendingTradeOutputDTO })
   @ApiSecurity('AccessToken')
   @Post()
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(AccessTokenAuthGuard)
   public async createPendingTrade(
     @User() user: UserEntity,
     @Body() dto: CreatePendingTradeInputDTO,
@@ -49,7 +49,7 @@ export class TradesController {
   @ApiCreatedResponse({ type: AcceptedTradeOutputDTO })
   @ApiSecurity('AccessToken')
   @Post(':id/accept')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(AccessTokenAuthGuard)
   public async acceptPendingTradeById(
     @User() user: UserEntity,
     @Param('id', new ParseUUIDPipe({ version: '4' })) id: UUIDv4,
@@ -68,7 +68,7 @@ export class TradesController {
   @ApiCreatedResponse({ type: CancelledTradeOuputDTO })
   @ApiSecurity('AccessToken')
   @Post(':id/cancel')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(AccessTokenAuthGuard)
   public async cancelPendingTradeById(
     @User() user: UserEntity,
     @Param('id', new ParseUUIDPipe({ version: '4' })) id: UUIDv4,
@@ -87,7 +87,7 @@ export class TradesController {
   @ApiCreatedResponse({ type: RejectedTradeOutputDTO })
   @ApiSecurity('AccessToken')
   @Post(':id/reject')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(AccessTokenAuthGuard)
   public async rejectPendingTradeById(
     @User() user: UserEntity,
     @Param('id', new ParseUUIDPipe({ version: '4' })) id: UUIDv4,

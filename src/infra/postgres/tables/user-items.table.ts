@@ -4,8 +4,7 @@ import { UserEntity, usersTable } from './users.table';
 import { PokemonEntity, pokemonsTable } from './pokemons.table';
 import { UUIDv4 } from 'src/common/types';
 import { relations } from 'drizzle-orm';
-import { tradesToSenderItemsTable } from './trades-to-sender-items.table';
-import { tradesToReceiverItemsTable } from './trades-to-receiver-items.table';
+import { tradesToUserItemsTable } from './trades-to-user-items.table';
 
 export const userItemsTableColumns = {
   ...baseIdColumn,
@@ -32,8 +31,6 @@ export const userItemsTableRelations = relations(userItemsTable, ({ one, many })
     fields: [userItemsTable.pokemonId],
     references: [pokemonsTable.id],
   }),
-  tradesToSenderItems: many(tradesToSenderItemsTable),
-  tradesToReceiverItems: many(tradesToReceiverItemsTable),
 }));
 
 export type UserItemEntity = typeof userItemsTable.$inferSelect & {

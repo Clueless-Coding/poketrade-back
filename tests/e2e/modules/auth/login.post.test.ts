@@ -1,4 +1,4 @@
-import * as request from 'supertest';
+import request from 'supertest';
 import { INestApplication } from '@nestjs/common';
 import { AuthUseCase } from 'src/core/use-cases/auth.use-case';
 import { UserEntity } from 'src/infra/postgres/tables';
@@ -34,7 +34,9 @@ describe('Auth POST /login', () => {
     expect(response.status).toBe(200);
     expect(response.body).toEqual(
       expect.objectContaining({
+        user: expect.any(Object),
         accessToken: expect.any(String),
+        refreshToken: expect.any(String)
       }),
     );
   });

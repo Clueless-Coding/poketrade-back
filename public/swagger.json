@@ -63,6 +63,69 @@
         ]
       }
     },
+    "/api/auth/logout": {
+      "post": {
+        "operationId": "AuthController_logoutUser",
+        "parameters": [
+          {
+            "name": "x-refresh-token",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Authorization"
+        ],
+        "security": [
+          {
+            "AccessToken": []
+          }
+        ]
+      }
+    },
+    "/api/auth/refresh": {
+      "post": {
+        "operationId": "AuthController_refreshTokens",
+        "parameters": [
+          {
+            "name": "x-refresh-token",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RefreshTokensOutputDTO"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Authorization"
+        ],
+        "security": [
+          {
+            "AccessToken": []
+          }
+        ]
+      }
+    },
     "/api/users": {
       "get": {
         "operationId": "UsersController_getUsers",
@@ -701,11 +764,15 @@
           },
           "accessToken": {
             "type": "string"
+          },
+          "refreshToken": {
+            "type": "string"
           }
         },
         "required": [
           "user",
-          "accessToken"
+          "accessToken",
+          "refreshToken"
         ]
       },
       "RegisterUserInputDTO": {
@@ -735,11 +802,34 @@
           },
           "accessToken": {
             "type": "string"
+          },
+          "refreshToken": {
+            "type": "string"
           }
         },
         "required": [
           "user",
-          "accessToken"
+          "accessToken",
+          "refreshToken"
+        ]
+      },
+      "RefreshTokensOutputDTO": {
+        "type": "object",
+        "properties": {
+          "user": {
+            "$ref": "#/components/schemas/UserOutputDTO"
+          },
+          "accessToken": {
+            "type": "string"
+          },
+          "refreshToken": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "user",
+          "accessToken",
+          "refreshToken"
         ]
       },
       "PokemonOutputDTO": {

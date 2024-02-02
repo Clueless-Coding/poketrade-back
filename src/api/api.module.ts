@@ -1,13 +1,11 @@
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
-import { ConfigService } from '@nestjs/config';
-import { EnvVariables } from 'src/infra/config/validation';
 import { AuthModule } from 'src/infra/ioc/auth.module';
 import { AuthController } from './controllers/auth.controller';
 import { PassportModule } from '@nestjs/passport';
 import { LocalAuthStrategy } from './strategies/local-auth.strategy';
 import { UsersModule } from 'src/infra/ioc/users.module';
-import { JwtAuthStrategy } from './strategies/jwt-auth.strategy';
+import { AccessTokenAuthStrategy } from './strategies/access-token-auth.strategy';
 import { UsersController } from './controllers/users.controller';
 import { PacksController } from './controllers/packs.controller';
 import { PacksModule } from 'src/infra/ioc/packs.module';
@@ -25,15 +23,12 @@ import { pojos } from '@automapper/pojos';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { CentrifugoModule } from 'src/infra/centrifugo/centrifugo.module';
 import { CentrifugoController } from './controllers/centrifugo.controller';
+import { RefreshTokenAuthStrategy } from './strategies/refresh-token-auth.strategy';
+import { CronJobsModule } from 'src/infra/cron-jobs/cron-jobs.module';
 
 @Module({
   imports: [
-    JwtModule.registerAsync({
-      inject: [ConfigService<EnvVariables>],
-      useFactory: (configService: ConfigService<EnvVariables>) => ({
-        secret: configService.getOrThrow('JWT_SECRET'),
-        signOptions: { expiresIn: configService.getOrThrow('JWT_EXPIRES_IN') }
-      }),
+    JwtModule.register({
       global: true,
     }),
     AutomapperModule.forRoot({
@@ -43,6 +38,7 @@ import { CentrifugoController } from './controllers/centrifugo.controller';
 
     EventEmitterModule.forRoot(),
     CentrifugoModule,
+    CronJobsModule,
 
     AuthModule,
     PokemonsModule,
@@ -54,7 +50,8 @@ import { CentrifugoController } from './controllers/centrifugo.controller';
   providers: [
     // strategies
     LocalAuthStrategy,
-    JwtAuthStrategy,
+    AccessTokenAuthStrategy,
+    RefreshTokenAuthStrategy,
 
     // profiles
     UserProfile,

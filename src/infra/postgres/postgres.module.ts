@@ -3,12 +3,12 @@ import { ConfigService } from '@nestjs/config';
 import { EnvVariables } from '../config/validation';
 import { DrizzlePGModule } from '@knaadh/nestjs-drizzle-pg';
 import * as tables from './tables';
-import { DRIZZLE_DB_TAG } from '../consts';
+import { DRIZZLE_DB_INJECTION_TOKEN } from '../injection-tokens';
 
 @Module({
   imports: [
     DrizzlePGModule.registerAsync({
-      tag: DRIZZLE_DB_TAG,
+      tag: DRIZZLE_DB_INJECTION_TOKEN,
       inject: [ConfigService<EnvVariables>],
       useFactory: (configService: ConfigService<EnvVariables>) => ({
         pg: {

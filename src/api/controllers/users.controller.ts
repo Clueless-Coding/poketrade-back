@@ -1,6 +1,6 @@
 import { Controller, Get, Param, ParseUUIDPipe, Post, Query, UseGuards } from '@nestjs/common';
 import { UsersUseCase } from 'src/core/use-cases/users.use-case';
-import { JwtAuthGuard } from '../guards/jwt-auth.guard';
+import { AccessTokenAuthGuard } from '../guards/access-token-auth.guard';
 import { User } from '../decorators/user.decorator';
 import { ApiOkResponse, ApiCreatedResponse, ApiSecurity, ApiTags } from '@nestjs/swagger';
 import { Mapper } from '@automapper/core';
@@ -34,7 +34,7 @@ export class UsersController {
   @ApiOkResponse({ type: UserOutputDTO })
   @ApiSecurity('AccessToken')
   @Get()
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(AccessTokenAuthGuard)
   public async getUsers(
     @Query() dto: GetUsersInputDTO,
     @Query() paginationDTO: PaginationInputDTO,
@@ -52,7 +52,7 @@ export class UsersController {
   @ApiOkResponse({ type: UserOutputDTO })
   @ApiSecurity('AccessToken')
   @Get('me')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(AccessTokenAuthGuard)
   public async getMe(@User() user: UserEntity): Promise<UserOutputDTO> {
     return this.mapper.map<UserEntity, UserOutputDTO>(
       user,
@@ -64,7 +64,7 @@ export class UsersController {
   @ApiOkResponseWithPagination({ type: UserItemOutputDTO })
   @ApiSecurity('AccessToken')
   @Get('me/items')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(AccessTokenAuthGuard)
   public async getMeItems(
     @User() user: UserEntity,
     @Query() paginationDto: PaginationInputDTO,
@@ -82,7 +82,7 @@ export class UsersController {
   @ApiCreatedResponse({ type: QuickSoldUserItemOutputDTO })
   @ApiSecurity('AccessToken')
   @Post('me/items/:id/quick-sell')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(AccessTokenAuthGuard)
   public async quickSellUserItem(
     @User() user: UserEntity,
     @Param('id', new ParseUUIDPipe({ version: '4' })) id: UUIDv4,

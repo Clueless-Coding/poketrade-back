@@ -15,7 +15,6 @@ type FindUsersWhere = Partial<{
 
 type FindUsersOptions = Partial<{
   where: FindUsersWhere,
-  extraFields: Record<string, SQL>,
 }>
 
 type FindUsersWithPaginationOptions = FindUsersOptions & {

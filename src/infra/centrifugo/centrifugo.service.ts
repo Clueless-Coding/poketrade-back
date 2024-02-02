@@ -31,6 +31,7 @@ export class CentrifugoService {
     return this.jwtService.signAsync({}, {
       secret: this.configService.getOrThrow('CENTRIFUGO_TOKEN_HMAC_SECRET_KEY'),
       subject: user.id,
+      expiresIn: this.configService.getOrThrow('CENTRIFUGO_CONNECTION_TOKEN_EXPIRES_IN'),
     }) as Promise<JWT>;
   }
 
@@ -40,6 +41,7 @@ export class CentrifugoService {
     return this.jwtService.signAsync({ channel }, {
       secret: this.configService.getOrThrow('CENTRIFUGO_TOKEN_HMAC_SECRET_KEY'),
       subject: user.id,
+      expiresIn: this.configService.getOrThrow('CENTRIFUGO_SUBSCRIPTION_TOKEN_EXPIRES_IN'),
     }) as Promise<JWT>;
   }
 

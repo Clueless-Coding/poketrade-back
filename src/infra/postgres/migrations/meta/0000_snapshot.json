@@ -1,5 +1,5 @@
 {
-  "id": "e31caf1d-fceb-4f96-8a26-68e9afaf4f0d",
+  "id": "7e8eda12-5bce-4e9b-9843-aa62e3fdf8f0",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "5",
   "dialect": "pg",
@@ -623,59 +623,52 @@
         }
       }
     },
-    "trades_to_receiver_items": {
-      "name": "trades_to_receiver_items",
+    "user_refresh_tokens": {
+      "name": "user_refresh_tokens",
       "schema": "",
       "columns": {
-        "trade_id": {
-          "name": "trade_id",
+        "user_id": {
+          "name": "user_id",
           "type": "uuid",
           "primaryKey": false,
           "notNull": true
         },
-        "receiver_item_id": {
-          "name": "receiver_item_id",
-          "type": "uuid",
+        "hashed_refresh_token": {
+          "name": "hashed_refresh_token",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "expiresAt": {
+          "name": "expiresAt",
+          "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": true
         }
       },
       "indexes": {
-        "trades_to_receiver_items_trade_id_index": {
-          "name": "trades_to_receiver_items_trade_id_index",
+        "user_refresh_tokens_user_id_index": {
+          "name": "user_refresh_tokens_user_id_index",
           "columns": [
-            "trade_id"
+            "user_id"
           ],
           "isUnique": false
         },
-        "trades_to_receiver_items_receiver_item_id_index": {
-          "name": "trades_to_receiver_items_receiver_item_id_index",
+        "user_refresh_tokens_hashed_refresh_token_index": {
+          "name": "user_refresh_tokens_hashed_refresh_token_index",
           "columns": [
-            "receiver_item_id"
+            "hashed_refresh_token"
           ],
           "isUnique": false
         }
       },
       "foreignKeys": {
-        "trades_to_receiver_items_trade_id_trades_id_fk": {
-          "name": "trades_to_receiver_items_trade_id_trades_id_fk",
-          "tableFrom": "trades_to_receiver_items",
-          "tableTo": "trades",
+        "user_refresh_tokens_user_id_users_id_fk": {
+          "name": "user_refresh_tokens_user_id_users_id_fk",
+          "tableFrom": "user_refresh_tokens",
+          "tableTo": "users",
           "columnsFrom": [
-            "trade_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "cascade"
-        },
-        "trades_to_receiver_items_receiver_item_id_user_items_id_fk": {
-          "name": "trades_to_receiver_items_receiver_item_id_user_items_id_fk",
-          "tableFrom": "trades_to_receiver_items",
-          "tableTo": "user_items",
-          "columnsFrom": [
-            "receiver_item_id"
+            "user_id"
           ],
           "columnsTo": [
             "id"
@@ -685,83 +678,11 @@
         }
       },
       "compositePrimaryKeys": {
-        "trades_to_receiver_items_trade_id_receiver_item_id_pk": {
-          "name": "trades_to_receiver_items_trade_id_receiver_item_id_pk",
+        "user_refresh_tokens_user_id_hashed_refresh_token_pk": {
+          "name": "user_refresh_tokens_user_id_hashed_refresh_token_pk",
           "columns": [
-            "trade_id",
-            "receiver_item_id"
-          ]
-        }
-      },
-      "uniqueConstraints": {}
-    },
-    "trades_to_sender_items": {
-      "name": "trades_to_sender_items",
-      "schema": "",
-      "columns": {
-        "trade_id": {
-          "name": "trade_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "sender_item_id": {
-          "name": "sender_item_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        }
-      },
-      "indexes": {
-        "trades_to_sender_items_trade_id_index": {
-          "name": "trades_to_sender_items_trade_id_index",
-          "columns": [
-            "trade_id"
-          ],
-          "isUnique": false
-        },
-        "trades_to_sender_items_sender_item_id_index": {
-          "name": "trades_to_sender_items_sender_item_id_index",
-          "columns": [
-            "sender_item_id"
-          ],
-          "isUnique": false
-        }
-      },
-      "foreignKeys": {
-        "trades_to_sender_items_trade_id_trades_id_fk": {
-          "name": "trades_to_sender_items_trade_id_trades_id_fk",
-          "tableFrom": "trades_to_sender_items",
-          "tableTo": "trades",
-          "columnsFrom": [
-            "trade_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "cascade"
-        },
-        "trades_to_sender_items_sender_item_id_user_items_id_fk": {
-          "name": "trades_to_sender_items_sender_item_id_user_items_id_fk",
-          "tableFrom": "trades_to_sender_items",
-          "tableTo": "user_items",
-          "columnsFrom": [
-            "sender_item_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "cascade"
-        }
-      },
-      "compositePrimaryKeys": {
-        "trades_to_sender_items_trade_id_sender_item_id_pk": {
-          "name": "trades_to_sender_items_trade_id_sender_item_id_pk",
-          "columns": [
-            "trade_id",
-            "sender_item_id"
+            "user_id",
+            "hashed_refresh_token"
           ]
         }
       },

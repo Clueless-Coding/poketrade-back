@@ -19,8 +19,7 @@ export class QuickSoldUserItemsService {
   ): Promise<QuickSoldUserItemEntity> {
     const { user, pokemon } = userItem;
 
-    const [ , quickSoldUserItem] = await Promise.all([
-      this.userItemsService.deleteUserItem(userItem, tx),
+    const [quickSoldUserItem] = await Promise.all([
       (tx ?? this.db)
         .insert(quickSoldUserItemsTable)
         .values(userItem)
@@ -30,6 +29,7 @@ export class QuickSoldUserItemsService {
           user,
           pokemon,
         })),
+      this.userItemsService.deleteUserItem(userItem, tx),
     ]);
 
     return quickSoldUserItem;

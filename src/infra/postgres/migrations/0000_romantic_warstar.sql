@@ -85,16 +85,11 @@ CREATE TABLE IF NOT EXISTS "users" (
 	CONSTRAINT "users_name_unique" UNIQUE("name")
 );
 --> statement-breakpoint
-CREATE TABLE IF NOT EXISTS "trades_to_receiver_items" (
-	"trade_id" uuid NOT NULL,
-	"receiver_item_id" uuid NOT NULL,
-	CONSTRAINT "trades_to_receiver_items_trade_id_receiver_item_id_pk" PRIMARY KEY("trade_id","receiver_item_id")
-);
---> statement-breakpoint
-CREATE TABLE IF NOT EXISTS "trades_to_sender_items" (
-	"trade_id" uuid NOT NULL,
-	"sender_item_id" uuid NOT NULL,
-	CONSTRAINT "trades_to_sender_items_trade_id_sender_item_id_pk" PRIMARY KEY("trade_id","sender_item_id")
+CREATE TABLE IF NOT EXISTS "user_refresh_tokens" (
+	"user_id" uuid NOT NULL,
+	"hashed_refresh_token" text NOT NULL,
+	"expiresAt" timestamp with time zone NOT NULL,
+	CONSTRAINT "user_refresh_tokens_user_id_hashed_refresh_token_pk" PRIMARY KEY("user_id","hashed_refresh_token")
 );
 --> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "packs_to_pokemons_pack_id_index" ON "packs_to_pokemons" ("pack_id");--> statement-breakpoint
@@ -103,10 +98,8 @@ CREATE INDEX IF NOT EXISTS "trades_to_user_items_trade_id_index" ON "trades_to_u
 CREATE INDEX IF NOT EXISTS "trades_to_user_items_user_type_index" ON "trades_to_user_items" ("user_type");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "trades_to_user_items_user_item_id_index" ON "trades_to_user_items" ("user_item_id");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "trades_status_index" ON "trades" ("status");--> statement-breakpoint
-CREATE INDEX IF NOT EXISTS "trades_to_receiver_items_trade_id_index" ON "trades_to_receiver_items" ("trade_id");--> statement-breakpoint
-CREATE INDEX IF NOT EXISTS "trades_to_receiver_items_receiver_item_id_index" ON "trades_to_receiver_items" ("receiver_item_id");--> statement-breakpoint
-CREATE INDEX IF NOT EXISTS "trades_to_sender_items_trade_id_index" ON "trades_to_sender_items" ("trade_id");--> statement-breakpoint
-CREATE INDEX IF NOT EXISTS "trades_to_sender_items_sender_item_id_index" ON "trades_to_sender_items" ("sender_item_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "user_refresh_tokens_user_id_index" ON "user_refresh_tokens" ("user_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "user_refresh_tokens_hashed_refresh_token_index" ON "user_refresh_tokens" ("hashed_refresh_token");--> statement-breakpoint
 DO $$ BEGIN
  ALTER TABLE "opened_packs" ADD CONSTRAINT "opened_packs_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE cascade ON UPDATE cascade;
 EXCEPTION
@@ -186,25 +179,7 @@ EXCEPTION
 END $$;
 --> statement-breakpoint
 DO $$ BEGIN
- ALTER TABLE "trades_to_receiver_items" ADD CONSTRAINT "trades_to_receiver_items_trade_id_trades_id_fk" FOREIGN KEY ("trade_id") REFERENCES "trades"("id") ON DELETE cascade ON UPDATE cascade;
-EXCEPTION
- WHEN duplicate_object THEN null;
-END $$;
---> statement-breakpoint
-DO $$ BEGIN
- ALTER TABLE "trades_to_receiver_items" ADD CONSTRAINT "trades_to_receiver_items_receiver_item_id_user_items_id_fk" FOREIGN KEY ("receiver_item_id") REFERENCES "user_items"("id") ON DELETE cascade ON UPDATE cascade;
-EXCEPTION
- WHEN duplicate_object THEN null;
-END $$;
---> statement-breakpoint
-DO $$ BEGIN
- ALTER TABLE "trades_to_sender_items" ADD CONSTRAINT "trades_to_sender_items_trade_id_trades_id_fk" FOREIGN KEY ("trade_id") REFERENCES "trades"("id") ON DELETE cascade ON UPDATE cascade;
-EXCEPTION
- WHEN duplicate_object THEN null;
-END $$;
---> statement-breakpoint
-DO $$ BEGIN
- ALTER TABLE "trades_to_sender_items" ADD CONSTRAINT "trades_to_sender_items_sender_item_id_user_items_id_fk" FOREIGN KEY ("sender_item_id") REFERENCES "user_items"("id") ON DELETE cascade ON UPDATE cascade;
+ ALTER TABLE "user_refresh_tokens" ADD CONSTRAINT "user_refresh_tokens_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE cascade ON UPDATE cascade;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;

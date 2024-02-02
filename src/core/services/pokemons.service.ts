@@ -24,8 +24,8 @@ export class PokemonsService {
 
   public async deleteAllPokemons(
     tx?: Transaction,
-  ): Promise<Array<PokemonEntity>> {
-    return (tx ?? this.db)
+  ): Promise<void> {
+    await (tx ?? this.db)
       .delete(pokemonsTable)
       .returning();
   }

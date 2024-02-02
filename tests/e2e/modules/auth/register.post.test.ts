@@ -1,4 +1,4 @@
-import * as request from 'supertest';
+import request from 'supertest';
 import { HttpStatus, INestApplication } from '@nestjs/common';
 import { AuthUseCase } from 'src/core/use-cases/auth.use-case';
 import { buildTestApp } from '../../build-test-app.helper';
@@ -23,7 +23,9 @@ describe('Auth POST /register', () => {
     expect(response.status).toBe(HttpStatus.CREATED);
     expect(response.body).toEqual(
       expect.objectContaining({
+        user: expect.any(Object),
         accessToken: expect.any(String),
+        refreshToken: expect.any(String),
       }),
     );
   });

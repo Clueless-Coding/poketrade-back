@@ -37,10 +37,16 @@ export class EnvVariables {
   POSTGRES_DB: string;
 
   @IsString()
-  JWT_SECRET: string;
+  JWT_ACCESS_SECRET: string;
 
   @IsString()
-  JWT_EXPIRES_IN: string;
+  JWT_ACCESS_EXPIRES_IN: string;
+
+  @IsString()
+  JWT_REFRESH_SECRET: string;
+
+  @IsString()
+  JWT_REFRESH_EXPIRES_IN: string;
 
   @IsString()
   CENTRIFUGO_API_URL: string;
@@ -50,6 +56,12 @@ export class EnvVariables {
 
   @IsString()
   CENTRIFUGO_TOKEN_HMAC_SECRET_KEY: string;
+
+  @IsString()
+  CENTRIFUGO_CONNECTION_TOKEN_EXPIRES_IN: string;
+
+  @IsString()
+  CENTRIFUGO_SUBSCRIPTION_TOKEN_EXPIRES_IN: string;
 }
 
 export const validate = (config: Record<string, unknown>) => {

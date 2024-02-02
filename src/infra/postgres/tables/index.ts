@@ -7,3 +7,4 @@ export * from './trades-to-user-items.table';
 export * from './trades.table';
 export * from './user-items.table';
 export * from './users.table';
+export * from './user-refresh-tokens.table';

@@ -2,10 +2,9 @@ import { relations } from 'drizzle-orm';
 import { uuid, pgTable, timestamp, index, pgEnum } from 'drizzle-orm/pg-core';
 import { UUIDv4 } from 'src/common/types';
 import { baseColumns } from '../other/base-columns';
-import { tradesToReceiverItemsTable } from './trades-to-receiver-items.table';
-import { tradesToSenderItemsTable } from './trades-to-sender-items.table';
 import { UserItemEntity } from './user-items.table';
 import { UserEntity, usersTable } from './users.table';
+import { tradesToUserItemsTable } from './trades-to-user-items.table';
 
 export const statusEnum = pgEnum('trades_status', [
   'PENDING',
@@ -37,12 +36,10 @@ export const tradesTableRelations = relations(tradesTable, ({ one, many }) => ({
     fields: [tradesTable.senderId],
     references: [usersTable.id],
   }),
-  tradesToSenderItems: many(tradesToSenderItemsTable),
   receiver: one(usersTable, {
     fields: [tradesTable.receiverId],
     references: [usersTable.id],
   }),
-  tradesToReceiverItems: many(tradesToReceiverItemsTable),
 }))
 
 export type TradeStatus = typeof statusEnum.enumValues[number];

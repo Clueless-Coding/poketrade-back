@@ -1,5 +1,5 @@
 import { Controller, Get, Param, ParseUUIDPipe, Post, Query, UseGuards } from '@nestjs/common';
-import { JwtAuthGuard } from '../guards/jwt-auth.guard';
+import { AccessTokenAuthGuard } from '../guards/access-token-auth.guard';
 import { User } from '../decorators/user.decorator';
 import { PacksUseCase } from 'src/core/use-cases/packs.use-case';
 import { ApiConflictResponse, ApiCreatedResponse, ApiNotFoundResponse, ApiOkResponse, ApiSecurity, ApiTags } from '@nestjs/swagger';
@@ -32,7 +32,7 @@ export class PacksController {
   @ApiOkResponseWithPagination({ type: PackOutputDTO })
   @ApiSecurity('AccessToken')
   @Get()
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(AccessTokenAuthGuard)
   public async getPacks(
     @Query() dto: GetPacksInputDTO,
     @Query() paginationDTO: PaginationInputDTO,
@@ -51,7 +51,7 @@ export class PacksController {
   @ApiNotFoundResponse()
   @ApiSecurity('AccessToken')
   @Get(':id')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(AccessTokenAuthGuard)
   public async getPack(
     @Param('id', new ParseUUIDPipe({ version: '4' })) id: UUIDv4,
   ): Promise<PackWithPokemonsOutputDTO> {
@@ -69,7 +69,7 @@ export class PacksController {
   @ApiNotFoundResponse()
   @ApiSecurity('AccessToken')
   @Post(':id/open')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(AccessTokenAuthGuard)
   public async openPack(
     @User() user: UserEntity,
     @Param('id', new ParseUUIDPipe({ version: '4' })) id: UUIDv4,
