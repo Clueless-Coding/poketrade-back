@@ -18,5 +18,4 @@ jobs:
           cache: 'pnpm'
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
-      - run: echo ${{ secrets.ENV_TEST }} > .env.test
-      - run: pnpm test -- --forceExit
+      - run: echo ${{ secrets.ENV_TEST }} > .env.test && pnpm test -- --forceExit
