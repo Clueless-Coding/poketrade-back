@@ -20,4 +20,4 @@ jobs:
           cache: 'pnpm'
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
-      - run: echo $ENV_TEST > .env.test && ls -al && cat .env.test && pnpm test -- --forceExit
+      - run: echo $ENV_TEST > .env.test && cat .env.test && pnpm test -- --forceExit
