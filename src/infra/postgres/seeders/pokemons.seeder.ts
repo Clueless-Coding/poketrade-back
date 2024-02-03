@@ -1,10 +1,10 @@
 import { Injectable } from "@nestjs/common";
 import { Seeder } from "nestjs-seeder";
-import { PokemonsService } from 'src/core/services/pokemons.service';
+import { PokemonsRepository } from 'src/core/repositories/pokemons.repository';
 
 @Injectable()
 export class PokemonsSeeder implements Seeder {
-  constructor(private readonly pokemonsService: PokemonsService) {}
+  constructor(private readonly pokemonsRepository: PokemonsRepository) {}
 
   async seed() {
     // TODO: Maybe i can do that with a single request? Research on that
@@ -24,10 +24,10 @@ export class PokemonsSeeder implements Seeder {
         image: apiPokemon['sprites']['other']['official-artwork']['front_default'],
     }));
 
-    return this.pokemonsService.createPokemons(createPokemonDTOs);
+    return this.pokemonsRepository.createPokemons(createPokemonDTOs);
   }
 
   async drop() {
-    return this.pokemonsService.deleteAllPokemons();
+    return this.pokemonsRepository.deleteAllPokemons();
   }
 }

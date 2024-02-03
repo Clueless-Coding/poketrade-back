@@ -20,8 +20,8 @@ import {
   userItemsTable,
   usersTable,
 } from 'src/infra/postgres/tables';
-import { mapTradesRowToEntity } from './trades.service';
-import { mapUserItemsRowToEntity } from './user-items.service';
+import { mapTradesRowToEntity } from './trades.repository';
+import { mapUserItemsRowToEntity } from './user-items.repository';
 
 type FindTradesToUserItemsWhere = Partial<{
   tradeId: UUIDv4,
@@ -51,7 +51,7 @@ export const mapTradesToUserItemsRowToEntity = (
 }
 
 @Injectable()
-export class TradesToUserItemsService {
+export class TradesToUserItemsRepository {
   public constructor(
     @InjectDatabase()
     private readonly db: Database,

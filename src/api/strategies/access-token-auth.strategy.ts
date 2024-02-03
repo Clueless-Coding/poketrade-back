@@ -5,14 +5,14 @@ import { ExtractJwt, Strategy } from 'passport-jwt';
 import { AppAuthException, AppEntityNotFoundException } from 'src/core/exceptions';
 import { Nullable } from 'src/common/types';
 import { UserTokenPayload } from '../types';
-import { UsersService } from 'src/core/services/users.service';
+import { UsersRepository } from 'src/core/repositories/users.repository';
 import { EnvVariables } from 'src/infra/config/env.config';
 import { UserEntity } from 'src/infra/postgres/tables';
 
 @Injectable()
 export class AccessTokenAuthStrategy extends PassportStrategy(Strategy, 'access-token') {
   public constructor(
-    private readonly usersService: UsersService,
+    private readonly usersRepository: UsersRepository,
     configService: ConfigService<EnvVariables>,
   ) {
     super({
@@ -27,7 +27,7 @@ export class AccessTokenAuthStrategy extends PassportStrategy(Strategy, 'access-
   public async validate(tokenPayload: UserTokenPayload): Promise<UserEntity> {
     let user: Nullable<UserEntity> = null;
     try {
-      user = await this.usersService.findUserById({ id: tokenPayload.sub });
+      user = await this.usersRepository.findUserById({ id: tokenPayload.sub });
     } catch (error) {
       if (error instanceof AppEntityNotFoundException) {
         throw new AppAuthException('Unauthorized');

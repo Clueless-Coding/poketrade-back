@@ -1,13 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { SQL, and, eq, gt, sql } from 'drizzle-orm';
-import { JWT, Nullable, Optional, UUIDv4 } from 'src/common/types';
+import { JWT, Optional, UUIDv4 } from 'src/common/types';
 import { InjectDatabase } from 'src/infra/ioc/decorators/inject-database.decorator';
 import { Database, Transaction } from 'src/infra/postgres/types';
 import { CreateUserRefreshTokenEntityValues, UserRefreshTokenEntity, userRefreshTokensTable, usersTable } from 'src/infra/postgres/tables';
 import { hashRefreshToken } from 'src/common/helpers/hash-refresh-token.helper';
 import { AppEntityNotFoundException } from '../exceptions';
 import { FindEntitiesOptions, FindEntityOptions } from '../types';
-import { DatabaseError } from 'pg';
 
 export type FindUserRefreshTokensWhere = Partial<{
   userId: UUIDv4,
@@ -22,7 +21,7 @@ export const mapUserRefreshTokensRowToEntity = (
 });
 
 @Injectable()
-export class UserRefreshTokensService {
+export class UserRefreshTokensRepository {
   public constructor(
     @InjectDatabase()
     private readonly db: Database,

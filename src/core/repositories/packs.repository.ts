@@ -16,7 +16,7 @@ export type FindPacksWhere = Partial<{
 }>;
 
 @Injectable()
-export class PacksService {
+export class PacksRepository {
   public constructor(
     @InjectDatabase()
     private readonly db: Database,

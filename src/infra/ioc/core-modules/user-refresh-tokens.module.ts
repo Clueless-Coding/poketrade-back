@@ -1,12 +1,12 @@
 import { Module } from '@nestjs/common';
-import { UserRefreshTokensService } from 'src/core/services/user-refresh-tokens.service';
+import { UserRefreshTokensRepository } from 'src/core/repositories/user-refresh-tokens.repository';
 import { PostgresModule } from '../../postgres/postgres.module';
 
 @Module({
   providers: [
     PostgresModule,
-    UserRefreshTokensService,
+    UserRefreshTokensRepository,
   ],
-  exports: [UserRefreshTokensService],
+  exports: [UserRefreshTokensRepository],
 })
 export class UserRefreshTokensModule {}

@@ -2,15 +2,15 @@ import { Injectable } from '@nestjs/common';
 import { Database, Transaction } from 'src/infra/postgres/types';
 import { InjectDatabase } from 'src/infra/ioc/decorators/inject-database.decorator';
 import { QuickSoldUserItemEntity, quickSoldUserItemsTable, UserItemEntity } from 'src/infra/postgres/tables';
-import { UserItemsService } from './user-items.service';
+import { UserItemsRepository } from './user-items.repository';
 
 @Injectable()
-export class QuickSoldUserItemsService {
+export class QuickSoldUserItemsRepository {
   public constructor(
     @InjectDatabase()
     private readonly db: Database,
 
-    private readonly userItemsService: UserItemsService,
+    private readonly userItemsRepository: UserItemsRepository,
   ) {}
 
   public async createQuickSoldUserItem(
@@ -29,7 +29,7 @@ export class QuickSoldUserItemsService {
           user,
           pokemon,
         })),
-      this.userItemsService.deleteUserItem(userItem, tx),
+      this.userItemsRepository.deleteUserItem(userItem, tx),
     ]);
 
     return quickSoldUserItem;

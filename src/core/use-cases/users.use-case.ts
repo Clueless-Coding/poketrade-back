@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { UsersService } from '../services/users.service';
+import { UsersRepository } from '../repositories/users.repository';
 import { PaginatedArray } from 'src/common/types';
 import { GetUsersInputDTO } from 'src/api/dtos/users/get-users.input.dto';
 import { UserEntity } from 'src/infra/postgres/tables';
@@ -8,14 +8,14 @@ import { PaginationInputDTO } from 'src/api/dtos/pagination.input.dto';
 @Injectable()
 export class UsersUseCase {
   public constructor(
-    private readonly usersService: UsersService,
+    private readonly usersRepository: UsersRepository,
   ) {}
 
   public getUsersWithPagination(
     dto: GetUsersInputDTO,
     paginationDTO: PaginationInputDTO,
   ): Promise<PaginatedArray<UserEntity>> {
-    return this.usersService.findUsersWithPagination({
+    return this.usersRepository.findUsersWithPagination({
       paginationOptions: paginationDTO,
       where: dto,
     });

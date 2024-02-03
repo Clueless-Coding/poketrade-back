@@ -3,18 +3,18 @@ import { PaginationInputDTO } from 'src/api/dtos/pagination.input.dto';
 import { PaginatedArray, UUIDv4 } from 'src/common/types';
 import { Database, Transaction } from 'src/infra/postgres/types';
 import { QuickSoldUserItemEntity, UserEntity, UserItemEntity } from 'src/infra/postgres/tables';
-import { QuickSoldUserItemsService } from '../services/quick-sold-user-items.service';
-import { UserItemsService } from '../services/user-items.service';
-import { UsersService } from '../services/users.service';
+import { QuickSoldUserItemsRepository } from '../repositories/quick-sold-user-items.repository';
+import { UserItemsRepository } from '../repositories/user-items.repository';
+import { UsersRepository } from '../repositories/users.repository';
 import { AppConflictException } from '../exceptions';
 import { InjectDatabase } from 'src/infra/ioc/decorators/inject-database.decorator';
 
 @Injectable()
 export class UserItemsUseCase {
   public constructor(
-    private readonly userItemsService: UserItemsService,
-    private readonly quickSoldUserItemsService: QuickSoldUserItemsService,
-    private readonly usersService: UsersService,
+    private readonly userItemsRepository: UserItemsRepository,
+    private readonly quickSoldUserItemsRepository: QuickSoldUserItemsRepository,
+    private readonly usersRepository: UsersRepository,
 
     @InjectDatabase()
     private readonly db: Database,
@@ -24,7 +24,7 @@ export class UserItemsUseCase {
     user: UserEntity,
     paginationDTO: PaginationInputDTO,
   ): Promise<PaginatedArray<UserItemEntity>> {
-    return this.userItemsService.findUserItemsWithPagination({
+    return this.userItemsRepository.findUserItemsWithPagination({
       paginationOptions: paginationDTO,
       where: { userId: user.id },
     });
@@ -35,19 +35,19 @@ export class UserItemsUseCase {
     id: UUIDv4,
     tx: Transaction,
   ): Promise<QuickSoldUserItemEntity> {
-    const userItem = await this.userItemsService.findUserItemById({ id });
+    const userItem = await this.userItemsRepository.findUserItemById({ id });
 
     if (user.id !== userItem.user.id) {
       throw new AppConflictException('You cannot quick sell someone else\'s pokemon');
     }
 
-    const updatedUser = await this.usersService.replenishUserBalance(
+    const updatedUser = await this.usersRepository.replenishUserBalance(
       user,
       userItem.pokemon.worth,
       tx,
     );
 
-    return this.quickSoldUserItemsService
+    return this.quickSoldUserItemsRepository
       .createQuickSoldUserItem(userItem, tx)
       .then((quickSoldUserItem) => ({
         ...quickSoldUserItem,

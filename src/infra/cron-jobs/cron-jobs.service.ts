@@ -1,15 +1,15 @@
 import { Injectable } from '@nestjs/common';
-import { Cron } from '@nestjs/schedule';
-import { UserRefreshTokensService } from 'src/core/services/user-refresh-tokens.service';
+import { Cron, CronExpression } from '@nestjs/schedule';
+import { UserRefreshTokensRepository } from 'src/core/repositories/user-refresh-tokens.repository';
 
 @Injectable()
 export class CronJobsService {
   public constructor(
-    private readonly userRefreshTokensService: UserRefreshTokensService,
+    private readonly userRefreshTokensRepository: UserRefreshTokensRepository,
   ) {}
 
-  @Cron('0 0 * * *')
+  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
   private async deleteExpiredUserRefreshTokens(): Promise<void> {
-    await this.userRefreshTokensService.deleteExpiredUserRefreshTokens();
+    await this.userRefreshTokensRepository.deleteExpiredUserRefreshTokens();
   }
 }

@@ -16,7 +16,7 @@ export type FindUsersWhere = Partial<{
 }>;
 
 @Injectable()
-export class UsersService {
+export class UsersRepository {
   public constructor(
     @InjectDatabase()
     private readonly db: Database,

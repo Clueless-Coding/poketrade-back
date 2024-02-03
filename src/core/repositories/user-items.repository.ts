@@ -37,7 +37,7 @@ export const mapUserItemsRowToEntity = (
 };
 
 @Injectable()
-export class UserItemsService {
+export class UserItemsRepository {
   public constructor(
     @InjectDatabase()
     private readonly db: Database,

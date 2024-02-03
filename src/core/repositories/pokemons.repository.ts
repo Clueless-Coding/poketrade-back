@@ -4,7 +4,7 @@ import { InjectDatabase } from 'src/infra/ioc/decorators/inject-database.decorat
 import { CreatePokemonEntityValues, PokemonEntity, pokemonsTable } from 'src/infra/postgres/tables';
 
 @Injectable()
-export class PokemonsService {
+export class PokemonsRepository {
   public constructor(
     @InjectDatabase()
     private readonly db: Database,

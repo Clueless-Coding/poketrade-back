@@ -3,7 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import { RegisterUserInputDTO } from 'src/api/dtos/auth/register-user.input.dto';
 import { JWT } from 'src/common/types';
 import { UserEntity } from 'src/infra/postgres/tables';
-import { UserRefreshTokensService } from '../services/user-refresh-tokens.service';
+import { UserRefreshTokensRepository } from '../repositories/user-refresh-tokens.repository';
 import ms from 'ms';
 import { addMilliseconds } from 'date-fns';
 import { ConfigService } from '@nestjs/config';
@@ -11,7 +11,7 @@ import { EnvVariables } from 'src/infra/config/env.config';
 import { hashUserPassword } from 'src/common/helpers/hash-user-password.helper';
 import { hashRefreshToken } from 'src/common/helpers/hash-refresh-token.helper';
 import { DatabaseError } from 'pg';
-import { UsersService } from '../services/users.service';
+import { UsersRepository } from '../repositories/users.repository';
 import { AppConflictException, AppValidationException } from '../exceptions';
 
 type AuthTokens = { accessToken: JWT, refreshToken: JWT };
@@ -20,9 +20,9 @@ type AuthTokens = { accessToken: JWT, refreshToken: JWT };
 export class AuthUseCase {
   public constructor(
     private readonly jwtService: JwtService,
-    private readonly usersService: UsersService,
-    private readonly userRefreshTokensService: UserRefreshTokensService,
     private readonly configService: ConfigService<EnvVariables>,
+    private readonly usersRepository: UsersRepository,
+    private readonly userRefreshTokensRepository: UserRefreshTokensRepository,
   ) {}
 
   private async generateAccessToken(user: UserEntity): Promise<JWT> {
@@ -48,7 +48,7 @@ export class AuthUseCase {
 
     const expiresAt = addMilliseconds(new Date(), ms(expiresIn));
     try {
-      await this.userRefreshTokensService.createUserRefreshToken({
+      await this.userRefreshTokensRepository.createUserRefreshToken({
         user,
         hashedRefreshToken: hashRefreshToken(refreshToken),
         expiresAt,
@@ -90,11 +90,11 @@ export class AuthUseCase {
       throw new AppValidationException('Passwords does not match');
     }
 
-    if (await this.usersService.userExists({ name: dto.username })) {
+    if (await this.usersRepository.userExists({ name: dto.username })) {
       throw new AppConflictException('User with this name already exists');
     }
 
-    const user = await this.usersService.createUser({
+    const user = await this.usersRepository.createUser({
       name: dto.username,
       hashedPassword: await hashUserPassword(dto.password),
     });
@@ -108,7 +108,7 @@ export class AuthUseCase {
     user: UserEntity,
     refreshToken: JWT,
   ): Promise<void> {
-    const userRefreshToken = await this.userRefreshTokensService.findUserRefreshToken({
+    const userRefreshToken = await this.userRefreshTokensRepository.findUserRefreshToken({
       where: {
         userId: user.id,
         refreshToken,
@@ -119,14 +119,14 @@ export class AuthUseCase {
       throw new AppConflictException('Could not log out (refreshToken not found)');
     }
 
-    await this.userRefreshTokensService.deleteUserRefreshToken(userRefreshToken);
+    await this.userRefreshTokensRepository.deleteUserRefreshToken(userRefreshToken);
   }
 
   public async refreshTokens(
     user: UserEntity,
     oldRefreshToken: JWT,
   ): Promise<AuthTokens> {
-    const userRefreshToken = await this.userRefreshTokensService.findUserRefreshToken({
+    const userRefreshToken = await this.userRefreshTokensRepository.findUserRefreshToken({
       where: {
         userId: user.id,
         refreshToken: oldRefreshToken,
@@ -140,7 +140,7 @@ export class AuthUseCase {
     const [accessToken, newRefreshToken] = await Promise.all([
       this.generateAccessToken(user),
       this.generateRefreshToken(user),
-      this.userRefreshTokensService.deleteUserRefreshToken(userRefreshToken),
+      this.userRefreshTokensRepository.deleteUserRefreshToken(userRefreshToken),
     ]);
 
     return { accessToken, refreshToken: newRefreshToken };

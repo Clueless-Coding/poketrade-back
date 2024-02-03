@@ -1,11 +1,11 @@
 import { Module } from '@nestjs/common';
-import { TradesService } from 'src/core/services/trades.service';
+import { TradesRepository } from 'src/core/repositories/trades.repository';
 import { TradesUseCase } from 'src/core/use-cases/trades.use-case';
 import { PostgresModule } from '../../postgres/postgres.module';
 import { UsersModule } from './users.module';
 import { UserItemsModule } from './user-items.module';
 import { PendingTradesUseCase } from 'src/core/use-cases/pending-trades.use-case';
-import { TradesToUserItemsService } from 'src/core/services/trades-to-user-items.service';
+import { TradesToUserItemsRepository } from 'src/core/repositories/trades-to-user-items.repository';
 
 @Module({
   imports: [
@@ -15,14 +15,14 @@ import { TradesToUserItemsService } from 'src/core/services/trades-to-user-items
   ],
   providers: [
     TradesUseCase,
-    TradesService,
-    TradesToUserItemsService,
+    TradesRepository,
+    TradesToUserItemsRepository,
     PendingTradesUseCase,
   ],
   exports: [
     TradesUseCase,
-    TradesService,
-    TradesToUserItemsService,
+    TradesRepository,
+    TradesToUserItemsRepository,
     PendingTradesUseCase,
   ],
 })

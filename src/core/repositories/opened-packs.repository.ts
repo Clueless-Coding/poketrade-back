@@ -4,7 +4,7 @@ import { InjectDatabase } from 'src/infra/ioc/decorators/inject-database.decorat
 import { CreateOpenedPackEntityValues, OpenedPackEntity, openedPacksTable } from 'src/infra/postgres/tables';
 
 @Injectable()
-export class OpenedPacksService {
+export class OpenedPacksRepository {
   public constructor(
     @InjectDatabase()
     private readonly db: Database,

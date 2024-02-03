@@ -17,7 +17,7 @@ import { InjectDatabase } from 'src/infra/ioc/decorators/inject-database.decorat
 import { and, eq, inArray, sql, SQL } from 'drizzle-orm';
 import { Optional, UUIDv4 } from 'src/common/types';
 import { alias } from 'drizzle-orm/pg-core';
-import { TradesToUserItemsService } from './trades-to-user-items.service';
+import { TradesToUserItemsRepository } from './trades-to-user-items.repository';
 import { AppEntityNotFoundException } from '../exceptions';
 import { FindEntitiesOptions, FindEntityByIdOptions, FindEntityOptions } from '../types';
 
@@ -40,12 +40,12 @@ export const mapTradesRowToEntity = (
 };
 
 @Injectable()
-export class TradesService {
+export class TradesRepository {
   public constructor(
     @InjectDatabase()
     private readonly db: Database,
 
-    private readonly tradesToUserItemsService: TradesToUserItemsService,
+    private readonly tradesToUserItemsRepository: TradesToUserItemsRepository,
   ) {}
 
   private mapWhereToSQL(
@@ -163,14 +163,14 @@ export class TradesService {
       }));
 
     const [tradesToSenderItems, tradesToReceiverItems] = await Promise.all([
-      this.tradesToUserItemsService.createTradesToSenderItems(
+      this.tradesToUserItemsRepository.createTradesToSenderItems(
         senderItems.map((senderItem) => ({
           trade: pendingTrade,
           senderItem,
         })),
         tx,
       ),
-      this.tradesToUserItemsService.createTradesToReceiverItems(
+      this.tradesToUserItemsRepository.createTradesToReceiverItems(
         receiverItems.map((receiverItem) => ({
           trade: pendingTrade,
           receiverItem,
