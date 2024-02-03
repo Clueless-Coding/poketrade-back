@@ -11,7 +11,6 @@ import { UserEntity } from 'src/infra/postgres/tables';
 import { InjectMapper } from '@automapper/nestjs';
 import { Mapper } from '@automapper/core';
 import { UserOutputDTO } from '../dtos/users/user.output.dto';
-import { AccessTokenAuthGuard } from '../guards/access-token-auth.guard';
 import { RefreshTokenAuthGuard } from '../guards/refresh-token-auth.guard';
 import { JWT } from 'src/common/types';
 import { RefreshTokensOutputDTO } from '../dtos/auth/refresh-tokens-output.dto';
@@ -58,9 +57,9 @@ export class AuthController {
   }
 
   @ApiOkResponse()
-  @ApiSecurity('AccessToken')
+  @ApiSecurity('RefreshToken')
   @HttpCode(HttpStatus.OK)
-  @UseGuards(AccessTokenAuthGuard)
+  @UseGuards(RefreshTokenAuthGuard)
   @Post('logout')
   public async logoutUser(
     @User() user: UserEntity,
@@ -70,7 +69,7 @@ export class AuthController {
   }
 
   @ApiCreatedResponse({ type: RefreshTokensOutputDTO })
-  @ApiSecurity('AccessToken')
+  @ApiSecurity('RefreshToken')
   @UseGuards(RefreshTokenAuthGuard)
   @Post('refresh')
   public async refreshTokens(

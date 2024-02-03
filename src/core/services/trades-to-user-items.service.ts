@@ -3,8 +3,9 @@ import { and, eq, SQL } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
 import { zip } from 'lodash';
 import { Optional, UUIDv4 } from 'src/common/types';
-import { InjectDatabase } from 'src/infra/decorators/inject-database.decorator';
-import { Database, Transaction } from 'src/infra/postgres/other/types';
+import { FindEntitiesOptions } from 'src/core/types';
+import { InjectDatabase } from 'src/infra/ioc/decorators/inject-database.decorator';
+import { Database, Transaction } from 'src/infra/postgres/types';
 import {
   CreateTradeToReceiverItemEntityValues,
   CreateTradeToSenderItemEntityValues,
@@ -27,28 +28,9 @@ type FindTradesToUserItemsWhere = Partial<{
   userType: TradeToUserItemUserType,
   userItemId: UUIDv4,
 }>;
-type FindTradesToUserItemsOptions = Partial<{
-  where: FindTradesToUserItemsWhere,
-}>;
 
 type FindTradesToSenderItemsWhere = Omit<FindTradesToUserItemsWhere, 'userType'>;
-type FindTradesToSenderItemsOptions = Partial<{
-  where: FindTradesToSenderItemsWhere,
-}>;
 type FindTradesToReceiverItemsWhere = Omit<FindTradesToUserItemsWhere, 'userType'>;
-type FindTradesToReceiverItemsOptions = Partial<{
-  where: FindTradesToReceiverItemsWhere,
-}>;
-
-export const mapFindTradesToUserItemsWhereToSQL = (
-  where: FindTradesToUserItemsWhere,
-): Optional<SQL> => {
-  return and(
-    where.tradeId !== undefined ? eq(tradesToUserItemsTable.tradeId, where.tradeId) : undefined,
-    where.userType !== undefined ? eq(tradesToUserItemsTable.userType, where.userType) : undefined,
-    where.userItemId !== undefined ? eq(tradesToUserItemsTable.userItemId, where.userItemId) : undefined,
-  );
-};
 
 export const mapTradesToUserItemsRowToEntity = (
   row: Record<
@@ -60,7 +42,7 @@ export const mapTradesToUserItemsRowToEntity = (
     | 'users'
     | 'pokemons',
     any>,
-) => {
+): TradeToUserItemEntity => {
   return {
     ...row.trades_to_user_items,
     trade: mapTradesRowToEntity(row),
@@ -75,10 +57,20 @@ export class TradesToUserItemsService {
     private readonly db: Database,
   ) {}
 
+  private mapWhereToSQL(
+    where: FindTradesToUserItemsWhere,
+  ): Optional<SQL> {
+    return and(
+      where.tradeId !== undefined ? eq(tradesToUserItemsTable.tradeId, where.tradeId) : undefined,
+      where.userType !== undefined ? eq(tradesToUserItemsTable.userType, where.userType) : undefined,
+      where.userItemId !== undefined ? eq(tradesToUserItemsTable.userItemId, where.userItemId) : undefined,
+    );
+  };
+
   private baseSelectBuilder(
-    findTradesToUserItemsOptions: FindTradesToUserItemsOptions,
+    options: FindEntitiesOptions<FindTradesToUserItemsWhere>,
   ) {
-    const { where = {} } = findTradesToUserItemsOptions;
+    const { where = {} } = options;
 
     const sendersTable = alias(usersTable, 'senders');
     const receiversTable = alias(usersTable, 'receivers');
@@ -92,27 +84,27 @@ export class TradesToUserItemsService {
       .innerJoin(userItemsTable, eq(userItemsTable.id, tradesToUserItemsTable.userItemId))
       .innerJoin(usersTable, eq(usersTable.id, userItemsTable.userId))
       .innerJoin(pokemonsTable, eq(pokemonsTable.id, userItemsTable.pokemonId))
-      .where(mapFindTradesToUserItemsWhereToSQL(where));
+      .where(this.mapWhereToSQL(where));
   }
 
   public async findTradesToUserItems(
-    findTradesToUserItemsOptions: FindTradesToUserItemsOptions,
+    options: FindEntitiesOptions<FindTradesToUserItemsWhere>,
   ): Promise<Array<TradeToUserItemEntity>> {
     return this
-      .baseSelectBuilder(findTradesToUserItemsOptions)
+      .baseSelectBuilder(options)
       .then((rows) => rows.map((row) => mapTradesToUserItemsRowToEntity(row)));
   }
 
   public async findTradesToSenderItems(
-    findTradesToSenderItemsOptions: FindTradesToSenderItemsOptions,
+    options: FindEntitiesOptions<FindTradesToSenderItemsWhere>,
   ): Promise<Array<TradeToSenderItemEntity>> {
     const userType = 'SENDER';
 
     return this
       .findTradesToUserItems({
-        ...findTradesToSenderItemsOptions,
+        ...options,
         where: {
-          ...findTradesToSenderItemsOptions.where,
+          ...options.where,
           userType,
         }
       })
@@ -124,15 +116,15 @@ export class TradesToUserItemsService {
   }
 
   public async findTradesToReceiverItems(
-    findTradesToReceiverItemsOptions: FindTradesToReceiverItemsOptions,
+    options: FindEntitiesOptions<FindTradesToReceiverItemsWhere>,
   ): Promise<Array<TradeToReceiverItemEntity>> {
     const userType = 'RECEIVER';
 
     return this
       .findTradesToUserItems({
-        ...findTradesToReceiverItemsOptions,
+        ...options,
         where: {
-          ...findTradesToReceiverItemsOptions.where,
+          ...options.where,
           userType,
         }
       })

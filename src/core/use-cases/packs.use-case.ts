@@ -1,22 +1,26 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { UsersUseCase } from './users.use-case';
+import { Injectable } from '@nestjs/common';
 import { PaginatedArray, UUIDv4 } from 'src/common/types';
 import { PacksService } from '../services/packs.service';
-import { UserItemsUseCase } from './user-items.use-case';
-import { Transaction } from 'src/infra/postgres/other/types';
-import { OpenedPackEntity, PackEntity, PokemonEntity, UserEntity } from 'src/infra/postgres/tables';
+import { Database, Transaction } from 'src/infra/postgres/types';
+import { OpenedPackEntity, PackEntity, UserEntity } from 'src/infra/postgres/tables';
 import { GetPacksInputDTO } from 'src/api/dtos/packs/get-packs.input.dto';
 import { PaginationInputDTO } from 'src/api/dtos/pagination.input.dto';
 import { OpenedPacksService } from '../services/opened-packs.service';
+import { UsersService } from '../services/users.service';
+import { UserItemsService } from '../services/user-items.service';
+import { AppConflictException } from '../exceptions';
+import { InjectDatabase } from 'src/infra/ioc/decorators/inject-database.decorator';
 
 @Injectable()
 export class PacksUseCase {
   public constructor(
     private readonly packsService: PacksService,
     private readonly openedPacksService: OpenedPacksService,
+    private readonly usersService: UsersService,
+    private readonly userItemsService: UserItemsService,
 
-    private readonly usersUseCase: UsersUseCase,
-    private readonly userItemsUseCase: UserItemsUseCase,
+    @InjectDatabase()
+    private readonly db: Database,
   ) {}
 
   public async getPacksWithPagination(
@@ -29,64 +33,30 @@ export class PacksUseCase {
     });
   }
 
-  public async getPack(
-    where: Partial<{ id: UUIDv4, name: string }> = {},
-    options: Partial<{
-      errorMessage: string,
-      errorStatus: HttpStatus,
-    }> = {},
-  ): Promise<PackEntity> {
-    const {
-      errorMessage = 'Pack not found',
-      errorStatus= HttpStatus.NOT_FOUND,
-    } = options;
-
-    const pack = await this.packsService.findPack({
-      where,
-    });
-
-    if (!pack) {
-      throw new HttpException(errorMessage, errorStatus);
-    }
-
-    return pack;
+  public async getPackById(id: UUIDv4): Promise<PackEntity> {
+    return this.packsService.findPackById({ id });
   }
 
-  public async getRandomPokemonFromPack(pack: PackEntity): Promise<PokemonEntity> {
-    const pokemon = await this.packsService.findRandomPokemonFromPack(pack);
-
-    if (!pokemon) {
-      throw new HttpException(
-        'There are no pokemons in the pack. Please notify the developer about it :)',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    }
-
-    return pokemon;
-  }
-
-  public async openPack(
+  private async _openPackById(
     user: UserEntity,
-    pack: PackEntity,
-    tx?: Transaction,
+    id: UUIDv4,
+    tx: Transaction,
   ): Promise<OpenedPackEntity> {
+    const pack = await this.packsService.findPackById({ id });
+
     if (user.balance < pack.price) {
-      throw new HttpException('Insufficient balance', HttpStatus.CONFLICT);
+      throw new AppConflictException('Insufficient balance');
     }
 
     const awaitedPromises = await Promise.all([
-      this.getRandomPokemonFromPack(pack),
-      this.usersUseCase.spendUserBalance(user, pack.price, tx),
+      this.packsService.findRandomPokemonFromPack(pack),
+      this.usersService.spendUserBalance(user, pack.price, tx),
     ])
 
     const pokemon = awaitedPromises[0];
     user = awaitedPromises[1];
 
-    const userItem = await this.userItemsUseCase.createUserItem(
-      user,
-      pokemon,
-      tx,
-    );
+    const userItem = await this.userItemsService.createUserItem({ user, pokemon });
 
     return this.openedPacksService.createOpenedPack({
       user: userItem.user,
@@ -98,10 +68,9 @@ export class PacksUseCase {
   public async openPackById(
     user: UserEntity,
     id: UUIDv4,
-    tx?: Transaction,
   ): Promise<OpenedPackEntity> {
-    const pack = await this.getPack({ id });
-
-    return this.openPack(user, pack, tx);
+    return this.db.transaction(async (tx) => (
+      this._openPackById(user, id, tx)
+    ));
   }
 }

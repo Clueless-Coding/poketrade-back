@@ -9,11 +9,9 @@ import { PackOutputDTO } from '../dtos/packs/pack.output.dto';
 import { InjectMapper } from '@automapper/nestjs';
 import { PackWithPokemonsOutputDTO } from '../dtos/packs/pack-with-pokemons.output.dto';
 import { OpenedPackOutputDTO } from '../dtos/packs/opened-pack.output.dto';
-import { Database } from 'src/infra/postgres/other/types';
 import { PaginationInputDTO } from '../dtos/pagination.input.dto';
-import { mapArrayWithPagination } from 'src/common/helpers/map-array-with-pagination.helper';
+import { mapPaginatedArray } from 'src/common/helpers/map-paginated-array.helper';
 import { OpenedPackEntity, PackEntity, UserEntity } from 'src/infra/postgres/tables';
-import { InjectDatabase } from 'src/infra/decorators/inject-database.decorator';
 import { GetPacksInputDTO } from '../dtos/packs/get-packs.input.dto';
 import { ApiOkResponseWithPagination } from '../decorators/api-ok-response-with-pagination.decorator';
 
@@ -23,8 +21,6 @@ export class PacksController {
   public constructor(
     @InjectMapper()
     private readonly mapper: Mapper,
-    @InjectDatabase()
-    private readonly db: Database,
 
     private readonly packsUseCase: PacksUseCase,
   ) {}
@@ -33,13 +29,13 @@ export class PacksController {
   @ApiSecurity('AccessToken')
   @Get()
   @UseGuards(AccessTokenAuthGuard)
-  public async getPacks(
+  public async getPacksWithPagination(
     @Query() dto: GetPacksInputDTO,
     @Query() paginationDTO: PaginationInputDTO,
   ): Promise<PaginatedArray<PackOutputDTO>> {
     const packs = await this.packsUseCase.getPacksWithPagination(dto, paginationDTO);
 
-    return mapArrayWithPagination<PackEntity, PackOutputDTO>(
+    return mapPaginatedArray<PackEntity, PackOutputDTO>(
       this.mapper,
       packs,
       'PackEntity',
@@ -52,10 +48,10 @@ export class PacksController {
   @ApiSecurity('AccessToken')
   @Get(':id')
   @UseGuards(AccessTokenAuthGuard)
-  public async getPack(
+  public async getPackById(
     @Param('id', new ParseUUIDPipe({ version: '4' })) id: UUIDv4,
   ): Promise<PackWithPokemonsOutputDTO> {
-    const pack = await this.packsUseCase.getPack({ id });
+    const pack = await this.packsUseCase.getPackById(id);
 
     return this.mapper.map<PackEntity, PackWithPokemonsOutputDTO>(
       pack,
@@ -70,13 +66,11 @@ export class PacksController {
   @ApiSecurity('AccessToken')
   @Post(':id/open')
   @UseGuards(AccessTokenAuthGuard)
-  public async openPack(
+  public async openPackById(
     @User() user: UserEntity,
     @Param('id', new ParseUUIDPipe({ version: '4' })) id: UUIDv4,
   ): Promise<OpenedPackOutputDTO> {
-    const openedPack = await this.db.transaction(async (tx) => (
-      this.packsUseCase.openPackById(user, id, tx)
-    ));
+    const openedPack = await this.packsUseCase.openPackById(user, id);
 
     return this.mapper.map<OpenedPackEntity, OpenedPackOutputDTO>(
       openedPack,

@@ -1,17 +1,18 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { RegisterUserInputDTO } from 'src/api/dtos/auth/register-user.input.dto';
 import { JWT } from 'src/common/types';
-import { UsersUseCase } from './users.use-case';
 import { UserEntity } from 'src/infra/postgres/tables';
 import { UserRefreshTokensService } from '../services/user-refresh-tokens.service';
 import ms from 'ms';
 import { addMilliseconds } from 'date-fns';
 import { ConfigService } from '@nestjs/config';
-import { EnvVariables } from 'src/infra/config/validation';
+import { EnvVariables } from 'src/infra/config/env.config';
 import { hashUserPassword } from 'src/common/helpers/hash-user-password.helper';
 import { hashRefreshToken } from 'src/common/helpers/hash-refresh-token.helper';
 import { DatabaseError } from 'pg';
+import { UsersService } from '../services/users.service';
+import { AppConflictException, AppValidationException } from '../exceptions';
 
 type AuthTokens = { accessToken: JWT, refreshToken: JWT };
 
@@ -19,7 +20,7 @@ type AuthTokens = { accessToken: JWT, refreshToken: JWT };
 export class AuthUseCase {
   public constructor(
     private readonly jwtService: JwtService,
-    private readonly usersUseCase: UsersUseCase,
+    private readonly usersService: UsersService,
     private readonly userRefreshTokensService: UserRefreshTokensService,
     private readonly configService: ConfigService<EnvVariables>,
   ) {}
@@ -86,14 +87,14 @@ export class AuthUseCase {
     dto: RegisterUserInputDTO
   ): Promise<{ user: UserEntity } & AuthTokens> {
     if (dto.password !== dto.confirmPassword) {
-      throw new HttpException('Passwords does not match', HttpStatus.BAD_REQUEST);
+      throw new AppValidationException('Passwords does not match');
     }
 
-    if (await this.usersUseCase.checkIfUserExists({ name: dto.username })) {
-      throw new HttpException('User with this name already exists', HttpStatus.CONFLICT);
+    if (await this.usersService.userExists({ name: dto.username })) {
+      throw new AppConflictException('User with this name already exists');
     }
 
-    const user = await this.usersUseCase.createUserByRegistration({
+    const user = await this.usersService.createUser({
       name: dto.username,
       hashedPassword: await hashUserPassword(dto.password),
     });
@@ -115,7 +116,7 @@ export class AuthUseCase {
     });
 
     if (!userRefreshToken) {
-      throw new HttpException('Could not log out (refreshToken not found)', HttpStatus.CONFLICT);
+      throw new AppConflictException('Could not log out (refreshToken not found)');
     }
 
     await this.userRefreshTokensService.deleteUserRefreshToken(userRefreshToken);
@@ -133,7 +134,7 @@ export class AuthUseCase {
     });
 
     if (!userRefreshToken) {
-      throw new HttpException('Could not refresh tokens (refreshToken not found)', HttpStatus.CONFLICT);
+      throw new AppConflictException('Could not refresh tokens (refreshToken not found)');
     }
 
     const [accessToken, newRefreshToken] = await Promise.all([

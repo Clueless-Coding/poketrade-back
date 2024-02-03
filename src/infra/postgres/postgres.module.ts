@@ -1,9 +1,9 @@
 import { Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { EnvVariables } from '../config/validation';
+import { EnvVariables } from '../config/env.config';
 import { DrizzlePGModule } from '@knaadh/nestjs-drizzle-pg';
 import * as tables from './tables';
-import { DRIZZLE_DB_INJECTION_TOKEN } from '../injection-tokens';
+import { DRIZZLE_DB_INJECTION_TOKEN } from '../ioc/injection-tokens';
 
 @Module({
   imports: [

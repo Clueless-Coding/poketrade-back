@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { PostgresModule } from '../postgres/postgres.module';
+import { PostgresModule } from '../../postgres/postgres.module';
 import { PokemonsModule } from './pokemons.module';
 import { PacksUseCase } from 'src/core/use-cases/packs.use-case';
 import { UsersModule } from './users.module';

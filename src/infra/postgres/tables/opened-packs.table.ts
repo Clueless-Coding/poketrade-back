@@ -1,5 +1,5 @@
 import { uuid, pgTable, integer, timestamp } from 'drizzle-orm/pg-core';
-import { baseIdColumn } from '../other/base-columns';
+import { baseIdColumn } from '../base-columns';
 import { UserEntity, usersTable } from './users.table';
 import { PackEntity, packsTable } from './packs.table';
 import { PokemonEntity, pokemonsTable } from './pokemons.table';

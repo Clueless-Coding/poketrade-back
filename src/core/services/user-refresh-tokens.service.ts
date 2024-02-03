@@ -1,35 +1,22 @@
 import { Injectable } from '@nestjs/common';
 import { SQL, and, eq, gt, sql } from 'drizzle-orm';
 import { JWT, Nullable, Optional, UUIDv4 } from 'src/common/types';
-import { InjectDatabase } from 'src/infra/decorators/inject-database.decorator';
-import { Database, Transaction } from 'src/infra/postgres/other/types';
-import { CreateUserRefreshTokenEntityValues, UserEntity, UserRefreshTokenEntity, userRefreshTokensTable, usersTable } from 'src/infra/postgres/tables';
+import { InjectDatabase } from 'src/infra/ioc/decorators/inject-database.decorator';
+import { Database, Transaction } from 'src/infra/postgres/types';
+import { CreateUserRefreshTokenEntityValues, UserRefreshTokenEntity, userRefreshTokensTable, usersTable } from 'src/infra/postgres/tables';
 import { hashRefreshToken } from 'src/common/helpers/hash-refresh-token.helper';
+import { AppEntityNotFoundException } from '../exceptions';
+import { FindEntitiesOptions, FindEntityOptions } from '../types';
 import { DatabaseError } from 'pg';
 
-type FindUserRefreshTokensWhere = Partial<{
+export type FindUserRefreshTokensWhere = Partial<{
   userId: UUIDv4,
   refreshToken: JWT,
-}>
-
-type FindUserRefreshTokensOptions = Partial<{
-  where: FindUserRefreshTokensWhere,
 }>;
-
-export const mapFindUserRefreshTokensWhereToSQL = (
-  where: FindUserRefreshTokensWhere,
-): Optional<SQL> => {
-  return and(
-    where.userId !== undefined ? eq(userRefreshTokensTable.userId, where.userId) : undefined,
-    where.refreshToken !== undefined
-      ? eq(userRefreshTokensTable.hashedRefreshToken, hashRefreshToken(where.refreshToken))
-      : undefined,
-  );
-}
 
 export const mapUserRefreshTokensRowToEntity = (
   row: Record<'user_refresh_tokens' | 'users', any>,
-) => ({
+): UserRefreshTokenEntity => ({
     ...row.user_refresh_tokens,
     user: row.users,
 });
@@ -41,27 +28,48 @@ export class UserRefreshTokensService {
     private readonly db: Database,
   ) {}
 
+  private mapWhereToSQL(
+    where: FindUserRefreshTokensWhere,
+  ): Optional<SQL> {
+    return and(
+      where.userId !== undefined ? eq(userRefreshTokensTable.userId, where.userId) : undefined,
+      where.refreshToken !== undefined
+        ? eq(userRefreshTokensTable.hashedRefreshToken, hashRefreshToken(where.refreshToken))
+        : undefined,
+    );
+  }
+
   private baseSelectBuilder(
-    findUserRefreshTokensOptions: FindUserRefreshTokensOptions,
+    options: FindEntitiesOptions<FindUserRefreshTokensWhere>,
   ) {
-    const { where = {} } = findUserRefreshTokensOptions;
+    const { where = {} } = options;
 
     return this.db
       .select()
       .from(userRefreshTokensTable)
       .innerJoin(usersTable, eq(userRefreshTokensTable.userId, usersTable.id))
-      .where(mapFindUserRefreshTokensWhereToSQL(where));
+      .where(this.mapWhereToSQL(where));
   }
 
   public async findUserRefreshToken(
-    findUserRefreshTokensOptions: FindUserRefreshTokensOptions,
-  ): Promise<Nullable<UserRefreshTokenEntity>> {
-    return this
-      .baseSelectBuilder(findUserRefreshTokensOptions)
+    options: FindEntityOptions<FindUserRefreshTokensWhere>,
+  ): Promise<UserRefreshTokenEntity> {
+    const {
+      notFoundErrorMessage = 'User refresh token not found',
+    } = options;
+
+    const userRefreshToken = await this
+      .baseSelectBuilder(options)
       .limit(1)
-      .then(([row]) => row
-        ? mapUserRefreshTokensRowToEntity(row)
-        : null);
+      .then(([row]) => (
+        row ? mapUserRefreshTokensRowToEntity(row) : null
+      ));
+
+    if (!userRefreshToken) {
+      throw new AppEntityNotFoundException(notFoundErrorMessage);
+    }
+
+    return userRefreshToken;
   }
 
   public async createUserRefreshToken(

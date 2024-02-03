@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { Database, Transaction } from 'src/infra/postgres/other/types';
-import { InjectDatabase } from 'src/infra/decorators/inject-database.decorator';
+import { Database, Transaction } from 'src/infra/postgres/types';
+import { InjectDatabase } from 'src/infra/ioc/decorators/inject-database.decorator';
 import { CreateOpenedPackEntityValues, OpenedPackEntity, openedPacksTable } from 'src/infra/postgres/tables';
 
 @Injectable()

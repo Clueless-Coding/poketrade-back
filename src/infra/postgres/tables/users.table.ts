@@ -1,6 +1,6 @@
 import { relations } from 'drizzle-orm';
 import { pgTable, text, integer } from 'drizzle-orm/pg-core';
-import { baseColumns } from '../other/base-columns';
+import { baseColumns } from '../base-columns';
 import { openedPacksTable } from './opened-packs.table';
 import { quickSoldUserItemsTable } from './quick-sold-user-items.table';
 import { userItemsTable } from './user-items.table';

@@ -1,4 +1,5 @@
-import { createParamDecorator, ExecutionContext, HttpException, HttpStatus } from '@nestjs/common';
+import { createParamDecorator, ExecutionContext } from '@nestjs/common';
+import { AppAuthException } from 'src/core/exceptions';
 
 export const User = createParamDecorator(
   (_data: unknown, ctx: ExecutionContext) => {
@@ -6,7 +7,7 @@ export const User = createParamDecorator(
     const { user } = req;
 
     if (!user) {
-      throw new HttpException('Unauthorized', HttpStatus.UNAUTHORIZED);
+      throw new AppAuthException('Unauthorized');
     }
 
     return user;

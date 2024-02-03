@@ -64,7 +64,7 @@ export class EnvVariables {
   CENTRIFUGO_SUBSCRIPTION_TOKEN_EXPIRES_IN: string;
 }
 
-export const validate = (config: Record<string, unknown>) => {
+export const validateEnv = (config: Record<string, unknown>) => {
   const validatedConfig = plainToInstance(EnvVariables, config, {
     enableImplicitConversion: true,
   });

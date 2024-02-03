@@ -10,12 +10,12 @@
     "start": "nest start",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
-    "start:prod": "node ./dist/main",
-    "migrations:generate": "drizzle-kit generate:pg --config ./src/infra/config/drizzle/",
-    "migrations:run": "node ./dist/infra/postgres/migrations/run",
-    "seeders:run": "node ./dist/infra/postgres/seeders/run",
+    "start:prod": "node ./dist/main.js",
+    "migrations:generate": "drizzle-kit generate:pg --config ./src/infra/config/drizzle.config.ts",
+    "migrations:run": "node ./dist/infra/postgres/migrations/run.js",
+    "seeders:run": "node ./dist/infra/postgres/seeders/run.js",
     "seeders:refresh": "pnpm seeders:run --refresh",
-    "drizzle:studio": "drizzle-kit studio --config ./src/infra/config/drizzle/",
+    "drizzle:studio": "drizzle-kit studio --config ./src/infra/config/drizzle.config.ts",
     "test": "jest"
   },
   "dependencies": {

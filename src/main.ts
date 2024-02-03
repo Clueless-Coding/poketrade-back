@@ -1,11 +1,12 @@
-import { NestFactory } from '@nestjs/core';
+import { HttpAdapterHost, NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ConfigService } from '@nestjs/config';
-import { EnvVariables } from './infra/config/validation';
+import { EnvVariables } from './infra/config/env.config';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+import { AppExceptionFilter } from './api/filters/app-exception.filter';
 
 const GLOBAL_PREFIX = 'api';
 const PUBLIC_PATH = './public';
@@ -17,6 +18,11 @@ function initializeSwaggerDocumentation(app: INestApplication) {
       type: 'apiKey',
       in: 'header',
       name: 'x-access-token',
+    })
+    .addSecurity('RefreshToken', {
+      type: 'apiKey',
+      in: 'header',
+      name: 'x-refresh-token',
     })
     .build();
 
@@ -37,6 +43,9 @@ async function bootstrap() {
   app.setGlobalPrefix(GLOBAL_PREFIX);
 
   app.useGlobalPipes(new ValidationPipe({ transform: true, whitelist: true }));
+
+  const { httpAdapter } = app.get(HttpAdapterHost);
+  app.useGlobalFilters(new AppExceptionFilter(httpAdapter));
 
   initializeSwaggerDocumentation(app);
 

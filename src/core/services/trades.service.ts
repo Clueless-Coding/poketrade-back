@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Database, Transaction } from 'src/infra/postgres/other/types';
+import { Database, Transaction } from 'src/infra/postgres/types';
 import {
   tradesTable,
   usersTable,
@@ -13,44 +13,30 @@ import {
   AcceptedTradeEntity,
   RejectedTradeEntity,
 } from 'src/infra/postgres/tables';
-import { InjectDatabase } from 'src/infra/decorators/inject-database.decorator';
+import { InjectDatabase } from 'src/infra/ioc/decorators/inject-database.decorator';
 import { and, eq, inArray, sql, SQL } from 'drizzle-orm';
-import { Nullable, Optional, UUIDv4 } from 'src/common/types';
+import { Optional, UUIDv4 } from 'src/common/types';
 import { alias } from 'drizzle-orm/pg-core';
 import { TradesToUserItemsService } from './trades-to-user-items.service';
+import { AppEntityNotFoundException } from '../exceptions';
+import { FindEntitiesOptions, FindEntityByIdOptions, FindEntityOptions } from '../types';
 
-type FindTradesWhere = Partial<{
+export type FindTradesWhere = Partial<{
   id: UUIDv4,
   ids: Array<UUIDv4>
   status: TradeStatus,
-}>
-
-type FindTradesOptions = Partial<{
-  where: FindTradesWhere,
-}>
-
-type FindPendingTradesOptions = Omit<FindTradesOptions, 'where'> & Partial<{
-  where: Omit<FindTradesWhere, 'status'>,
 }>;
 
-export const mapFindTradesWhereToSQL = (
-  where: FindTradesWhere,
-): Optional<SQL> => {
-  return and(
-    where.id !== undefined ? eq(tradesTable.id, where.id) : undefined,
-    where.ids !== undefined ? inArray(tradesTable.id, where.ids) : undefined,
-    where.status !== undefined ? eq(tradesTable.status, where.status) : undefined,
-  );
-}
+export type FindPendingTradesWhere = Omit<FindTradesWhere, 'status'>;
 
 export const mapTradesRowToEntity = (
   row: Record<'trades' | 'senders' | 'receivers', any>,
-) => {
+): TradeEntity => {
   return {
     ...row.trades,
     sender: row.senders,
     receiver: row.receivers,
-  }
+  };
 };
 
 @Injectable()
@@ -62,10 +48,20 @@ export class TradesService {
     private readonly tradesToUserItemsService: TradesToUserItemsService,
   ) {}
 
+  private mapWhereToSQL(
+    where: FindTradesWhere,
+  ): Optional<SQL> {
+    return and(
+      where.id !== undefined ? eq(tradesTable.id, where.id) : undefined,
+      where.ids !== undefined ? inArray(tradesTable.id, where.ids) : undefined,
+      where.status !== undefined ? eq(tradesTable.status, where.status) : undefined,
+    );
+  }
+
   private baseSelectBuilder(
-    findTradesOptions: FindTradesOptions,
+    options: FindEntitiesOptions<FindTradesWhere>,
   ) {
-    const { where = {} } = findTradesOptions;
+    const { where = {} } = options;
 
     const sendersTable = alias(usersTable, 'senders');
     const receiversTable = alias(usersTable, 'receivers');
@@ -75,41 +71,67 @@ export class TradesService {
       .from(tradesTable)
       .innerJoin(sendersTable, eq(sendersTable.id, tradesTable.senderId))
       .innerJoin(receiversTable, eq(receiversTable.id, tradesTable.receiverId))
-      .where(mapFindTradesWhereToSQL(where));
+      .where(this.mapWhereToSQL(where));
   }
 
   public async findTrade(
-    findTradesOptions: FindTradesOptions,
-  ): Promise<Nullable<TradeEntity>> {
-    return this
-      .baseSelectBuilder(findTradesOptions)
+    options: FindEntityOptions<FindTradesWhere>,
+  ): Promise<TradeEntity> {
+    const {
+      notFoundErrorMessage = 'Trade not found',
+    } = options;
+
+    const trade = await this
+      .baseSelectBuilder(options)
       .limit(1)
       .then(([row]) => (
         row
         ? mapTradesRowToEntity(row)
         : null
       ));
+
+    if (!trade) {
+      throw new AppEntityNotFoundException(notFoundErrorMessage);
+    }
+
+    return trade;
   }
 
   public async findPendingTrade(
-    findPendingTradesOptions: FindPendingTradesOptions,
-  ): Promise<Nullable<PendingTradeEntity>> {
+    options: FindEntityOptions<FindPendingTradesWhere>,
+  ): Promise<PendingTradeEntity> {
+    const {
+      notFoundErrorMessage = 'Pending trade not found',
+    } = options;
     const status = 'PENDING';
 
     return this
       .findTrade({
-        ...findPendingTradesOptions,
+        ...options,
         where: {
-          ...findPendingTradesOptions.where,
-          status
-        }
+          ...options.where,
+          status,
+        },
+        notFoundErrorMessage,
       })
-      .then((trade) => (
-        trade ? {
-          ...trade,
-          status: status as typeof status,
-        } : null
-      ))
+      .then((trade) => ({
+        ...trade,
+        status: status as typeof status,
+      }));
+  }
+
+  public async findPendingTradeById(
+    options: FindEntityByIdOptions,
+  ): Promise<PendingTradeEntity> {
+    const {
+      id,
+      notFoundErrorMessageFn = (id) => `Pending trade (\`${id}\`) not found`,
+    } = options;
+
+    return this.findPendingTrade({
+      where: { id },
+      notFoundErrorMessage: notFoundErrorMessageFn(id),
+    });
   }
 
   public async createPendingTrade(

@@ -86,7 +86,7 @@
         ],
         "security": [
           {
-            "AccessToken": []
+            "RefreshToken": []
           }
         ]
       }
@@ -121,14 +121,14 @@
         ],
         "security": [
           {
-            "AccessToken": []
+            "RefreshToken": []
           }
         ]
       }
     },
     "/api/users": {
       "get": {
-        "operationId": "UsersController_getUsers",
+        "operationId": "UsersController_getUsersWithPagination",
         "parameters": [
           {
             "name": "nameLike",
@@ -291,7 +291,7 @@
     },
     "/api/users/me/items/{id}/quick-sell": {
       "post": {
-        "operationId": "UsersController_quickSellUserItem",
+        "operationId": "UsersController_quickSellUserItemById",
         "parameters": [
           {
             "name": "id",
@@ -326,7 +326,7 @@
     },
     "/api/packs": {
       "get": {
-        "operationId": "PacksController_getPacks",
+        "operationId": "PacksController_getPacksWithPagination",
         "parameters": [
           {
             "name": "id",
@@ -434,7 +434,7 @@
     },
     "/api/packs/{id}": {
       "get": {
-        "operationId": "PacksController_getPack",
+        "operationId": "PacksController_getPackById",
         "parameters": [
           {
             "name": "id",
@@ -472,7 +472,7 @@
     },
     "/api/packs/{id}/open": {
       "post": {
-        "operationId": "PacksController_openPack",
+        "operationId": "PacksController_openPackById",
         "parameters": [
           {
             "name": "id",
@@ -547,41 +547,6 @@
         ]
       }
     },
-    "/api/trades/{id}/accept": {
-      "post": {
-        "operationId": "TradesController_acceptPendingTradeById",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "201": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AcceptedTradeOutputDTO"
-                }
-              }
-            }
-          }
-        },
-        "tags": [
-          "Trades"
-        ],
-        "security": [
-          {
-            "AccessToken": []
-          }
-        ]
-      }
-    },
     "/api/trades/{id}/cancel": {
       "post": {
         "operationId": "TradesController_cancelPendingTradeById",
@@ -602,6 +567,41 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/CancelledTradeOuputDTO"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Trades"
+        ],
+        "security": [
+          {
+            "AccessToken": []
+          }
+        ]
+      }
+    },
+    "/api/trades/{id}/accept": {
+      "post": {
+        "operationId": "TradesController_acceptPendingTradeById",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AcceptedTradeOutputDTO"
                 }
               }
             }
@@ -719,6 +719,11 @@
         "type": "apiKey",
         "in": "header",
         "name": "x-access-token"
+      },
+      "RefreshToken": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "x-refresh-token"
       }
     },
     "schemas": {
@@ -1060,7 +1065,7 @@
           "status"
         ]
       },
-      "AcceptedTradeOutputDTO": {
+      "CancelledTradeOuputDTO": {
         "type": "object",
         "properties": {
           "id": {
@@ -1098,7 +1103,7 @@
           "status"
         ]
       },
-      "CancelledTradeOuputDTO": {
+      "AcceptedTradeOutputDTO": {
         "type": "object",
         "properties": {
           "id": {

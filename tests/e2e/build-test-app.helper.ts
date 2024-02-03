@@ -1,12 +1,14 @@
-import { Database } from 'src/infra/postgres/other/types';
+import { Database } from 'src/infra/postgres/types';
 import { migrate } from 'drizzle-orm/node-postgres/migrator';
 import { Test } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { PostgreSqlContainer } from '@testcontainers/postgresql';
-import { DRIZZLE_DB_INJECTION_TOKEN } from 'src/infra/injection-tokens';
+import { DRIZZLE_DB_INJECTION_TOKEN } from 'src/infra/ioc/injection-tokens';
 import { join } from 'node:path';
 import { ConfigModule } from '@nestjs/config';
 import { ApiModule } from 'src/api/api.module';
+import { HttpAdapterHost } from '@nestjs/core';
+import { AppExceptionFilter } from 'src/api/filters/app-exception.filter';
 
 export const buildTestApp = async (): Promise<INestApplication> => {
   const postgresContainer = new PostgreSqlContainer()
@@ -40,6 +42,8 @@ export const buildTestApp = async (): Promise<INestApplication> => {
   const app = moduleFixture.createNestApplication();
 
   app.useGlobalPipes(new ValidationPipe({ transform: true, whitelist: true }));
+  const { httpAdapter } = app.get(HttpAdapterHost);
+  app.useGlobalFilters(new AppExceptionFilter(httpAdapter));
 
   await app.init();
 

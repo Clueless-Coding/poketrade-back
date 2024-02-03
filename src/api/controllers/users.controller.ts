@@ -6,17 +6,15 @@ import { ApiOkResponse, ApiCreatedResponse, ApiSecurity, ApiTags } from '@nestjs
 import { Mapper } from '@automapper/core';
 import { InjectMapper } from '@automapper/nestjs';
 import { UserOutputDTO } from '../dtos/users/user.output.dto';
-import { mapArrayWithPagination } from 'src/common/helpers/map-array-with-pagination.helper';
+import { mapPaginatedArray } from 'src/common/helpers/map-paginated-array.helper';
 import { PaginationInputDTO } from '../dtos/pagination.input.dto';
 import { ApiOkResponseWithPagination } from '../decorators/api-ok-response-with-pagination.decorator';
 import { PaginatedArray, UUIDv4 } from 'src/common/types';
 import { GetUsersInputDTO } from '../dtos/users/get-users.input.dto';
 import { UserItemsUseCase } from 'src/core/use-cases/user-items.use-case';
-import { Database } from 'src/infra/postgres/other/types';
 import { UserItemOutputDTO } from '../dtos/user-items/user-item.output.dto';
 import { QuickSoldUserItemOutputDTO } from '../dtos/user-items/quick-sold-user-item.output.dto';
 import { QuickSoldUserItemEntity, UserEntity, UserItemEntity } from 'src/infra/postgres/tables';
-import { InjectDatabase } from 'src/infra/decorators/inject-database.decorator';
 
 @ApiTags('Users')
 @Controller('users')
@@ -24,8 +22,6 @@ export class UsersController {
   public constructor(
     @InjectMapper()
     private readonly mapper: Mapper,
-    @InjectDatabase()
-    private readonly db: Database,
 
     private readonly usersUseCase: UsersUseCase,
     private readonly userItemsUseCase: UserItemsUseCase,
@@ -35,13 +31,14 @@ export class UsersController {
   @ApiSecurity('AccessToken')
   @Get()
   @UseGuards(AccessTokenAuthGuard)
-  public async getUsers(
+  public async getUsersWithPagination(
     @Query() dto: GetUsersInputDTO,
     @Query() paginationDTO: PaginationInputDTO,
   ): Promise<PaginatedArray<UserOutputDTO>> {
     const users = await this.usersUseCase.getUsersWithPagination(dto, paginationDTO);
 
-    return mapArrayWithPagination<UserEntity, UserOutputDTO>(
+    this.mapper.mapArray
+    return mapPaginatedArray<UserEntity, UserOutputDTO>(
       this.mapper,
       users,
       'UserEntity',
@@ -71,7 +68,7 @@ export class UsersController {
   ): Promise<PaginatedArray<UserItemOutputDTO>> {
     const userItemsWithPagination = await this.userItemsUseCase.getUserItemsWithPaginationByUser(user, paginationDto);
 
-    return mapArrayWithPagination<UserItemEntity, UserItemOutputDTO>(
+    return mapPaginatedArray<UserItemEntity, UserItemOutputDTO>(
       this.mapper,
       userItemsWithPagination,
       'UserItemEntity',
@@ -83,13 +80,11 @@ export class UsersController {
   @ApiSecurity('AccessToken')
   @Post('me/items/:id/quick-sell')
   @UseGuards(AccessTokenAuthGuard)
-  public async quickSellUserItem(
+  public async quickSellUserItemById(
     @User() user: UserEntity,
     @Param('id', new ParseUUIDPipe({ version: '4' })) id: UUIDv4,
   ): Promise<QuickSoldUserItemOutputDTO> {
-    const quickSoldUserItem = await this.db.transaction(async (tx) => (
-      this.userItemsUseCase.quickSellUserItemById(user, id, tx)
-    ));
+    const quickSoldUserItem = await this.userItemsUseCase.quickSellUserItemById(user, id);
 
     return this.mapper.map<QuickSoldUserItemEntity, QuickSoldUserItemOutputDTO>(
       quickSoldUserItem,

@@ -1,7 +1,7 @@
 import { relations } from 'drizzle-orm';
 import { uuid, pgTable, timestamp, index, pgEnum } from 'drizzle-orm/pg-core';
 import { UUIDv4 } from 'src/common/types';
-import { baseColumns } from '../other/base-columns';
+import { baseColumns } from '../base-columns';
 import { UserItemEntity } from './user-items.table';
 import { UserEntity, usersTable } from './users.table';
 import { tradesToUserItemsTable } from './trades-to-user-items.table';

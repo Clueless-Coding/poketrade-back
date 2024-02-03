@@ -1,76 +1,71 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { CreatePendingTradeInputDTO } from 'src/api/dtos/pending-trades/create-pending-trade.input.dto';
 import { UUIDv4 } from 'src/common/types';
-import { Transaction } from 'src/infra/postgres/other/types';
-import { UserItemsUseCase } from './user-items.use-case';
-import { UsersUseCase } from './users.use-case';
+import { Database, Transaction } from 'src/infra/postgres/types';
 import { AcceptedTradeEntity, CancelledTradeEntity, PendingTradeEntity, RejectedTradeEntity, UserEntity } from 'src/infra/postgres/tables';
 import { TradesService } from '../services/trades.service';
 import { TradesToUserItemsService } from '../services/trades-to-user-items.service';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { PENDING_TRADE_ACCEPTED_EVENT, PENDING_TRADE_CREATED_EVENT } from 'src/common/events';
+import { PENDING_TRADE_ACCEPTED_EVENT, PENDING_TRADE_CREATED_EVENT } from '../events';
+import { UsersService } from '../services/users.service';
+import { UserItemsService } from '../services/user-items.service';
+import { AppConflictException, AppValidationException } from '../exceptions';
+import { InjectDatabase } from 'src/infra/ioc/decorators/inject-database.decorator';
 
 @Injectable()
 export class PendingTradesUseCase {
   public constructor(
     private readonly tradesService: TradesService,
     private readonly tradesToUserItemsService: TradesToUserItemsService,
-    private readonly userItemsUseCase: UserItemsUseCase,
-    private readonly usersUseCase: UsersUseCase,
+    private readonly userItemsService: UserItemsService,
+    private readonly usersService: UsersService,
     private readonly eventEmitter: EventEmitter2,
+    @InjectDatabase()
+    private readonly db: Database,
   ) {}
 
-  public async createPendingTrade(
+  private async _createPendingTrade(
     sender: UserEntity,
     dto: CreatePendingTradeInputDTO,
-    tx?: Transaction,
+    tx: Transaction,
   ): Promise<PendingTradeEntity> {
     if (!dto.senderItemIds.length && !dto.receiverItemIds.length) {
-      throw new HttpException(
+      throw new AppValidationException(
         '`senderItemIds` and `receiverItemIds` cannot be empty simultaneously',
-        HttpStatus.BAD_REQUEST
       );
     }
 
     const [senderItems, receiver, receiverItems] = await Promise.all([
-      this.userItemsUseCase.getUserItemsByIds(
-        dto.senderItemIds,
-        {
-          errorMessageFn: (id) => `Trade sender item (\`${id}\`) not found`,
-        },
-      ),
-      this.usersUseCase.getUserById(
-        dto.receiverId,
-        {
-          errorMessageFn: (id) => `Trade receiver (\`${id}\`) not found`,
-        },
-      ),
-      this.userItemsUseCase.getUserItemsByIds(
-        dto.receiverItemIds,
-        {
-          errorMessageFn: (id) => `Trade receiver item (\`${id}\`) not found`,
-        }
-      ),
+      this.userItemsService.findUserItemsByIds({
+        ids: dto.senderItemIds,
+        notFoundErrorMessageFn: (id) => `Trade sender item (\`${id}\`) not found`,
+      }),
+      this.usersService.findUserById({
+        id: dto.receiverId,
+        notFoundErrorMessageFn: (id) => `Trade receiver (\`${id}\`) not found`,
+      }),
+      this.userItemsService.findUserItemsByIds({
+        ids: dto.receiverItemIds,
+        notFoundErrorMessageFn: (id) => `Trade receiver item (\`${id}\`) not found`,
+      }),
     ]);
 
     if (sender.id === receiver.id) {
-      throw new HttpException('You cannot send trade to yourself', HttpStatus.CONFLICT);
+      throw new AppConflictException('You cannot send trade to yourself');
     }
 
     for (const senderItem of senderItems) {
       if (senderItem.user.id !== sender.id) {
-        throw new HttpException(
+        throw new AppConflictException(
           `Trade sender item (\`${senderItem.id}\`) does not belong to you`,
-          HttpStatus.CONFLICT,
         );
       }
     }
 
     for (const receiverItem of receiverItems) {
       if (receiverItem.user.id !== receiver.id) {
-        throw new HttpException(
+        throw new AppConflictException(
           `Trade receiver item (\`${receiverItem.id}\`) does not belong to them`,
-          HttpStatus.CONFLICT,
         );
       }
     }
@@ -88,54 +83,24 @@ export class PendingTradesUseCase {
       });
   }
 
-  public async getPendingTrade(
-    where: Partial<{ id: UUIDv4 }> = {},
-    options: Partial<{
-      errorMessage: string;
-      errorStatus: HttpStatus;
-    }> = {},
+  public async createPendingTrade(
+    sender: UserEntity,
+    dto: CreatePendingTradeInputDTO,
   ): Promise<PendingTradeEntity> {
-    const {
-      errorMessage = 'Pending trade not found',
-      errorStatus = HttpStatus.NOT_FOUND,
-    } = options;
-
-    const pendingTrade = await this.tradesService.findPendingTrade({
-      where
-    });
-
-    if (!pendingTrade) {
-      throw new HttpException(errorMessage, errorStatus);
-    }
-
-    return pendingTrade;
+    return this.db.transaction(async (tx) => (
+      this._createPendingTrade(sender, dto, tx)
+    ));
   }
 
-  public async getPendingTradeById(
-    id: UUIDv4,
-    options: Partial<{
-      errorMessageFn: (id: UUIDv4) => string,
-      errorStatus: HttpStatus,
-    }> = {},
-  ): Promise<PendingTradeEntity> {
-    const {
-      errorMessageFn = (id) => `Pending trade (\`${id}\`) not found`,
-      errorStatus = HttpStatus.NOT_FOUND,
-    } = options;
-
-    return this.getPendingTrade({ id }, {
-      errorMessage: errorMessageFn(id),
-      errorStatus,
-    });
-  }
-
-  public async cancelPendingTrade(
+  private async _cancelPendingTradeById(
     user: UserEntity,
-    pendingTrade: PendingTradeEntity,
-    tx?: Transaction,
+    id: UUIDv4,
+    tx: Transaction,
   ): Promise<CancelledTradeEntity> {
+    const pendingTrade = await this.tradesService.findPendingTradeById({ id });
+
     if (user.id !== pendingTrade.sender.id) {
-      throw new HttpException('You cannot cancel a trade that is not yours', HttpStatus.CONFLICT);
+      throw new AppConflictException('You cannot cancel a trade that is not yours');
     }
 
     return this.tradesService.updatePendingTradeToCancelledTrade(pendingTrade, tx);
@@ -144,25 +109,26 @@ export class PendingTradesUseCase {
   public async cancelPendingTradeById(
     user: UserEntity,
     id: UUIDv4,
-    tx?: Transaction,
   ): Promise<CancelledTradeEntity> {
-    const pendingTrade = await this.getPendingTradeById(id);
-
-    return this.cancelPendingTrade(user, pendingTrade, tx);
+    return this.db.transaction(async (tx) => (
+      this._cancelPendingTradeById(user, id, tx)
+    ));
   }
 
-  public async acceptPendingTrade(
+  private async _acceptPendingTradeById(
     user: UserEntity,
-    pendingTrade: PendingTradeEntity,
-    tx?: Transaction,
+    id: UUIDv4,
+    tx: Transaction,
   ): Promise<AcceptedTradeEntity> {
+    const pendingTrade = await this.tradesService.findPendingTradeById({ id });
+
     const {
       sender,
       receiver,
     } = pendingTrade;
 
     if (user.id !== receiver.id) {
-      throw new HttpException('You are not a receiver of this trade', HttpStatus.CONFLICT);
+      throw new AppConflictException('You are not a receiver of this trade');
     }
 
     const [tradesToSenderItems, tradesToReceiverItems] = await Promise.all([
@@ -179,12 +145,12 @@ export class PendingTradesUseCase {
     ]);
 
     await Promise.all([
-      this.userItemsUseCase.transferUserItemsToAnotherUser(
+      this.userItemsService.transferUserItemsToAnotherUser(
         tradesToSenderItems.map(({ senderItem }) => senderItem),
         receiver,
         tx,
       ),
-      this.userItemsUseCase.transferUserItemsToAnotherUser(
+      this.userItemsService.transferUserItemsToAnotherUser(
         tradesToReceiverItems.map(({ receiverItem }) => receiverItem),
         sender,
         tx,
@@ -202,20 +168,21 @@ export class PendingTradesUseCase {
   public async acceptPendingTradeById(
     user: UserEntity,
     id: UUIDv4,
-    tx?: Transaction,
   ): Promise<AcceptedTradeEntity> {
-    const pendingTrade = await this.getPendingTradeById(id);
-
-    return this.acceptPendingTrade(user, pendingTrade, tx);
+    return this.db.transaction(async (tx) => (
+      this._acceptPendingTradeById(user, id, tx)
+    ));
   }
 
-  public async rejectPendingTrade(
+  private async _rejectPendingTradeById(
     user: UserEntity,
-    pendingTrade: PendingTradeEntity,
-    tx?: Transaction,
+    id: UUIDv4,
+    tx: Transaction,
   ): Promise<RejectedTradeEntity> {
+    const pendingTrade = await this.tradesService.findPendingTradeById({ id });
+
     if (user.id !== pendingTrade.receiver.id) {
-      throw new HttpException('You cannot reject a trade that is sent to you', HttpStatus.CONFLICT);
+      throw new AppConflictException('You cannot reject a trade that is sent to you');
     }
 
     return this.tradesService.updatePendingTradeToRejectedTrade(pendingTrade, tx);
@@ -224,10 +191,9 @@ export class PendingTradesUseCase {
   public async rejectPendingTradeById(
     user: UserEntity,
     id: UUIDv4,
-    tx?: Transaction,
-  ) {
-    const pendingTrade = await this.getPendingTradeById(id);
-
-    return this.rejectPendingTrade(user, pendingTrade, tx);
+  ): Promise<RejectedTradeEntity> {
+    return this.db.transaction(async (tx) => (
+      this._rejectPendingTradeById(user, id, tx)
+    ));
   }
 }
