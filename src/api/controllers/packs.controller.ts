@@ -1,7 +1,7 @@
 import { Controller, Get, Param, ParseUUIDPipe, Post, Query, UseGuards } from '@nestjs/common';
 import { AccessTokenAuthGuard } from '../guards/access-token-auth.guard';
 import { User } from '../decorators/user.decorator';
-import { PacksUseCase } from 'src/core/use-cases/packs.use-case';
+import { PacksService } from 'src/core/services/packs.service';
 import { ApiConflictResponse, ApiCreatedResponse, ApiNotFoundResponse, ApiOkResponse, ApiSecurity, ApiTags } from '@nestjs/swagger';
 import { PaginatedArray, UUIDv4 } from 'src/common/types';
 import { Mapper } from '@automapper/core';
@@ -22,7 +22,7 @@ export class PacksController {
     @InjectMapper()
     private readonly mapper: Mapper,
 
-    private readonly packsUseCase: PacksUseCase,
+    private readonly packsService: PacksService,
   ) {}
 
   @ApiOkResponseWithPagination({ type: PackOutputDTO })
@@ -33,7 +33,7 @@ export class PacksController {
     @Query() dto: GetPacksInputDTO,
     @Query() paginationDTO: PaginationInputDTO,
   ): Promise<PaginatedArray<PackOutputDTO>> {
-    const packs = await this.packsUseCase.getPacksWithPagination(dto, paginationDTO);
+    const packs = await this.packsService.getPacksWithPagination(dto, paginationDTO);
 
     return mapPaginatedArray<PackEntity, PackOutputDTO>(
       this.mapper,
@@ -51,7 +51,7 @@ export class PacksController {
   public async getPackById(
     @Param('id', new ParseUUIDPipe({ version: '4' })) id: UUIDv4,
   ): Promise<PackWithPokemonsOutputDTO> {
-    const pack = await this.packsUseCase.getPackById(id);
+    const pack = await this.packsService.getPackById(id);
 
     return this.mapper.map<PackEntity, PackWithPokemonsOutputDTO>(
       pack,
@@ -70,7 +70,7 @@ export class PacksController {
     @User() user: UserEntity,
     @Param('id', new ParseUUIDPipe({ version: '4' })) id: UUIDv4,
   ): Promise<OpenedPackOutputDTO> {
-    const openedPack = await this.packsUseCase.openPackById(user, id);
+    const openedPack = await this.packsService.openPackById(user, id);
 
     return this.mapper.map<OpenedPackEntity, OpenedPackOutputDTO>(
       openedPack,

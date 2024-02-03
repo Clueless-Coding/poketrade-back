@@ -1,6 +1,6 @@
 import request from 'supertest';
 import { INestApplication } from '@nestjs/common';
-import { AuthUseCase } from 'src/core/use-cases/auth.use-case';
+import { AuthService } from 'src/core/services/auth.service';
 import { UserEntity } from 'src/infra/postgres/tables';
 import { buildTestApp } from '../../build-test-app.helper';
 
@@ -15,10 +15,10 @@ describe('Auth POST /login', () => {
   beforeAll(async () => {
     app = await buildTestApp();
 
-    const authUseCase = app.get(AuthUseCase);
+    const authService = app.get(AuthService);
 
     userPassword = 'PASSWORD';
-    const { user: registredUser } = await authUseCase.registerUser({
+    const { user: registredUser } = await authService.registerUser({
       username: 'NAME',
       password: userPassword,
       confirmPassword: userPassword,

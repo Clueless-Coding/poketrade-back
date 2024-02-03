@@ -1,5 +1,5 @@
 import { Body, Controller, Headers, HttpCode, HttpStatus, Post, UseGuards } from '@nestjs/common';
-import { AuthUseCase } from 'src/core/use-cases/auth.use-case';
+import { AuthService } from 'src/core/services/auth.service';
 import { LocalAuthGuard } from '../guards/local-auth.guard';
 import { User } from '../decorators/user.decorator';
 import { LoginUserOutputDTO } from '../dtos/auth/login-user.output.dto';
@@ -21,7 +21,7 @@ export class AuthController {
   public constructor(
     @InjectMapper()
     private readonly mapper: Mapper,
-    private readonly authUseCase: AuthUseCase,
+    private readonly authService: AuthService,
   ) {}
 
   // TODO: For some reason body validation doesn't work. Fix it.
@@ -33,7 +33,7 @@ export class AuthController {
     @Body() _dto: LoginUserInputDTO,
     @User() user: UserEntity,
   ): Promise<LoginUserOutputDTO> {
-    const { accessToken, refreshToken } = await this.authUseCase.loginUser(user);
+    const { accessToken, refreshToken } = await this.authService.loginUser(user);
 
     return {
       user: this.mapper.map<UserEntity, UserOutputDTO>(user, 'UserEntity', 'UserOutputDTO'),
@@ -47,7 +47,7 @@ export class AuthController {
   public async registerUser(
     @Body() dto: RegisterUserInputDTO,
   ): Promise<RegisterUserOutputDTO> {
-    const { user, accessToken, refreshToken } = await this.authUseCase.registerUser(dto);
+    const { user, accessToken, refreshToken } = await this.authService.registerUser(dto);
 
     return {
       user: this.mapper.map<UserEntity, UserOutputDTO>(user, 'UserEntity', 'UserOutputDTO'),
@@ -65,7 +65,7 @@ export class AuthController {
     @User() user: UserEntity,
     @Headers('x-refresh-token') refreshToken: JWT,
   ): Promise<void> {
-    return this.authUseCase.logoutUser(user, refreshToken);
+    return this.authService.logoutUser(user, refreshToken);
   }
 
   @ApiCreatedResponse({ type: RefreshTokensOutputDTO })
@@ -79,7 +79,7 @@ export class AuthController {
     const {
       accessToken,
       refreshToken: newRefreshToken,
-    } = await this.authUseCase.refreshTokens(user, oldRefreshToken);
+    } = await this.authService.refreshTokens(user, oldRefreshToken);
 
     return {
       user: this.mapper.map<UserEntity, UserOutputDTO>(user, 'UserEntity', 'UserOutputDTO'),

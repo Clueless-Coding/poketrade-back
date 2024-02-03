@@ -12,7 +12,7 @@ import { AppConflictException } from '../exceptions';
 import { InjectDatabase } from 'src/infra/ioc/decorators/inject-database.decorator';
 
 @Injectable()
-export class PacksUseCase {
+export class PacksService {
   public constructor(
     private readonly packsRepository: PacksRepository,
     private readonly openedPacksRepository: OpenedPacksRepository,

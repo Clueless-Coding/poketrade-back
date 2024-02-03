@@ -2,7 +2,7 @@ import { Injectable } from "@nestjs/common";
 import { PokemonsRepository } from "../repositories/pokemons.repository";
 
 @Injectable()
-export class PokemonsUseCase {
+export class PokemonsService {
   public constructor(
     private readonly pokemonsRepository: PokemonsRepository,
   ) {}

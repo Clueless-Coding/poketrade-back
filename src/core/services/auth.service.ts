@@ -17,7 +17,7 @@ import { AppConflictException, AppValidationException } from '../exceptions';
 type AuthTokens = { accessToken: JWT, refreshToken: JWT };
 
 @Injectable()
-export class AuthUseCase {
+export class AuthService {
   public constructor(
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService<EnvVariables>,

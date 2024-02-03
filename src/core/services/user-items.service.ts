@@ -10,7 +10,7 @@ import { AppConflictException } from '../exceptions';
 import { InjectDatabase } from 'src/infra/ioc/decorators/inject-database.decorator';
 
 @Injectable()
-export class UserItemsUseCase {
+export class UserItemsService {
   public constructor(
     private readonly userItemsRepository: UserItemsRepository,
     private readonly quickSoldUserItemsRepository: QuickSoldUserItemsRepository,

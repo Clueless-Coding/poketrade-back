@@ -1,6 +1,6 @@
 import request from 'supertest';
 import { HttpStatus, INestApplication } from '@nestjs/common';
-import { AuthUseCase } from 'src/core/use-cases/auth.use-case';
+import { AuthService } from 'src/core/services/auth.service';
 import { buildTestApp } from '../../build-test-app.helper';
 
 const API_ENDPOINT = '/auth/register';
@@ -47,11 +47,11 @@ describe('Auth POST /register', () => {
   });
 
   test('User with this name already exists', async () => {
-    const authUseCase = app.get(AuthUseCase);
+    const authService = app.get(AuthService);
 
     const username = 'NAME3';
     const password = 'PASSWORD3';
-    const { user } = await authUseCase.registerUser({
+    const { user } = await authService.registerUser({
       username,
       password,
       confirmPassword: password,

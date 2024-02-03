@@ -13,7 +13,7 @@ import { AppConflictException, AppValidationException } from '../exceptions';
 import { InjectDatabase } from 'src/infra/ioc/decorators/inject-database.decorator';
 
 @Injectable()
-export class PendingTradesUseCase {
+export class PendingTradesService {
   public constructor(
     private readonly tradesRepository: TradesRepository,
     private readonly tradesToUserItemsRepository: TradesToUserItemsRepository,

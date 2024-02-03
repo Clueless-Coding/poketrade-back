@@ -1,5 +1,5 @@
 import { Controller, Get, Param, ParseUUIDPipe, Post, Query, UseGuards } from '@nestjs/common';
-import { UsersUseCase } from 'src/core/use-cases/users.use-case';
+import { UsersService } from 'src/core/services/users.service';
 import { AccessTokenAuthGuard } from '../guards/access-token-auth.guard';
 import { User } from '../decorators/user.decorator';
 import { ApiOkResponse, ApiCreatedResponse, ApiSecurity, ApiTags } from '@nestjs/swagger';
@@ -11,7 +11,7 @@ import { PaginationInputDTO } from '../dtos/pagination.input.dto';
 import { ApiOkResponseWithPagination } from '../decorators/api-ok-response-with-pagination.decorator';
 import { PaginatedArray, UUIDv4 } from 'src/common/types';
 import { GetUsersInputDTO } from '../dtos/users/get-users.input.dto';
-import { UserItemsUseCase } from 'src/core/use-cases/user-items.use-case';
+import { UserItemsService } from 'src/core/services/user-items.service';
 import { UserItemOutputDTO } from '../dtos/user-items/user-item.output.dto';
 import { QuickSoldUserItemOutputDTO } from '../dtos/user-items/quick-sold-user-item.output.dto';
 import { QuickSoldUserItemEntity, UserEntity, UserItemEntity } from 'src/infra/postgres/tables';
@@ -23,8 +23,8 @@ export class UsersController {
     @InjectMapper()
     private readonly mapper: Mapper,
 
-    private readonly usersUseCase: UsersUseCase,
-    private readonly userItemsUseCase: UserItemsUseCase,
+    private readonly usersService: UsersService,
+    private readonly userItemsService: UserItemsService,
   ) {}
 
   @ApiOkResponse({ type: UserOutputDTO })
@@ -35,7 +35,7 @@ export class UsersController {
     @Query() dto: GetUsersInputDTO,
     @Query() paginationDTO: PaginationInputDTO,
   ): Promise<PaginatedArray<UserOutputDTO>> {
-    const users = await this.usersUseCase.getUsersWithPagination(dto, paginationDTO);
+    const users = await this.usersService.getUsersWithPagination(dto, paginationDTO);
 
     this.mapper.mapArray
     return mapPaginatedArray<UserEntity, UserOutputDTO>(
@@ -66,7 +66,7 @@ export class UsersController {
     @User() user: UserEntity,
     @Query() paginationDto: PaginationInputDTO,
   ): Promise<PaginatedArray<UserItemOutputDTO>> {
-    const userItemsWithPagination = await this.userItemsUseCase.getUserItemsWithPaginationByUser(user, paginationDto);
+    const userItemsWithPagination = await this.userItemsService.getUserItemsWithPaginationByUser(user, paginationDto);
 
     return mapPaginatedArray<UserItemEntity, UserItemOutputDTO>(
       this.mapper,
@@ -84,7 +84,7 @@ export class UsersController {
     @User() user: UserEntity,
     @Param('id', new ParseUUIDPipe({ version: '4' })) id: UUIDv4,
   ): Promise<QuickSoldUserItemOutputDTO> {
-    const quickSoldUserItem = await this.userItemsUseCase.quickSellUserItemById(user, id);
+    const quickSoldUserItem = await this.userItemsService.quickSellUserItemById(user, id);
 
     return this.mapper.map<QuickSoldUserItemEntity, QuickSoldUserItemOutputDTO>(
       quickSoldUserItem,

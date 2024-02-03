@@ -6,7 +6,7 @@ import { UserEntity } from 'src/infra/postgres/tables';
 import { PaginationInputDTO } from 'src/api/dtos/pagination.input.dto';
 
 @Injectable()
-export class UsersUseCase {
+export class UsersService {
   public constructor(
     private readonly usersRepository: UsersRepository,
   ) {}

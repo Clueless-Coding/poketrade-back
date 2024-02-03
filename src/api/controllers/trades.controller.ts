@@ -3,7 +3,7 @@ import { InjectMapper } from '@automapper/nestjs';
 import { Body, Controller, Param, ParseUUIDPipe, Post, UseGuards } from '@nestjs/common';
 import { ApiCreatedResponse, ApiSecurity, ApiTags } from '@nestjs/swagger';
 import { UUIDv4 } from 'src/common/types';
-import { PendingTradesUseCase } from 'src/core/use-cases/pending-trades.use-case';
+import { PendingTradesService } from 'src/core/services/pending-trades.service';
 import { AcceptedTradeEntity, CancelledTradeEntity, PendingTradeEntity, RejectedTradeEntity, UserEntity } from 'src/infra/postgres/tables';
 import { User } from '../decorators/user.decorator';
 import { AcceptedTradeOutputDTO } from '../dtos/accepted-trades/accepted-trade.output.dto';
@@ -20,7 +20,7 @@ export class TradesController {
     @InjectMapper()
     private readonly mapper: Mapper,
 
-    private readonly pendingTradesUseCase: PendingTradesUseCase,
+    private readonly pendingTradesService: PendingTradesService,
   ) {}
 
   @ApiCreatedResponse({ type: PendingTradeOutputDTO })
@@ -31,7 +31,7 @@ export class TradesController {
     @User() user: UserEntity,
     @Body() dto: CreatePendingTradeInputDTO,
   ): Promise<PendingTradeOutputDTO> {
-    const pendingTrade = await this.pendingTradesUseCase.createPendingTrade(user, dto);
+    const pendingTrade = await this.pendingTradesService.createPendingTrade(user, dto);
 
     return this.mapper.map<PendingTradeEntity, PendingTradeOutputDTO>(
       pendingTrade,
@@ -48,7 +48,7 @@ export class TradesController {
     @User() user: UserEntity,
     @Param('id', new ParseUUIDPipe({ version: '4' })) id: UUIDv4,
   ) {
-    const cancelledTrade = await this.pendingTradesUseCase.cancelPendingTradeById(user, id)
+    const cancelledTrade = await this.pendingTradesService.cancelPendingTradeById(user, id)
 
     return this.mapper.map<CancelledTradeEntity, CancelledTradeOuputDTO>(
       cancelledTrade,
@@ -65,7 +65,7 @@ export class TradesController {
     @User() user: UserEntity,
     @Param('id', new ParseUUIDPipe({ version: '4' })) id: UUIDv4,
   ) {
-    const acceptedTrade = await this.pendingTradesUseCase.acceptPendingTradeById(user, id);
+    const acceptedTrade = await this.pendingTradesService.acceptPendingTradeById(user, id);
 
     return this.mapper.map<AcceptedTradeEntity, AcceptedTradeOutputDTO>(
       acceptedTrade,
@@ -82,7 +82,7 @@ export class TradesController {
     @User() user: UserEntity,
     @Param('id', new ParseUUIDPipe({ version: '4' })) id: UUIDv4,
   ) {
-    const rejectedTrade = await this.pendingTradesUseCase.rejectPendingTradeById(user, id);
+    const rejectedTrade = await this.pendingTradesService.rejectPendingTradeById(user, id);
 
     return this.mapper.map<RejectedTradeEntity, RejectedTradeOutputDTO>(
       rejectedTrade,

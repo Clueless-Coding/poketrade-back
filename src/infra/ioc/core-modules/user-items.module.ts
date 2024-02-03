@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { QuickSoldUserItemsRepository } from 'src/core/repositories/quick-sold-user-items.repository';
 import { UserItemsRepository } from 'src/core/repositories/user-items.repository';
-import { UserItemsUseCase } from 'src/core/use-cases/user-items.use-case';
+import { UserItemsService } from 'src/core/services/user-items.service';
 import { PostgresModule } from '../../postgres/postgres.module';
 import { UsersModule } from './users.module';
 
@@ -11,12 +11,12 @@ import { UsersModule } from './users.module';
     UsersModule,
   ],
   providers: [
-    UserItemsUseCase,
+    UserItemsService,
     UserItemsRepository,
     QuickSoldUserItemsRepository,
   ],
   exports: [
-    UserItemsUseCase,
+    UserItemsService,
     UserItemsRepository,
     QuickSoldUserItemsRepository,
   ],
