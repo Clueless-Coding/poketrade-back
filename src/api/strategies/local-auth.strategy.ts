@@ -3,7 +3,7 @@ import { PassportStrategy } from '@nestjs/passport';
 import { Strategy } from 'passport-local';
 import * as bcrypt from 'bcrypt';
 import { IUsersRepository } from 'src/core/repositories/users.repository';
-import { UserEntity } from 'src/infra/postgres/tables';
+import { UserEntity } from 'src/core/entities/user.entity';
 import { Nullable } from 'src/common/types';
 import { AppAuthException } from 'src/core/exceptions';
 

@@ -19,12 +19,12 @@ import { UserItemProfile } from './profiles/user-item.profile';
 import { TradesController } from './controllers/trades.controller';
 import { TradesModule } from 'src/infra/ioc/core-modules/trades.module';
 import { TradeProfile } from './profiles/trade.profile';
-import { pojos } from '@automapper/pojos';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { CentrifugoModule } from 'src/infra/centrifugo/centrifugo.module';
 import { CentrifugoController } from './controllers/centrifugo.controller';
 import { RefreshTokenAuthStrategy } from './strategies/refresh-token-auth.strategy';
 import { CronJobsModule } from 'src/infra/cron-jobs/cron-jobs.module';
+import { classes } from '@automapper/classes';
 
 @Module({
   imports: [
@@ -32,7 +32,7 @@ import { CronJobsModule } from 'src/infra/cron-jobs/cron-jobs.module';
       global: true,
     }),
     AutomapperModule.forRoot({
-      strategyInitializer: pojos(),
+      strategyInitializer: classes(),
     }),
     PassportModule,
 

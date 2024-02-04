@@ -14,7 +14,9 @@ import { GetUsersInputDTO } from '../dtos/users/get-users.input.dto';
 import { UserItemsService } from 'src/core/services/user-items.service';
 import { UserItemOutputDTO } from '../dtos/user-items/user-item.output.dto';
 import { QuickSoldUserItemOutputDTO } from '../dtos/user-items/quick-sold-user-item.output.dto';
-import { QuickSoldUserItemEntity, UserEntity, UserItemEntity } from 'src/infra/postgres/tables';
+import { QuickSoldUserItemEntity } from 'src/core/entities/quick-sold-user-item.entity';
+import { UserEntity } from 'src/core/entities/user.entity';
+import { UserItemEntity } from 'src/core/entities/user-item.entity';
 
 @ApiTags('Users')
 @Controller('users')
@@ -37,13 +39,7 @@ export class UsersController {
   ): Promise<PaginatedArray<UserOutputDTO>> {
     const users = await this.usersService.getUsersWithPagination(dto, paginationDTO);
 
-    this.mapper.mapArray
-    return mapPaginatedArray<UserEntity, UserOutputDTO>(
-      this.mapper,
-      users,
-      'UserEntity',
-      'UserOutputDTO',
-    )
+    return mapPaginatedArray(this.mapper, users, UserEntity, UserOutputDTO);
   }
 
   @ApiOkResponse({ type: UserOutputDTO })
@@ -51,11 +47,7 @@ export class UsersController {
   @Get('me')
   @UseGuards(AccessTokenAuthGuard)
   public async getMe(@User() user: UserEntity): Promise<UserOutputDTO> {
-    return this.mapper.map<UserEntity, UserOutputDTO>(
-      user,
-      'UserEntity',
-      'UserOutputDTO',
-    );
+    return this.mapper.map(user, UserEntity, UserOutputDTO);
   }
 
   @ApiOkResponseWithPagination({ type: UserItemOutputDTO })
@@ -68,11 +60,11 @@ export class UsersController {
   ): Promise<PaginatedArray<UserItemOutputDTO>> {
     const userItemsWithPagination = await this.userItemsService.getUserItemsWithPaginationByUser(user, paginationDto);
 
-    return mapPaginatedArray<UserItemEntity, UserItemOutputDTO>(
+    return mapPaginatedArray(
       this.mapper,
       userItemsWithPagination,
-      'UserItemEntity',
-      'UserItemOutputDTO',
+      UserItemEntity,
+      UserItemOutputDTO,
     );
   }
 
@@ -86,10 +78,10 @@ export class UsersController {
   ): Promise<QuickSoldUserItemOutputDTO> {
     const quickSoldUserItem = await this.userItemsService.quickSellUserItemById(user, id);
 
-    return this.mapper.map<QuickSoldUserItemEntity, QuickSoldUserItemOutputDTO>(
+    return this.mapper.map(
       quickSoldUserItem,
-      'QuickSoldUserItemEntity',
-      'QuickSoldUserItemOutputDTO',
+      QuickSoldUserItemEntity,
+      QuickSoldUserItemOutputDTO,
     );
   }
 }

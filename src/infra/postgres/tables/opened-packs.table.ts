@@ -1,8 +1,8 @@
 import { uuid, pgTable, integer, timestamp } from 'drizzle-orm/pg-core';
 import { baseIdColumn } from '../base-columns';
-import { UserEntity, usersTable } from './users.table';
-import { PackEntity, packsTable } from './packs.table';
-import { PokemonEntity, pokemonsTable } from './pokemons.table';
+import { usersTable } from './users.table';
+import { packsTable } from './packs.table';
+import { pokemonsTable } from './pokemons.table';
 import { UUIDv4 } from 'src/common/types';
 import { relations } from 'drizzle-orm';
 
@@ -37,15 +37,4 @@ export const openedPacksTableRelations = relations(openedPacksTable, ({ one }) =
     fields: [openedPacksTable.pokemonId],
     references: [pokemonsTable.id],
   }),
-}))
-
-export type OpenedPackEntity = typeof openedPacksTable.$inferSelect & {
-  user: UserEntity,
-  pack: PackEntity,
-  pokemon: PokemonEntity,
-}
-export type CreateOpenedPackEntityValues = Omit<typeof openedPacksTable.$inferInsert, 'id' | 'openedAt' | 'userId' | 'packId' | 'pokemonId'> & {
-  user: UserEntity,
-  pack: PackEntity,
-  pokemon: PokemonEntity,
-}
+}));

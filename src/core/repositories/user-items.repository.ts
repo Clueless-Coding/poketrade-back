@@ -1,5 +1,6 @@
 import { PaginatedArray, UUIDv4 } from 'src/common/types';
-import { CreateUserItemEntityValues, UpdateUserItemEntityValues, UserEntity, UserItemEntity } from 'src/infra/postgres/tables';
+import { UserEntity } from '../entities/user.entity';
+import { CreateUserItemEntityValues, UpdateUserItemEntityValues, UserItemEntity } from '../entities/user-item.entity';
 import {
   FindEntitiesOptions,
   FindEntityOptions,

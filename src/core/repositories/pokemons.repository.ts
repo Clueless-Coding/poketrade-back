@@ -1,4 +1,4 @@
-import { CreatePokemonEntityValues, PokemonEntity } from 'src/infra/postgres/tables';
+import { CreatePokemonEntityValues, PokemonEntity } from '../entities/pokemon.entity';
 
 export abstract class IPokemonsRepository {
   public abstract createPokemons(

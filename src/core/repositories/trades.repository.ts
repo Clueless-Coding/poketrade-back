@@ -3,12 +3,11 @@ import {
   TradeStatus,
   PendingTradeEntity,
   CreatePendingTradeEntityValues,
-  TradeToSenderItemEntity,
-  TradeToReceiverItemEntity,
   CancelledTradeEntity,
   AcceptedTradeEntity,
   RejectedTradeEntity,
-} from 'src/infra/postgres/tables';
+} from '../entities/trade.entity';
+import { TradeToSenderItemEntity, TradeToReceiverItemEntity, } from '../entities/trade-to-user-item.entity'
 import { UUIDv4 } from 'src/common/types';
 import { FindEntityByIdOptions, FindEntityOptions } from '../types';
 

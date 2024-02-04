@@ -1,5 +1,5 @@
 import { JWT, UUIDv4 } from 'src/common/types';
-import { CreateUserRefreshTokenEntityValues, UserRefreshTokenEntity } from 'src/infra/postgres/tables';
+import { CreateUserRefreshTokenEntityValues, UserRefreshTokenEntity } from '../entities/user-refresh-token.entity';
 import { FindEntityOptions } from '../types';
 
 export type FindUserRefreshTokensWhere = Partial<{

@@ -22,7 +22,3 @@ export const usersTableRelations = relations(usersTable, ({ many }) => ({
   openedPacks: many(openedPacksTable),
   quickSoldItems: many(quickSoldUserItemsTable),
 }))
-
-export type UserEntity = typeof usersTable.$inferSelect;
-export type CreateUserEntityValues = Omit<typeof usersTable.$inferInsert, 'id' | 'updatedAt' | 'createdAt'>;
-export type UpdateUserEntityValues = Partial<CreateUserEntityValues>;

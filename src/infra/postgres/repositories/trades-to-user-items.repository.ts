@@ -7,18 +7,20 @@ import { FindEntitiesOptions } from 'src/core/types';
 import { InjectDatabase } from 'src/infra/ioc/decorators/inject-database.decorator';
 import { Database, Transaction } from 'src/infra/postgres/types';
 import {
-  CreateTradeToReceiverItemEntityValues,
-  CreateTradeToSenderItemEntityValues,
-  CreateTradeToUserItemEntityValues,
   pokemonsTable,
   tradesTable,
   tradesToUserItemsTable,
-  TradeToReceiverItemEntity,
-  TradeToSenderItemEntity,
-  TradeToUserItemEntity,
   userItemsTable,
   usersTable,
 } from 'src/infra/postgres/tables';
+import {
+  TradeToReceiverItemEntity,
+  TradeToSenderItemEntity,
+  TradeToUserItemEntity,
+  CreateTradeToReceiverItemEntityValues,
+  CreateTradeToSenderItemEntityValues,
+  CreateTradeToUserItemEntityValues,
+} from 'src/core/entities/trade-to-user-item.entity';
 import { mapTradesRowToEntity } from './trades.repository';
 import { mapUserItemsRowToEntity } from './user-items.repository';
 import { FindTradesToReceiverItemsWhere, FindTradesToSenderItemsWhere, FindTradesToUserItemsWhere, ITradesToUserItemsRepository } from 'src/core/repositories/trades-to-user-items.repository';

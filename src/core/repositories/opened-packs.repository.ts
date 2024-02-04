@@ -1,4 +1,4 @@
-import { CreateOpenedPackEntityValues, OpenedPackEntity } from 'src/infra/postgres/tables';
+import { CreateOpenedPackEntityValues, OpenedPackEntity } from '../entities/opened-pack.entity';
 
 export abstract class IOpenedPacksRepository {
   public abstract createOpenedPack(

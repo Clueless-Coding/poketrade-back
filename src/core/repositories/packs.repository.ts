@@ -1,5 +1,6 @@
 import { PaginatedArray, UUIDv4 } from 'src/common/types';
-import { PackEntity, PokemonEntity } from 'src/infra/postgres/tables';
+import { PokemonEntity } from '../entities/pokemon.entity';
+import { PackEntity } from '../entities/pack.entity';
 import { FindEntitiesWithPaginationOptions, FindEntityByIdOptions, FindEntityOptions } from '../types';
 
 export type FindPacksWhere = Partial<{

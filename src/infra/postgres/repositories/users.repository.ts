@@ -2,12 +2,14 @@ import { Injectable } from '@nestjs/common';
 import { Database, Transaction } from 'src/infra/postgres/types';
 import { InjectDatabase } from 'src/infra/ioc/decorators/inject-database.decorator';
 import { Nullable, Optional, PaginatedArray } from 'src/common/types';
-import { CreateUserEntityValues, UpdateUserEntityValues, UserEntity, usersTable } from 'src/infra/postgres/tables';
+import { usersTable } from 'src/infra/postgres/tables';
+import { CreateUserEntityValues, UpdateUserEntityValues, UserEntity } from 'src/core/entities/user.entity';
 import { and, eq, inArray, like, SQL } from 'drizzle-orm';
 import { mapArrayToPaginatedArray } from 'src/common/helpers/map-array-to-paginated-array.helper';
 import { AppEntityNotFoundException } from 'src/core/exceptions';
 import { FindEntitiesOptions, FindEntitiesWithPaginationOptions, FindEntityByIdOptions, FindEntityOptions } from 'src/core/types';
 import { FindUsersWhere, IUsersRepository } from 'src/core/repositories/users.repository';
+import { hashUserPassword } from 'src/common/helpers/hash-user-password.helper';
 
 @Injectable()
 export class UsersRepository implements IUsersRepository {
@@ -124,9 +126,14 @@ export class UsersRepository implements IUsersRepository {
     values: CreateUserEntityValues,
     tx?: Transaction,
   ): Promise<UserEntity> {
+    const { password } = values;
+
     return (tx ?? this.db)
       .insert(usersTable)
-      .values(values)
+      .values({
+        ...values,
+        hashedPassword: await hashUserPassword(password),
+      })
       .returning()
       .then(([user]) => user!);
   }
@@ -136,9 +143,16 @@ export class UsersRepository implements IUsersRepository {
     values: UpdateUserEntityValues,
     tx?: Transaction,
   ): Promise<UserEntity> {
+    const { password } = values;
+
     return (tx ?? this.db)
       .update(usersTable)
-      .set(values)
+      .set({
+        ...values,
+        ...(password !== undefined 
+          ? { hashedPassword: await hashUserPassword(password) } 
+          : {})
+      })
       .where(eq(usersTable.id, user.id))
       .returning()
       .then(([updatedUser]) => updatedUser!);

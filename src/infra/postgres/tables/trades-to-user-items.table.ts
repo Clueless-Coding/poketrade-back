@@ -1,13 +1,11 @@
 import { relations } from 'drizzle-orm';
 import { index, pgEnum, pgTable, primaryKey, uuid } from 'drizzle-orm/pg-core';
 import { UUIDv4 } from 'src/common/types';
-import { TradeEntity, tradesTable } from './trades.table';
-import { UserItemEntity, userItemsTable } from './user-items.table';
+import { tradesTable } from './trades.table';
+import { userItemsTable } from './user-items.table';
+import { userTypeEnumValues } from 'src/core/entities/trade-to-user-item.entity';
 
-export const userTypeEnum = pgEnum('trades_to_user_items_user_type', [
-  'SENDER',
-  'RECEIVER',
-]);
+export const userTypeEnum = pgEnum('trades_to_user_items_user_type', userTypeEnumValues);
 
 export const tradesToUserItemsTable = pgTable('trades_to_user_items', {
   tradeId: uuid('trade_id')
@@ -37,29 +35,3 @@ export const tradesToUserItemsTableRelations = relations(tradesToUserItemsTable,
     references: [userItemsTable.id],
   }),
 }));
-
-export type TradeToUserItemUserType = typeof userTypeEnum.enumValues[number];
-
-export type TradeToUserItemEntity = typeof tradesToUserItemsTable.$inferSelect & {
-  trade: TradeEntity,
-  userItem: UserItemEntity,
-}
-export type TradeToSenderItemEntity = Omit<TradeToUserItemEntity, 'userType' | 'userItem'> & {
-  userType: 'SENDER',
-  senderItem: UserItemEntity,
-}
-export type TradeToReceiverItemEntity = Omit<TradeToUserItemEntity, 'userType' | 'userItem'> & {
-  userType: 'RECEIVER',
-  receiverItem: UserItemEntity,
-}
-
-export type CreateTradeToUserItemEntityValues = Omit<typeof tradesToUserItemsTable.$inferInsert, 'tradeId' | 'userItemId'> & {
-  trade: TradeEntity,
-  userItem: UserItemEntity,
-}
-export type CreateTradeToSenderItemEntityValues = Omit<CreateTradeToUserItemEntityValues, 'userType' | 'userItem'> & {
-  senderItem: UserItemEntity,
-};
-export type CreateTradeToReceiverItemEntityValues = Omit<CreateTradeToUserItemEntityValues, 'userType' | 'userItem'> & {
-  receiverItem: UserItemEntity,
-};

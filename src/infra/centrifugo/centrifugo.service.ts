@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
-import { AcceptedTradeEntity, PendingTradeEntity, UserEntity } from '../postgres/tables';
+import { AcceptedTradeEntity, PendingTradeEntity } from 'src/core/entities/trade.entity';
+import { UserEntity } from 'src/core/entities/user.entity';
 import { CentClient } from 'cent.js';
 import { PENDING_TRADE_ACCEPTED_EVENT, PENDING_TRADE_CREATED_EVENT } from 'src/core/events';
 import { ConfigService } from '@nestjs/config';

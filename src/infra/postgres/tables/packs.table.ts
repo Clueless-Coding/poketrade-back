@@ -17,8 +17,4 @@ export const packsTable = pgTable('packs', {
 
 export const packsTableRelations = relations(packsTable, ({ many }) => ({
   packsToPokemons: many(packsToPokemonsTable),
-}))
-
-export type PackEntity = typeof packsTable.$inferSelect;
-export type CreatePackEntityValues = Omit<typeof packsTable.$inferInsert, 'id' | 'createdAt' | 'updatedAt'>;
-export type UpdatePackEntityValues = Partial<CreatePackEntityValues>;
+}));

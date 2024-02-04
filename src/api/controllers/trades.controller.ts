@@ -4,7 +4,8 @@ import { Body, Controller, Param, ParseUUIDPipe, Post, UseGuards } from '@nestjs
 import { ApiCreatedResponse, ApiSecurity, ApiTags } from '@nestjs/swagger';
 import { UUIDv4 } from 'src/common/types';
 import { PendingTradesService } from 'src/core/services/pending-trades.service';
-import { AcceptedTradeEntity, CancelledTradeEntity, PendingTradeEntity, RejectedTradeEntity, UserEntity } from 'src/infra/postgres/tables';
+import { AcceptedTradeEntity, CancelledTradeEntity, PendingTradeEntity, RejectedTradeEntity} from 'src/core/entities/trade.entity';
+import { UserEntity } from 'src/core/entities/user.entity';
 import { User } from '../decorators/user.decorator';
 import { AcceptedTradeOutputDTO } from '../dtos/accepted-trades/accepted-trade.output.dto';
 import { CancelledTradeOuputDTO } from '../dtos/cancelled-trades/cancelled-trade.output.dto';
@@ -33,10 +34,10 @@ export class TradesController {
   ): Promise<PendingTradeOutputDTO> {
     const pendingTrade = await this.pendingTradesService.createPendingTrade(user, dto);
 
-    return this.mapper.map<PendingTradeEntity, PendingTradeOutputDTO>(
+    return this.mapper.map(
       pendingTrade,
-      'PendingTradeEntity',
-      'PendingTradeOutputDTO',
+      PendingTradeEntity,
+      PendingTradeOutputDTO,
     );
   }
 
@@ -50,10 +51,10 @@ export class TradesController {
   ) {
     const cancelledTrade = await this.pendingTradesService.cancelPendingTradeById(user, id)
 
-    return this.mapper.map<CancelledTradeEntity, CancelledTradeOuputDTO>(
+    return this.mapper.map(
       cancelledTrade,
-      'CancelledTradeEntity',
-      'CancelledTradeOuputDTO',
+      CancelledTradeEntity,
+      CancelledTradeOuputDTO,
     );
   }
 
@@ -67,10 +68,10 @@ export class TradesController {
   ) {
     const acceptedTrade = await this.pendingTradesService.acceptPendingTradeById(user, id);
 
-    return this.mapper.map<AcceptedTradeEntity, AcceptedTradeOutputDTO>(
+    return this.mapper.map(
       acceptedTrade,
-      'AcceptedTradeEntity',
-      'AcceptedTradeOutputDTO',
+      AcceptedTradeEntity,
+      AcceptedTradeOutputDTO,
     );
   }
 
@@ -84,10 +85,10 @@ export class TradesController {
   ) {
     const rejectedTrade = await this.pendingTradesService.rejectPendingTradeById(user, id);
 
-    return this.mapper.map<RejectedTradeEntity, RejectedTradeOutputDTO>(
+    return this.mapper.map(
       rejectedTrade,
-      'RejectedTradeEntity',
-      'RejectedTradeOutputDTO'
+      RejectedTradeEntity,
+      RejectedTradeOutputDTO,
     );
   }
 }

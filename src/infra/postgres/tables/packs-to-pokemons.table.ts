@@ -1,8 +1,8 @@
 import { relations } from 'drizzle-orm';
 import { uuid, integer, pgTable, index, primaryKey } from 'drizzle-orm/pg-core';
 import { UUIDv4 } from 'src/common/types';
-import { PackEntity, packsTable } from './packs.table';
-import { PokemonEntity, pokemonsTable } from './pokemons.table';
+import { packsTable } from './packs.table';
+import { pokemonsTable } from './pokemons.table';
 
 export const packsToPokemonsTable = pgTable('packs_to_pokemons', {
   packId: uuid('pack_id')
@@ -28,8 +28,3 @@ export const packsToPokemonsTableRelations = relations(packsToPokemonsTable, ({ 
     references: [pokemonsTable.id],
   }),
 }));
-
-export type PackToPokemonEntity = typeof packsToPokemonsTable.$inferSelect & {
-  pack: PackEntity,
-  pokemon: PokemonEntity,
-}

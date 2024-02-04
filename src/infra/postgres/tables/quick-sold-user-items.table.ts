@@ -1,9 +1,9 @@
 import { relations } from 'drizzle-orm';
 import { uuid, pgTable, timestamp } from 'drizzle-orm/pg-core';
 import { UUIDv4 } from 'src/common/types';
-import { PokemonEntity, pokemonsTable } from './pokemons.table';
+import { pokemonsTable } from './pokemons.table';
 import { userItemsTableColumns } from './user-items.table';
-import { UserEntity, usersTable } from './users.table';
+import { usersTable } from './users.table';
 
 export const quickSoldUserItemsTable = pgTable('quick_sold_user_items', {
   ...userItemsTableColumns,
@@ -30,8 +30,3 @@ export const quickSoldUserItemsTableRelations = relations(quickSoldUserItemsTabl
     references: [pokemonsTable.id],
   }),
 }));
-
-export type QuickSoldUserItemEntity = typeof quickSoldUserItemsTable.$inferSelect & {
-  user: UserEntity,
-  pokemon: PokemonEntity,
-};

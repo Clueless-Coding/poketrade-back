@@ -1,5 +1,5 @@
 import { UUIDv4 } from 'src/common/types';
-import { FindEntitiesOptions } from 'src/core/types';
+import { FindEntitiesOptions } from '../types';
 import {
   CreateTradeToReceiverItemEntityValues,
   CreateTradeToSenderItemEntityValues,
@@ -7,7 +7,7 @@ import {
   TradeToSenderItemEntity,
   TradeToUserItemEntity,
   TradeToUserItemUserType,
-} from 'src/infra/postgres/tables';
+} from '../entities/trade-to-user-item.entity';
 
 export type FindTradesToUserItemsWhere = Partial<{
   tradeId: UUIDv4,

@@ -2,7 +2,9 @@ import { Injectable } from '@nestjs/common';
 import { Database, Transaction } from 'src/infra/postgres/types';
 import { InjectDatabase } from 'src/infra/ioc/decorators/inject-database.decorator';
 import { Optional, PaginatedArray, UUIDv4 } from 'src/common/types';
-import { CreateUserItemEntityValues, pokemonsTable, UpdateUserItemEntityValues, UserEntity, UserItemEntity, userItemsTable, usersTable } from 'src/infra/postgres/tables';
+import { pokemonsTable, userItemsTable, usersTable } from 'src/infra/postgres/tables';
+import { UserItemEntity, CreateUserItemEntityValues, UpdateUserItemEntityValues} from 'src/core/entities/user-item.entity';
+import { UserEntity } from 'src/core/entities/user.entity';
 import { and, eq, inArray, like, SQL } from 'drizzle-orm';
 import { mapArrayToPaginatedArray } from 'src/common/helpers/map-array-to-paginated-array.helper';
 import { zip } from 'lodash';
@@ -202,12 +204,12 @@ export class UserItemsRepository implements IUserItemsRepository {
   ): Promise<Array<UserItemEntity>> {
     if (!fromUserItems.length) return [];
 
-    const set = new Set<UUIDv4>(fromUserItems.map(({ userId }) => userId));
+    const set = new Set<UUIDv4>(fromUserItems.map(({ user }) => user.id));
     if (set.size > 1) {
       throw new AppConflictException('All of the items must have the same user');
     }
 
-    const fromUserId = fromUserItems[0]!.userId;
+    const fromUserId = fromUserItems[0]!.user.id;
     if (fromUserId === toUser.id) {
       throw new AppConflictException('You cannot transfer items to yourself');
     }

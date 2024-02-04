@@ -1,4 +1,5 @@
-import { QuickSoldUserItemEntity, UserItemEntity } from 'src/infra/postgres/tables';
+import { UserItemEntity } from '../entities/user-item.entity';
+import { QuickSoldUserItemEntity } from '../entities/quick-sold-user-item.entity';
 
 export abstract class IQuickSoldUserItemsRepository {
   public abstract createQuickSoldUserItem(

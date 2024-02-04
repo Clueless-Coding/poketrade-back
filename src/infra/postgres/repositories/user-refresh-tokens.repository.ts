@@ -1,13 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { SQL, and, eq, gt, sql } from 'drizzle-orm';
-import { Optional } from 'src/common/types';
+import { Nullable, Optional } from 'src/common/types';
 import { InjectDatabase } from 'src/infra/ioc/decorators/inject-database.decorator';
 import { Database, Transaction } from 'src/infra/postgres/types';
-import { CreateUserRefreshTokenEntityValues, UserRefreshTokenEntity, userRefreshTokensTable, usersTable } from 'src/infra/postgres/tables';
+import { userRefreshTokensTable, usersTable } from 'src/infra/postgres/tables';
+import { CreateUserRefreshTokenEntityValues, UserRefreshTokenEntity } from 'src/core/entities/user-refresh-token.entity';
 import { hashRefreshToken } from 'src/common/helpers/hash-refresh-token.helper';
 import { AppEntityNotFoundException } from 'src/core/exceptions';
 import { FindEntitiesOptions, FindEntityOptions } from 'src/core/types';
 import { FindUserRefreshTokensWhere, IUserRefreshTokensRepository } from 'src/core/repositories/user-refresh-tokens.repository';
+import { DatabaseError } from 'pg';
 
 export const mapUserRefreshTokensRowToEntity = (
   row: Record<'user_refresh_tokens' | 'users', any>,
@@ -71,19 +73,37 @@ export class UserRefreshTokensRepository implements IUserRefreshTokensRepository
     values: CreateUserRefreshTokenEntityValues,
     tx?: Transaction,
   ): Promise<UserRefreshTokenEntity> {
-    const { user } = values;
+    const { user, refreshToken } = values;
 
-    return (tx ?? this.db)
-      .insert(userRefreshTokensTable)
-      .values({
-        ...values,
-        userId: user.id,
-      })
-      .returning()
-      .then(([userRefreshToken]) => ({
-        ...userRefreshToken!,
-        user,
-      }));
+    try {
+      return await (tx ?? this.db)
+        .insert(userRefreshTokensTable)
+        .values({
+          ...values,
+          userId: user.id,
+          hashedRefreshToken: hashRefreshToken(refreshToken)
+        })
+        .returning()
+        .then(([userRefreshToken]) => ({
+          ...userRefreshToken!,
+          user,
+        }));
+    } catch (error) {
+      // NOTE: If multiple refresh tokens got generated at the same time (have the same `iat` and `exp`)
+      // Then the database will throw an unique constraint error (because of the primary key)
+      // If that happens that means that we already have the refresh token in the database
+      // so we can simply fetch it from the database
+      if (error instanceof DatabaseError && error.code !== '23505') {
+        return this.findUserRefreshToken({
+          where: {
+            userId: user.id,
+            refreshToken,
+          },
+        });
+      } else {
+        throw error;
+      }
+    }
   }
 
   public async deleteUserRefreshToken(
@@ -93,7 +113,7 @@ export class UserRefreshTokensRepository implements IUserRefreshTokensRepository
     return (tx ?? this.db)
       .delete(userRefreshTokensTable)
       .where(and(
-        eq(userRefreshTokensTable.userId, userRefreshToken.userId),
+        eq(userRefreshTokensTable.userId, userRefreshToken.user.id),
         eq(userRefreshTokensTable.hashedRefreshToken, userRefreshToken.hashedRefreshToken),
       ))
       .returning()

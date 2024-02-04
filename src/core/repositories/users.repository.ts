@@ -1,6 +1,7 @@
 import { PaginatedArray, UUIDv4 } from 'src/common/types';
-import { CreateUserEntityValues, UpdateUserEntityValues, UserEntity } from 'src/infra/postgres/tables';
+import { CreateUserEntityValues, UpdateUserEntityValues } from '../entities/user.entity';
 import { FindEntitiesOptions, FindEntitiesWithPaginationOptions, FindEntityByIdOptions, FindEntityOptions } from '../types';
+import { UserEntity } from '../entities/user.entity';
 
 export type FindUsersWhere = Partial<{
   id: UUIDv4,

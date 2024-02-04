@@ -1,7 +1,7 @@
 import request from 'supertest';
 import { INestApplication } from '@nestjs/common';
 import { AuthService } from 'src/core/services/auth.service';
-import { UserEntity } from 'src/infra/postgres/tables';
+import { UserEntity } from 'src/core/entities/user.entity';
 import { buildTestApp } from '../../build-test-app.helper';
 
 const API_ENDPOINT = '/auth/login';

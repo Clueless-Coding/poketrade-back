@@ -7,7 +7,7 @@ import { Nullable, } from 'src/common/types';
 import { UserTokenPayload } from '../types';
 import { IUsersRepository } from 'src/core/repositories/users.repository';
 import { EnvVariables } from 'src/infra/config/env.config';
-import { UserEntity } from 'src/infra/postgres/tables';
+import { UserEntity } from 'src/core/entities/user.entity';
 
 @Injectable()
 export class RefreshTokenAuthStrategy extends PassportStrategy(Strategy, 'refresh-token') {

@@ -21,6 +21,3 @@ export const pokemonsTable = pgTable('pokemons', {
 export const pokemonsTableRelations = relations(pokemonsTable, ({ many }) => ({
   packsToPokemons: many(packsToPokemonsTable),
 }));
-
-export type PokemonEntity = typeof pokemonsTable.$inferSelect;
-export type CreatePokemonEntityValues = typeof pokemonsTable.$inferInsert;

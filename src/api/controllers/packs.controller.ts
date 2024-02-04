@@ -11,7 +11,9 @@ import { PackWithPokemonsOutputDTO } from '../dtos/packs/pack-with-pokemons.outp
 import { OpenedPackOutputDTO } from '../dtos/packs/opened-pack.output.dto';
 import { PaginationInputDTO } from '../dtos/pagination.input.dto';
 import { mapPaginatedArray } from 'src/common/helpers/map-paginated-array.helper';
-import { OpenedPackEntity, PackEntity, UserEntity } from 'src/infra/postgres/tables';
+import { OpenedPackEntity } from 'src/core/entities/opened-pack.entity';
+import { PackEntity} from 'src/core/entities/pack.entity';
+import { UserEntity } from 'src/core/entities/user.entity';
 import { GetPacksInputDTO } from '../dtos/packs/get-packs.input.dto';
 import { ApiOkResponseWithPagination } from '../decorators/api-ok-response-with-pagination.decorator';
 
@@ -35,11 +37,11 @@ export class PacksController {
   ): Promise<PaginatedArray<PackOutputDTO>> {
     const packs = await this.packsService.getPacksWithPagination(dto, paginationDTO);
 
-    return mapPaginatedArray<PackEntity, PackOutputDTO>(
+    return mapPaginatedArray(
       this.mapper,
       packs,
-      'PackEntity',
-      'PackOutputDTO',
+      PackEntity,
+      PackOutputDTO,
     )
   }
 
@@ -53,10 +55,10 @@ export class PacksController {
   ): Promise<PackWithPokemonsOutputDTO> {
     const pack = await this.packsService.getPackById(id);
 
-    return this.mapper.map<PackEntity, PackWithPokemonsOutputDTO>(
+    return this.mapper.map(
       pack,
-      'PackEntity',
-      'PackOutputDTO',
+      PackEntity,
+      PackWithPokemonsOutputDTO,
     );
   }
 
@@ -72,10 +74,10 @@ export class PacksController {
   ): Promise<OpenedPackOutputDTO> {
     const openedPack = await this.packsService.openPackById(user, id);
 
-    return this.mapper.map<OpenedPackEntity, OpenedPackOutputDTO>(
+    return this.mapper.map(
       openedPack,
-      'OpenedPackEntity',
-      'OpenedPackOutputDTO'
+      OpenedPackEntity,
+      OpenedPackOutputDTO,
     );
   }
 }

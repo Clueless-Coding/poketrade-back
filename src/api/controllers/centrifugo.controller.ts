@@ -1,7 +1,7 @@
 import { Controller, HttpCode, HttpStatus, Post, UseGuards } from '@nestjs/common';
 import { CentrifugoService } from 'src/infra/centrifugo/centrifugo.service';
 import { User } from '../decorators/user.decorator';
-import { UserEntity } from 'src/infra/postgres/tables';
+import { UserEntity } from 'src/core/entities/user.entity';
 import { AccessTokenAuthGuard } from '../guards/access-token-auth.guard';
 import { ApiCreatedResponse, ApiSecurity, ApiTags } from '@nestjs/swagger';
 import { GenerateCentrifugoConnectionTokenOutputDTO } from '../dtos/centrifugo/generate-centrifugo-connection-token.output.dto';

@@ -1,10 +1,9 @@
 import { uuid, integer, pgTable, timestamp } from 'drizzle-orm/pg-core';
 import { baseIdColumn } from '../base-columns';
-import { UserEntity, usersTable } from './users.table';
-import { PokemonEntity, pokemonsTable } from './pokemons.table';
+import { usersTable } from './users.table';
+import { pokemonsTable } from './pokemons.table';
 import { UUIDv4 } from 'src/common/types';
 import { relations } from 'drizzle-orm';
-import { tradesToUserItemsTable } from './trades-to-user-items.table';
 
 export const userItemsTableColumns = {
   ...baseIdColumn,
@@ -22,7 +21,7 @@ export const userItemsTableColumns = {
 
 export const userItemsTable = pgTable('user_items', userItemsTableColumns);
 
-export const userItemsTableRelations = relations(userItemsTable, ({ one, many }) => ({
+export const userItemsTableRelations = relations(userItemsTable, ({ one }) => ({
   user: one(usersTable, {
     fields: [userItemsTable.userId],
     references: [usersTable.id],
@@ -32,15 +31,3 @@ export const userItemsTableRelations = relations(userItemsTable, ({ one, many })
     references: [pokemonsTable.id],
   }),
 }));
-
-export type UserItemEntity = typeof userItemsTable.$inferSelect & {
-  user: UserEntity,
-  pokemon: PokemonEntity,
-}
-export type CreateUserItemEntityValues = Omit<typeof userItemsTable.$inferInsert, 'id' | 'receivedAt' | 'userId' | 'pokemonId'> & {
-  user: UserEntity,
-  pokemon: PokemonEntity,
-}
-export type UpdateUserItemEntityValues = Partial<CreateUserItemEntityValues & {
-  receivedAt: typeof userItemsTable.$inferInsert.receivedAt,
-}>;

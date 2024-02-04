@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { Optional, PaginatedArray } from 'src/common/types';
-import { PackEntity, packsTable, packsToPokemonsTable, PokemonEntity, pokemonsTable } from 'src/infra/postgres/tables';
+import { packsTable, packsToPokemonsTable, pokemonsTable } from 'src/infra/postgres/tables';
+import { PackEntity } from 'src/core/entities/pack.entity';
+import { PokemonEntity } from 'src/core/entities/pokemon.entity';
 import { and, eq, getTableColumns, inArray, like, SQL, sql } from 'drizzle-orm';
 import { Database } from 'src/infra/postgres/types';
 import { InjectDatabase } from 'src/infra/ioc/decorators/inject-database.decorator';

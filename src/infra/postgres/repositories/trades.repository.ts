@@ -3,15 +3,19 @@ import { Database, Transaction } from 'src/infra/postgres/types';
 import {
   tradesTable,
   usersTable,
+} from 'src/infra/postgres/tables';
+import {
   TradeEntity,
   PendingTradeEntity,
-  CreatePendingTradeEntityValues,
-  TradeToSenderItemEntity,
-  TradeToReceiverItemEntity,
   CancelledTradeEntity,
   AcceptedTradeEntity,
   RejectedTradeEntity,
-} from 'src/infra/postgres/tables';
+  CreatePendingTradeEntityValues,
+} from 'src/core/entities/trade.entity'
+import {
+  TradeToSenderItemEntity,
+  TradeToReceiverItemEntity,
+} from 'src/core/entities/trade-to-user-item.entity'
 import { InjectDatabase } from 'src/infra/ioc/decorators/inject-database.decorator';
 import { and, eq, inArray, sql, SQL } from 'drizzle-orm';
 import { Optional } from 'src/common/types';

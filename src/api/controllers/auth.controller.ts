@@ -7,7 +7,7 @@ import { LoginUserInputDTO } from '../dtos/auth/login-user.input.dto';
 import { RegisterUserInputDTO } from '../dtos/auth/register-user.input.dto';
 import { RegisterUserOutputDTO } from '../dtos/auth/register-user.output.dto';
 import { ApiCreatedResponse, ApiOkResponse, ApiSecurity, ApiTags } from '@nestjs/swagger';
-import { UserEntity } from 'src/infra/postgres/tables';
+import { UserEntity } from 'src/core/entities/user.entity';
 import { InjectMapper } from '@automapper/nestjs';
 import { Mapper } from '@automapper/core';
 import { UserOutputDTO } from '../dtos/users/user.output.dto';
@@ -36,7 +36,7 @@ export class AuthController {
     const { accessToken, refreshToken } = await this.authService.loginUser(user);
 
     return {
-      user: this.mapper.map<UserEntity, UserOutputDTO>(user, 'UserEntity', 'UserOutputDTO'),
+      user: this.mapper.map(user, UserEntity, UserOutputDTO),
       accessToken,
       refreshToken,
     };
@@ -50,7 +50,7 @@ export class AuthController {
     const { user, accessToken, refreshToken } = await this.authService.registerUser(dto);
 
     return {
-      user: this.mapper.map<UserEntity, UserOutputDTO>(user, 'UserEntity', 'UserOutputDTO'),
+      user: this.mapper.map(user, UserEntity, UserOutputDTO),
       accessToken,
       refreshToken,
     };
@@ -82,7 +82,7 @@ export class AuthController {
     } = await this.authService.refreshTokens(user, oldRefreshToken);
 
     return {
-      user: this.mapper.map<UserEntity, UserOutputDTO>(user, 'UserEntity', 'UserOutputDTO'),
+      user: this.mapper.map(user, UserEntity, UserOutputDTO),
       accessToken,
       refreshToken: newRefreshToken,
     };
