@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { SQL, and, eq, gt, sql } from 'drizzle-orm';
-import { Nullable, Optional } from 'src/common/types';
+import { Optional } from 'src/common/types';
 import { InjectDatabase } from 'src/infra/ioc/decorators/inject-database.decorator';
 import { Database, Transaction } from 'src/infra/postgres/types';
 import { userRefreshTokensTable, usersTable } from 'src/infra/postgres/tables';
@@ -93,7 +93,7 @@ export class UserRefreshTokensRepository implements IUserRefreshTokensRepository
       // Then the database will throw an unique constraint error (because of the primary key)
       // If that happens that means that we already have the refresh token in the database
       // so we can simply fetch it from the database
-      if (error instanceof DatabaseError && error.code !== '23505') {
+      if (error instanceof DatabaseError && error.code === '23505') {
         return this.findUserRefreshToken({
           where: {
             userId: user.id,
