@@ -1,8 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { Database, Transaction } from 'src/infra/postgres/types';
 import {
-  tradesTable,
-  usersTable,
   TradeEntity,
   TradeStatus,
   PendingTradeEntity,
@@ -13,13 +9,8 @@ import {
   AcceptedTradeEntity,
   RejectedTradeEntity,
 } from 'src/infra/postgres/tables';
-import { InjectDatabase } from 'src/infra/ioc/decorators/inject-database.decorator';
-import { and, eq, inArray, sql, SQL } from 'drizzle-orm';
-import { Optional, UUIDv4 } from 'src/common/types';
-import { alias } from 'drizzle-orm/pg-core';
-import { TradesToUserItemsRepository } from './trades-to-user-items.repository';
-import { AppEntityNotFoundException } from '../exceptions';
-import { FindEntitiesOptions, FindEntityByIdOptions, FindEntityOptions } from '../types';
+import { UUIDv4 } from 'src/common/types';
+import { FindEntityByIdOptions, FindEntityOptions } from '../types';
 
 export type FindTradesWhere = Partial<{
   id: UUIDv4,
@@ -29,226 +20,41 @@ export type FindTradesWhere = Partial<{
 
 export type FindPendingTradesWhere = Omit<FindTradesWhere, 'status'>;
 
-export const mapTradesRowToEntity = (
-  row: Record<'trades' | 'senders' | 'receivers', any>,
-): TradeEntity => {
-  return {
-    ...row.trades,
-    sender: row.senders,
-    receiver: row.receivers,
-  };
-};
-
-@Injectable()
-export class TradesRepository {
-  public constructor(
-    @InjectDatabase()
-    private readonly db: Database,
-
-    private readonly tradesToUserItemsRepository: TradesToUserItemsRepository,
-  ) {}
-
-  private mapWhereToSQL(
-    where: FindTradesWhere,
-  ): Optional<SQL> {
-    return and(
-      where.id !== undefined ? eq(tradesTable.id, where.id) : undefined,
-      where.ids !== undefined ? inArray(tradesTable.id, where.ids) : undefined,
-      where.status !== undefined ? eq(tradesTable.status, where.status) : undefined,
-    );
-  }
-
-  private baseSelectBuilder(
-    options: FindEntitiesOptions<FindTradesWhere>,
-  ) {
-    const { where = {} } = options;
-
-    const sendersTable = alias(usersTable, 'senders');
-    const receiversTable = alias(usersTable, 'receivers');
-
-    return this.db
-      .select()
-      .from(tradesTable)
-      .innerJoin(sendersTable, eq(sendersTable.id, tradesTable.senderId))
-      .innerJoin(receiversTable, eq(receiversTable.id, tradesTable.receiverId))
-      .where(this.mapWhereToSQL(where));
-  }
-
-  public async findTrade(
+export abstract class ITradesRepository {
+  public abstract findTrade(
     options: FindEntityOptions<FindTradesWhere>,
-  ): Promise<TradeEntity> {
-    const {
-      notFoundErrorMessage = 'Trade not found',
-    } = options;
+  ): Promise<TradeEntity>;
 
-    const trade = await this
-      .baseSelectBuilder(options)
-      .limit(1)
-      .then(([row]) => (
-        row
-        ? mapTradesRowToEntity(row)
-        : null
-      ));
-
-    if (!trade) {
-      throw new AppEntityNotFoundException(notFoundErrorMessage);
-    }
-
-    return trade;
-  }
-
-  public async findPendingTrade(
+  public abstract findPendingTrade(
     options: FindEntityOptions<FindPendingTradesWhere>,
-  ): Promise<PendingTradeEntity> {
-    const {
-      notFoundErrorMessage = 'Pending trade not found',
-    } = options;
-    const status = 'PENDING';
+  ): Promise<PendingTradeEntity>;
 
-    return this
-      .findTrade({
-        ...options,
-        where: {
-          ...options.where,
-          status,
-        },
-        notFoundErrorMessage,
-      })
-      .then((trade) => ({
-        ...trade,
-        status: status as typeof status,
-      }));
-  }
-
-  public async findPendingTradeById(
+  public abstract findPendingTradeById(
     options: FindEntityByIdOptions,
-  ): Promise<PendingTradeEntity> {
-    const {
-      id,
-      notFoundErrorMessageFn = (id) => `Pending trade (\`${id}\`) not found`,
-    } = options;
+  ): Promise<PendingTradeEntity>;
 
-    return this.findPendingTrade({
-      where: { id },
-      notFoundErrorMessage: notFoundErrorMessageFn(id),
-    });
-  }
-
-  public async createPendingTrade(
+  public abstract createPendingTrade(
     values: CreatePendingTradeEntityValues,
-    tx?: Transaction,
+    tx?: unknown,
   ): Promise<{
     pendingTrade: PendingTradeEntity,
     tradesToSenderItems: Array<TradeToSenderItemEntity>,
     tradesToReceiverItems: Array<TradeToReceiverItemEntity>,
-  }> {
-    const status = 'PENDING';
-    const { sender, senderItems, receiver, receiverItems } = values;
+  }>;
 
-    const pendingTrade = await (tx ?? this.db)
-      .insert(tradesTable)
-      .values({
-        ...values,
-        status,
-        statusedAt: sql<Date>`now()`,
-        senderId: sender.id,
-        receiverId: receiver.id,
-      })
-      .returning()
-      .then(([trade]) => ({
-        ...trade!,
-        status: trade!.status as typeof status,
-        sender,
-        receiver,
-      }));
-
-    const [tradesToSenderItems, tradesToReceiverItems] = await Promise.all([
-      this.tradesToUserItemsRepository.createTradesToSenderItems(
-        senderItems.map((senderItem) => ({
-          trade: pendingTrade,
-          senderItem,
-        })),
-        tx,
-      ),
-      this.tradesToUserItemsRepository.createTradesToReceiverItems(
-        receiverItems.map((receiverItem) => ({
-          trade: pendingTrade,
-          receiverItem,
-        })),
-        tx,
-      ),
-    ]);
-
-    return {
-      pendingTrade,
-      tradesToSenderItems,
-      tradesToReceiverItems,
-    };
-  }
-
-  public async updatePendingTradeToCancelledTrade(
+  public abstract updatePendingTradeToCancelledTrade(
     pendingTrade: PendingTradeEntity,
-    tx?: Transaction,
-  ): Promise<CancelledTradeEntity> {
-    const status = 'CANCELLED';
-    const { sender, receiver } = pendingTrade;
+    tx?: unknown,
+  ): Promise<CancelledTradeEntity>;
 
-    return (tx ?? this.db)
-      .update(tradesTable)
-      .set({
-        status,
-        statusedAt: sql<Date>`now()`,
-      })
-      .returning()
-      .then(([trade]) => ({
-        ...trade!,
-        status: trade!.status as typeof status,
-        sender,
-        receiver,
-      }));
-  }
-
-  public async updatePendingTradeToAcceptedTrade(
+  public abstract updatePendingTradeToAcceptedTrade(
     pendingTrade: PendingTradeEntity,
-    tx?: Transaction,
-  ): Promise<AcceptedTradeEntity> {
-    const status = 'ACCEPTED';
-    const { sender, receiver } = pendingTrade;
+    tx?: unknown,
+  ): Promise<AcceptedTradeEntity>;
 
-    return (tx ?? this.db)
-      .update(tradesTable)
-      .set({
-        status,
-        statusedAt: sql<Date>`now()`,
-      })
-      .returning()
-      .then(([trade]) => ({
-        ...trade!,
-        status: trade!.status as typeof status,
-        sender,
-        receiver,
-      }));
-  }
-
-  public async updatePendingTradeToRejectedTrade(
+  public abstract updatePendingTradeToRejectedTrade(
     pendingTrade: PendingTradeEntity,
-    tx?: Transaction,
-  ): Promise<RejectedTradeEntity> {
-    const status = 'REJECTED';
-    const { sender, receiver } = pendingTrade;
-
-    return (tx ?? this.db)
-      .update(tradesTable)
-      .set({
-        status,
-        statusedAt: sql<Date>`now()`,
-      })
-      .returning()
-      .then(([trade]) => ({
-        ...trade!,
-        status: trade!.status as typeof status,
-        sender,
-        receiver,
-      }));
-  }
+    tx?: unknown,
+  ): Promise<RejectedTradeEntity>;
 }
+

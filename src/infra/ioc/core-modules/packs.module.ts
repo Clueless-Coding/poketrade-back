@@ -3,9 +3,11 @@ import { PostgresModule } from '../../postgres/postgres.module';
 import { PokemonsModule } from './pokemons.module';
 import { PacksService } from 'src/core/services/packs.service';
 import { UsersModule } from './users.module';
-import { PacksRepository } from 'src/core/repositories/packs.repository';
-import { OpenedPacksRepository } from 'src/core/repositories/opened-packs.repository';
+import { IPacksRepository } from 'src/core/repositories/packs.repository';
+import { IOpenedPacksRepository } from 'src/core/repositories/opened-packs.repository';
 import { UserItemsModule } from './user-items.module';
+import { OpenedPacksRepository } from 'src/infra/postgres/repositories/opened-pack.repository';
+import { PacksRepository } from 'src/infra/postgres/repositories/packs.repository';
 
 @Module({
   imports: [
@@ -14,7 +16,17 @@ import { UserItemsModule } from './user-items.module';
     UsersModule,
     UserItemsModule,
   ],
-  providers: [PacksService, PacksRepository, OpenedPacksRepository],
-  exports: [PacksService, PacksRepository, OpenedPacksRepository],
+  providers: [
+    PacksService,
+    {
+      provide: IPacksRepository,
+      useClass: PacksRepository,
+    },
+    {
+      provide: IOpenedPacksRepository,
+      useClass: OpenedPacksRepository,
+    },
+  ],
+  exports: [PacksService, IPacksRepository, IOpenedPacksRepository],
 })
 export class PacksModule {}

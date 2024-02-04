@@ -1,9 +1,11 @@
 import { Module } from '@nestjs/common';
-import { QuickSoldUserItemsRepository } from 'src/core/repositories/quick-sold-user-items.repository';
-import { UserItemsRepository } from 'src/core/repositories/user-items.repository';
+import { IQuickSoldUserItemsRepository } from 'src/core/repositories/quick-sold-user-items.repository';
+import { IUserItemsRepository } from 'src/core/repositories/user-items.repository';
 import { UserItemsService } from 'src/core/services/user-items.service';
 import { PostgresModule } from '../../postgres/postgres.module';
 import { UsersModule } from './users.module';
+import { UserItemsRepository } from 'src/infra/postgres/repositories/user-items.repository';
+import { QuickSoldUserItemsRepository } from 'src/infra/postgres/repositories/quick-sold-user-items.repository';
 
 @Module({
   imports: [
@@ -12,13 +14,19 @@ import { UsersModule } from './users.module';
   ],
   providers: [
     UserItemsService,
-    UserItemsRepository,
-    QuickSoldUserItemsRepository,
+    {
+      provide: IUserItemsRepository,
+      useClass: UserItemsRepository,
+    },
+    {
+      provide: IQuickSoldUserItemsRepository,
+      useClass: QuickSoldUserItemsRepository,
+    },
   ],
   exports: [
     UserItemsService,
-    UserItemsRepository,
-    QuickSoldUserItemsRepository,
+    IUserItemsRepository,
+    IQuickSoldUserItemsRepository,
   ],
 })
 export class UserItemsModule {}

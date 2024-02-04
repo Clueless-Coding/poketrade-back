@@ -5,14 +5,14 @@ import { ExtractJwt, Strategy } from 'passport-jwt';
 import { AppAuthException, AppEntityNotFoundException } from 'src/core/exceptions';
 import { Nullable } from 'src/common/types';
 import { UserTokenPayload } from '../types';
-import { UsersRepository } from 'src/core/repositories/users.repository';
+import { IUsersRepository } from 'src/core/repositories/users.repository';
 import { EnvVariables } from 'src/infra/config/env.config';
 import { UserEntity } from 'src/infra/postgres/tables';
 
 @Injectable()
 export class AccessTokenAuthStrategy extends PassportStrategy(Strategy, 'access-token') {
   public constructor(
-    private readonly usersRepository: UsersRepository,
+    private readonly usersRepository: IUsersRepository,
     configService: ConfigService<EnvVariables>,
   ) {
     super({

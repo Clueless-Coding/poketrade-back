@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { TradesRepository } from '../repositories/trades.repository';
+import { ITradesRepository } from '../repositories/trades.repository';
 
 @Injectable()
 export class TradesService {
   public constructor(
-    private readonly tradesRepository: TradesRepository,
+    private readonly tradesRepository: ITradesRepository,
   ) {}
 }

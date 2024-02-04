@@ -3,7 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import { RegisterUserInputDTO } from 'src/api/dtos/auth/register-user.input.dto';
 import { JWT } from 'src/common/types';
 import { UserEntity } from 'src/infra/postgres/tables';
-import { UserRefreshTokensRepository } from '../repositories/user-refresh-tokens.repository';
+import { IUserRefreshTokensRepository } from '../repositories/user-refresh-tokens.repository';
 import ms from 'ms';
 import { addMilliseconds } from 'date-fns';
 import { ConfigService } from '@nestjs/config';
@@ -11,7 +11,7 @@ import { EnvVariables } from 'src/infra/config/env.config';
 import { hashUserPassword } from 'src/common/helpers/hash-user-password.helper';
 import { hashRefreshToken } from 'src/common/helpers/hash-refresh-token.helper';
 import { DatabaseError } from 'pg';
-import { UsersRepository } from '../repositories/users.repository';
+import { IUsersRepository } from '../repositories/users.repository';
 import { AppConflictException, AppValidationException } from '../exceptions';
 
 type AuthTokens = { accessToken: JWT, refreshToken: JWT };
@@ -21,8 +21,8 @@ export class AuthService {
   public constructor(
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService<EnvVariables>,
-    private readonly usersRepository: UsersRepository,
-    private readonly userRefreshTokensRepository: UserRefreshTokensRepository,
+    private readonly usersRepository: IUsersRepository,
+    private readonly userRefreshTokensRepository: IUserRefreshTokensRepository,
   ) {}
 
   private async generateAccessToken(user: UserEntity): Promise<JWT> {

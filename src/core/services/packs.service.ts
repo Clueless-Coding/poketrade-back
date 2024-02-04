@@ -1,23 +1,23 @@
 import { Injectable } from '@nestjs/common';
 import { PaginatedArray, UUIDv4 } from 'src/common/types';
-import { PacksRepository } from '../repositories/packs.repository';
+import { IPacksRepository } from '../repositories/packs.repository';
 import { Database, Transaction } from 'src/infra/postgres/types';
 import { OpenedPackEntity, PackEntity, UserEntity } from 'src/infra/postgres/tables';
 import { GetPacksInputDTO } from 'src/api/dtos/packs/get-packs.input.dto';
 import { PaginationInputDTO } from 'src/api/dtos/pagination.input.dto';
-import { OpenedPacksRepository } from '../repositories/opened-packs.repository';
-import { UsersRepository } from '../repositories/users.repository';
-import { UserItemsRepository } from '../repositories/user-items.repository';
+import { IUsersRepository } from '../repositories/users.repository';
+import { IUserItemsRepository } from '../repositories/user-items.repository';
 import { AppConflictException } from '../exceptions';
 import { InjectDatabase } from 'src/infra/ioc/decorators/inject-database.decorator';
+import { IOpenedPacksRepository } from '../repositories/opened-packs.repository';
 
 @Injectable()
 export class PacksService {
   public constructor(
-    private readonly packsRepository: PacksRepository,
-    private readonly openedPacksRepository: OpenedPacksRepository,
-    private readonly usersRepository: UsersRepository,
-    private readonly userItemsRepository: UserItemsRepository,
+    private readonly packsRepository: IPacksRepository,
+    private readonly openedPacksRepository: IOpenedPacksRepository,
+    private readonly usersRepository: IUsersRepository,
+    private readonly userItemsRepository: IUserItemsRepository,
 
     @InjectDatabase()
     private readonly db: Database,

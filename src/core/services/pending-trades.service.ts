@@ -3,22 +3,22 @@ import { CreatePendingTradeInputDTO } from 'src/api/dtos/pending-trades/create-p
 import { UUIDv4 } from 'src/common/types';
 import { Database, Transaction } from 'src/infra/postgres/types';
 import { AcceptedTradeEntity, CancelledTradeEntity, PendingTradeEntity, RejectedTradeEntity, UserEntity } from 'src/infra/postgres/tables';
-import { TradesRepository } from '../repositories/trades.repository';
-import { TradesToUserItemsRepository } from '../repositories/trades-to-user-items.repository';
+import { ITradesRepository } from '../repositories/trades.repository';
+import { ITradesToUserItemsRepository } from '../repositories/trades-to-user-items.repository';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { PENDING_TRADE_ACCEPTED_EVENT, PENDING_TRADE_CREATED_EVENT } from '../events';
-import { UsersRepository } from '../repositories/users.repository';
-import { UserItemsRepository } from '../repositories/user-items.repository';
+import { IUsersRepository } from '../repositories/users.repository';
+import { IUserItemsRepository } from '../repositories/user-items.repository';
 import { AppConflictException, AppValidationException } from '../exceptions';
 import { InjectDatabase } from 'src/infra/ioc/decorators/inject-database.decorator';
 
 @Injectable()
 export class PendingTradesService {
   public constructor(
-    private readonly tradesRepository: TradesRepository,
-    private readonly tradesToUserItemsRepository: TradesToUserItemsRepository,
-    private readonly userItemsRepository: UserItemsRepository,
-    private readonly usersRepository: UsersRepository,
+    private readonly tradesRepository: ITradesRepository,
+    private readonly tradesToUserItemsRepository: ITradesToUserItemsRepository,
+    private readonly userItemsRepository: IUserItemsRepository,
+    private readonly usersRepository: IUsersRepository,
     private readonly eventEmitter: EventEmitter2,
     @InjectDatabase()
     private readonly db: Database,
