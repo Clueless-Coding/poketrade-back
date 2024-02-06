@@ -8,6 +8,7 @@ import { PendingTradesService } from 'src/core/services/pending-trades.service';
 import { ITradesToUserItemsRepository } from 'src/core/repositories/trades-to-user-items.repository';
 import { TradesRepository } from 'src/infra/postgres/repositories/trades.repository';
 import { TradesToUserItemsRepository } from 'src/infra/postgres/repositories/trades-to-user-items.repository';
+import { TradesToUserItemsService } from 'src/core/services/trades-to-user-items.service';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { TradesToUserItemsRepository } from 'src/infra/postgres/repositories/tra
   providers: [
     TradesService,
     PendingTradesService,
+    TradesToUserItemsService,
     {
       provide: ITradesRepository,
       useClass: TradesRepository,
@@ -30,6 +32,7 @@ import { TradesToUserItemsRepository } from 'src/infra/postgres/repositories/tra
   exports: [
     TradesService,
     PendingTradesService,
+    TradesToUserItemsService,
     ITradesRepository,
     ITradesToUserItemsRepository,
   ],

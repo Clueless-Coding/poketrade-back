@@ -2,11 +2,11 @@ import { applyDecorators, Type } from '@nestjs/common'
 import { ApiExtraModels, ApiOkResponse, getSchemaPath } from '@nestjs/swagger'
 
 const metaProperties = [
-  'totalItems',
   'itemCount',
   'itemsPerPage',
-  'totalPages',
   'currentPage',
+  'totalPages',
+  'totalItems',
 ];
 
 export const ApiOkResponseWithPagination = ({ type }: { type: Type<unknown> }) => {

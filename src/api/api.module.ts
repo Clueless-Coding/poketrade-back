@@ -3,7 +3,6 @@ import { JwtModule } from '@nestjs/jwt';
 import { AuthModule } from 'src/infra/ioc/core-modules/auth.module';
 import { AuthController } from './controllers/auth.controller';
 import { PassportModule } from '@nestjs/passport';
-import { LocalAuthStrategy } from './strategies/local-auth.strategy';
 import { UsersModule } from 'src/infra/ioc/core-modules/users.module';
 import { AccessTokenAuthStrategy } from './strategies/access-token-auth.strategy';
 import { UsersController } from './controllers/users.controller';
@@ -25,6 +24,28 @@ import { CentrifugoController } from './controllers/centrifugo.controller';
 import { RefreshTokenAuthStrategy } from './strategies/refresh-token-auth.strategy';
 import { CronJobsModule } from 'src/infra/cron-jobs/cron-jobs.module';
 import { classes } from '@automapper/classes';
+import { PendingTradesController } from './controllers/pending-trades.controller';
+
+const coreModules = [
+    AuthModule,
+    PokemonsModule,
+    UsersModule,
+    UserItemsModule,
+    PacksModule,
+    TradesModule,
+];
+
+const strategies = [
+    AccessTokenAuthStrategy,
+    RefreshTokenAuthStrategy,
+];
+const profiles = [
+    UserProfile,
+    UserItemProfile,
+    PokemonProfile,
+    PackProfile,
+    TradeProfile,
+];
 
 @Module({
   imports: [
@@ -40,31 +61,18 @@ import { classes } from '@automapper/classes';
     CentrifugoModule,
     CronJobsModule,
 
-    AuthModule,
-    PokemonsModule,
-    UsersModule,
-    UserItemsModule,
-    PacksModule,
-    TradesModule,
+    ...coreModules,
   ],
   providers: [
-    // strategies
-    LocalAuthStrategy,
-    AccessTokenAuthStrategy,
-    RefreshTokenAuthStrategy,
-
-    // profiles
-    UserProfile,
-    UserItemProfile,
-    PokemonProfile,
-    PackProfile,
-    TradeProfile,
+    ...strategies,
+    ...profiles,
   ],
   controllers: [
     AuthController,
     UsersController,
     PacksController,
     TradesController,
+    PendingTradesController,
     CentrifugoController,
   ],
 })

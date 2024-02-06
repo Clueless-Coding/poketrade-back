@@ -1,14 +1,15 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { JWT } from 'src/common/types';
 import { UserOutputDTO } from '../users/user.output.dto';
+import { ApiPropertyJWT } from 'src/api/decorators/api-property-jwt.decorator';
 
 export class LoginUserOutputDTO {
   @ApiProperty({ type: UserOutputDTO })
   public readonly user: UserOutputDTO;
 
-  @ApiProperty()
+  @ApiPropertyJWT()
   public readonly accessToken: JWT;
 
-  @ApiProperty()
+  @ApiPropertyJWT()
   public readonly refreshToken: JWT;
 }

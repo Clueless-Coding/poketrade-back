@@ -1,6 +1,6 @@
 import { applyDecorators } from "@nestjs/common";
-import { IsInt, IsPositive } from "class-validator";
+import { IsInt, IsPositive, ValidationOptions } from "class-validator";
 
-export const IsPositiveInt = () => {
-  return applyDecorators(IsInt(), IsPositive());
+export const IsPositiveInt = (validationOptions?: ValidationOptions) => {
+  return applyDecorators(IsInt(validationOptions), IsPositive(validationOptions));
 };

@@ -6,18 +6,23 @@ import { OpenedPackEntity } from '../entities/opened-pack.entity';
 import { PackEntity } from '../entities/pack.entity';
 import { UserEntity } from '../entities/user.entity';
 import { GetPacksInputDTO } from 'src/api/dtos/packs/get-packs.input.dto';
-import { PaginationInputDTO } from 'src/api/dtos/pagination.input.dto';
+import { PaginationOptionsInputDTO } from 'src/api/dtos/pagination.input.dto';
 import { IUsersRepository } from '../repositories/users.repository';
 import { IUserItemsRepository } from '../repositories/user-items.repository';
 import { AppConflictException } from '../exceptions';
 import { InjectDatabase } from 'src/infra/ioc/decorators/inject-database.decorator';
 import { IOpenedPacksRepository } from '../repositories/opened-packs.repository';
+import { CreatePackInputDTO } from 'src/api/dtos/packs/create-pack.input.dto';
+import { PackToPokemonEntity } from '../entities/pack-to-pokemon.entity';
+import { IPokemonsRepository } from '../repositories/pokemons.repository';
+import { UpdatePackByIdInputDTO } from 'src/api/dtos/packs/update-pack-by-id.input.dto';
 
 @Injectable()
 export class PacksService {
   public constructor(
     private readonly packsRepository: IPacksRepository,
     private readonly openedPacksRepository: IOpenedPacksRepository,
+    private readonly pokemonsRepository: IPokemonsRepository,
     private readonly usersRepository: IUsersRepository,
     private readonly userItemsRepository: IUserItemsRepository,
 
@@ -27,10 +32,10 @@ export class PacksService {
 
   public async getPacksWithPagination(
     dto: GetPacksInputDTO,
-    paginationDTO: PaginationInputDTO,
+    paginationOptionsDTO: PaginationOptionsInputDTO,
   ): Promise<PaginatedArray<PackEntity>> {
     return this.packsRepository.findPacksWithPagination({
-      paginationOptions: paginationDTO,
+      paginationOptions: paginationOptionsDTO,
       where: dto,
     });
   }
@@ -73,6 +78,86 @@ export class PacksService {
   ): Promise<OpenedPackEntity> {
     return this.db.transaction(async (tx) => (
       this._openPackById(user, id, tx)
+    ));
+  }
+
+  private async _createPack(
+    dto: CreatePackInputDTO,
+    tx?: Transaction,
+  ): Promise<{
+    pack: PackEntity,
+    packsToPokemons: Array<PackToPokemonEntity>,
+  }> {
+    const { pokemonIds } = dto;
+
+    const pokemons = await this.pokemonsRepository.findPokemonsByIds({
+      ids: pokemonIds,
+    });
+
+    return this.packsRepository.createPack({
+      ...dto,
+      pokemons,
+    }, tx);
+  }
+
+  public async createPack(dto: CreatePackInputDTO): Promise<{
+    pack: PackEntity,
+    packsToPokemons: Array<PackToPokemonEntity>,
+  }> {
+    return this.db.transaction(async (tx) => (
+      this._createPack(dto, tx)
+    ));
+  }
+
+  private async _updatePackById(
+    id: UUIDv4,
+    dto: UpdatePackByIdInputDTO,
+    tx?: Transaction,
+  ): Promise<{
+    pack: PackEntity,
+    packsToPokemons?: Array<PackToPokemonEntity>,
+  }> {
+    const pack = await this.packsRepository.findPackById({ id });
+
+    const { pokemonIds } = dto;
+    const pokemons = pokemonIds && await this.pokemonsRepository.findPokemonsByIds({ ids: pokemonIds });
+
+    return this.packsRepository.updatePack(pack, {
+      ...dto,
+      pokemons,
+    }, tx);
+  }
+
+  public async updatePackById(
+    id: UUIDv4,
+    dto: UpdatePackByIdInputDTO,
+  ): Promise<{
+    pack: PackEntity,
+    packsToPokemons?: Array<PackToPokemonEntity>,
+  }> {
+    return this.db.transaction(async (tx) => (
+      this._updatePackById(id, dto, tx)
+    ));
+  }
+
+  private async _deletePackById(
+    id: UUIDv4,
+    tx?: Transaction,
+  ): Promise<{
+    pack: PackEntity,
+    packsToPokemons: Array<PackToPokemonEntity>,
+  }> {
+    const pack = await this.packsRepository.findPackById({ id });
+
+    return this.packsRepository.deletePack(pack, tx);
+  }
+
+  public async deletePackById(id: UUIDv4): Promise<{
+    pack: PackEntity,
+    packsToPokemons: Array<PackToPokemonEntity>,
+  }> {
+    return this.db.transaction(async (tx) => (
+      this._deletePackById(id, tx)
     ));
   }
 }

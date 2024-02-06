@@ -66,16 +66,7 @@
     "/api/auth/logout": {
       "post": {
         "operationId": "AuthController_logoutUser",
-        "parameters": [
-          {
-            "name": "x-refresh-token",
-            "required": true,
-            "in": "header",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
+        "parameters": [],
         "responses": {
           "200": {
             "description": ""
@@ -94,16 +85,7 @@
     "/api/auth/refresh": {
       "post": {
         "operationId": "AuthController_refreshTokens",
-        "parameters": [
-          {
-            "name": "x-refresh-token",
-            "required": true,
-            "in": "header",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
+        "parameters": [],
         "responses": {
           "201": {
             "description": "",
@@ -163,7 +145,46 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/UserOutputDTO"
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/UserOutputDTO"
+                      }
+                    },
+                    "meta": {
+                      "type": "object",
+                      "properties": {
+                        "itemCount": {
+                          "type": "number"
+                        },
+                        "itemsPerPage": {
+                          "type": "number"
+                        },
+                        "currentPage": {
+                          "type": "number"
+                        },
+                        "totalPages": {
+                          "type": "number"
+                        },
+                        "totalItems": {
+                          "type": "number"
+                        }
+                      },
+                      "required": [
+                        "itemCount",
+                        "itemsPerPage",
+                        "currentPage",
+                        "totalPages",
+                        "totalItems"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "items",
+                    "meta"
+                  ]
                 }
               }
             }
@@ -179,7 +200,7 @@
         ]
       }
     },
-    "/api/users/me": {
+    "/api/users/@me": {
       "get": {
         "operationId": "UsersController_getMe",
         "parameters": [],
@@ -205,7 +226,7 @@
         ]
       }
     },
-    "/api/users/me/items": {
+    "/api/users/@me/items": {
       "get": {
         "operationId": "UsersController_getMeItems",
         "parameters": [
@@ -245,28 +266,28 @@
                     "meta": {
                       "type": "object",
                       "properties": {
-                        "totalItems": {
-                          "type": "number"
-                        },
                         "itemCount": {
                           "type": "number"
                         },
                         "itemsPerPage": {
                           "type": "number"
                         },
+                        "currentPage": {
+                          "type": "number"
+                        },
                         "totalPages": {
                           "type": "number"
                         },
-                        "currentPage": {
+                        "totalItems": {
                           "type": "number"
                         }
                       },
                       "required": [
-                        "totalItems",
                         "itemCount",
                         "itemsPerPage",
+                        "currentPage",
                         "totalPages",
-                        "currentPage"
+                        "totalItems"
                       ]
                     }
                   },
@@ -289,9 +310,9 @@
         ]
       }
     },
-    "/api/users/me/items/{id}/quick-sell": {
+    "/api/users/@me/items/{id}/quick-sell": {
       "post": {
-        "operationId": "UsersController_quickSellUserItemById",
+        "operationId": "UsersController_quickSellMeItemById",
         "parameters": [
           {
             "name": "id",
@@ -324,6 +345,133 @@
         ]
       }
     },
+    "/api/users/{id}": {
+      "get": {
+        "operationId": "UsersController_getUserById",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserOutputDTO"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Users"
+        ],
+        "security": [
+          {
+            "AccessToken": []
+          }
+        ]
+      }
+    },
+    "/api/users/{id}/items": {
+      "get": {
+        "operationId": "UsersController_getUserItemsByUserId",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 10,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/UserItemOutputDTO"
+                      }
+                    },
+                    "meta": {
+                      "type": "object",
+                      "properties": {
+                        "itemCount": {
+                          "type": "number"
+                        },
+                        "itemsPerPage": {
+                          "type": "number"
+                        },
+                        "currentPage": {
+                          "type": "number"
+                        },
+                        "totalPages": {
+                          "type": "number"
+                        },
+                        "totalItems": {
+                          "type": "number"
+                        }
+                      },
+                      "required": [
+                        "itemCount",
+                        "itemsPerPage",
+                        "currentPage",
+                        "totalPages",
+                        "totalItems"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "items",
+                    "meta"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Users"
+        ],
+        "security": [
+          {
+            "AccessToken": []
+          }
+        ]
+      }
+    },
     "/api/packs": {
       "get": {
         "operationId": "PacksController_getPacksWithPagination",
@@ -333,6 +481,7 @@
             "required": false,
             "in": "query",
             "schema": {
+              "format": "uuid",
               "type": "string"
             }
           },
@@ -388,28 +537,28 @@
                     "meta": {
                       "type": "object",
                       "properties": {
-                        "totalItems": {
-                          "type": "number"
-                        },
                         "itemCount": {
                           "type": "number"
                         },
                         "itemsPerPage": {
                           "type": "number"
                         },
+                        "currentPage": {
+                          "type": "number"
+                        },
                         "totalPages": {
                           "type": "number"
                         },
-                        "currentPage": {
+                        "totalItems": {
                           "type": "number"
                         }
                       },
                       "required": [
-                        "totalItems",
                         "itemCount",
                         "itemsPerPage",
+                        "currentPage",
                         "totalPages",
-                        "currentPage"
+                        "totalItems"
                       ]
                     }
                   },
@@ -428,6 +577,40 @@
         "security": [
           {
             "AccessToken": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "PacksController_createPack",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePackInputDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PackOutputDTO"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Packs"
+        ],
+        "security": [
+          {
+            "AdminApiKey": []
           }
         ]
       }
@@ -451,13 +634,181 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PackWithPokemonsOutputDTO"
+                  "$ref": "#/components/schemas/PackOutputDTO"
                 }
               }
             }
           },
           "404": {
             "description": ""
+          }
+        },
+        "tags": [
+          "Packs"
+        ],
+        "security": [
+          {
+            "AccessToken": []
+          }
+        ]
+      },
+      "patch": {
+        "operationId": "PacksController_updatePackById",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePackByIdInputDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdatePackByIdOutputDTO"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Packs"
+        ],
+        "security": [
+          {
+            "AdminApiKey": []
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "PacksController_deletePackById",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeletePackByIdOutputDTO"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Packs"
+        ],
+        "security": [
+          {
+            "AdminApiKey": []
+          }
+        ]
+      }
+    },
+    "/api/packs/{id}/pokemons": {
+      "get": {
+        "operationId": "PacksController_getPackPokemonsWithPaginationByPackId",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 10,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/PokemonOutputDTO"
+                      }
+                    },
+                    "meta": {
+                      "type": "object",
+                      "properties": {
+                        "itemCount": {
+                          "type": "number"
+                        },
+                        "itemsPerPage": {
+                          "type": "number"
+                        },
+                        "currentPage": {
+                          "type": "number"
+                        },
+                        "totalPages": {
+                          "type": "number"
+                        },
+                        "totalItems": {
+                          "type": "number"
+                        }
+                      },
+                      "required": [
+                        "itemCount",
+                        "itemsPerPage",
+                        "currentPage",
+                        "totalPages",
+                        "totalItems"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "items",
+                    "meta"
+                  ]
+                }
+              }
+            }
           }
         },
         "tags": [
@@ -512,8 +863,311 @@
       }
     },
     "/api/trades": {
+      "get": {
+        "operationId": "TradesController_getTradesWithPagination",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 10,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/TradeOutputDTO"
+                      }
+                    },
+                    "meta": {
+                      "type": "object",
+                      "properties": {
+                        "itemCount": {
+                          "type": "number"
+                        },
+                        "itemsPerPage": {
+                          "type": "number"
+                        },
+                        "currentPage": {
+                          "type": "number"
+                        },
+                        "totalPages": {
+                          "type": "number"
+                        },
+                        "totalItems": {
+                          "type": "number"
+                        }
+                      },
+                      "required": [
+                        "itemCount",
+                        "itemsPerPage",
+                        "currentPage",
+                        "totalPages",
+                        "totalItems"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "items",
+                    "meta"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Trades"
+        ],
+        "security": [
+          {
+            "AccessToken": []
+          }
+        ]
+      }
+    },
+    "/api/trades/{id}": {
+      "get": {
+        "operationId": "TradesController_getTradeById",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TradeOutputDTO"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Trades"
+        ],
+        "security": [
+          {
+            "AccessToken": []
+          }
+        ]
+      }
+    },
+    "/api/trades/{id}/sender-items": {
+      "get": {
+        "operationId": "TradesController_getTradeSenderItemsWithPaginationByTradeId",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 10,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/UserItemOutputDTO"
+                      }
+                    },
+                    "meta": {
+                      "type": "object",
+                      "properties": {
+                        "itemCount": {
+                          "type": "number"
+                        },
+                        "itemsPerPage": {
+                          "type": "number"
+                        },
+                        "currentPage": {
+                          "type": "number"
+                        },
+                        "totalPages": {
+                          "type": "number"
+                        },
+                        "totalItems": {
+                          "type": "number"
+                        }
+                      },
+                      "required": [
+                        "itemCount",
+                        "itemsPerPage",
+                        "currentPage",
+                        "totalPages",
+                        "totalItems"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "items",
+                    "meta"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Trades"
+        ],
+        "security": [
+          {
+            "AccessToken": []
+          }
+        ]
+      }
+    },
+    "/api/trades/{id}/receiver-items": {
+      "get": {
+        "operationId": "TradesController_getTradeReceiverItemsWithPaginationByTradeId",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 10,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/UserItemOutputDTO"
+                      }
+                    },
+                    "meta": {
+                      "type": "object",
+                      "properties": {
+                        "itemCount": {
+                          "type": "number"
+                        },
+                        "itemsPerPage": {
+                          "type": "number"
+                        },
+                        "currentPage": {
+                          "type": "number"
+                        },
+                        "totalPages": {
+                          "type": "number"
+                        },
+                        "totalItems": {
+                          "type": "number"
+                        }
+                      },
+                      "required": [
+                        "itemCount",
+                        "itemsPerPage",
+                        "currentPage",
+                        "totalPages",
+                        "totalItems"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "items",
+                    "meta"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Trades"
+        ],
+        "security": [
+          {
+            "AccessToken": []
+          }
+        ]
+      }
+    },
+    "/api/pending-trades": {
       "post": {
-        "operationId": "TradesController_createPendingTrade",
+        "operationId": "PendingTradesController_createPendingTrade",
         "parameters": [],
         "requestBody": {
           "required": true,
@@ -531,14 +1185,14 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PendingTradeOutputDTO"
+                  "$ref": "#/components/schemas/CreatePendingTradeOutputDTO"
                 }
               }
             }
           }
         },
         "tags": [
-          "Trades"
+          "Pending Trades"
         ],
         "security": [
           {
@@ -547,9 +1201,9 @@
         ]
       }
     },
-    "/api/trades/{id}/cancel": {
+    "/api/pending-trades/{id}/cancel": {
       "post": {
-        "operationId": "TradesController_cancelPendingTradeById",
+        "operationId": "PendingTradesController_cancelPendingTradeById",
         "parameters": [
           {
             "name": "id",
@@ -573,7 +1227,7 @@
           }
         },
         "tags": [
-          "Trades"
+          "Pending Trades"
         ],
         "security": [
           {
@@ -582,9 +1236,9 @@
         ]
       }
     },
-    "/api/trades/{id}/accept": {
+    "/api/pending-trades/{id}/accept": {
       "post": {
-        "operationId": "TradesController_acceptPendingTradeById",
+        "operationId": "PendingTradesController_acceptPendingTradeById",
         "parameters": [
           {
             "name": "id",
@@ -608,7 +1262,7 @@
           }
         },
         "tags": [
-          "Trades"
+          "Pending Trades"
         ],
         "security": [
           {
@@ -617,9 +1271,9 @@
         ]
       }
     },
-    "/api/trades/{id}/reject": {
+    "/api/pending-trades/{id}/reject": {
       "post": {
-        "operationId": "TradesController_rejectPendingTradeById",
+        "operationId": "PendingTradesController_rejectPendingTradeById",
         "parameters": [
           {
             "name": "id",
@@ -643,7 +1297,7 @@
           }
         },
         "tags": [
-          "Trades"
+          "Pending Trades"
         ],
         "security": [
           {
@@ -716,14 +1370,19 @@
   "components": {
     "securitySchemes": {
       "AccessToken": {
-        "type": "apiKey",
-        "in": "header",
-        "name": "x-access-token"
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "type": "http"
       },
       "RefreshToken": {
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "type": "http"
+      },
+      "AdminApiKey": {
         "type": "apiKey",
         "in": "header",
-        "name": "x-refresh-token"
+        "name": "x-api-key"
       }
     },
     "schemas": {
@@ -746,7 +1405,8 @@
         "type": "object",
         "properties": {
           "id": {
-            "type": "string"
+            "type": "string",
+            "format": "uuid"
           },
           "name": {
             "type": "string"
@@ -768,10 +1428,12 @@
             "$ref": "#/components/schemas/UserOutputDTO"
           },
           "accessToken": {
-            "type": "string"
+            "type": "string",
+            "pattern": "^[A-Za-z0-9-_]{15}\\.[A-Za-z0-9-_]{20}\\.[A-Za-z0-9-_]{20}$"
           },
           "refreshToken": {
-            "type": "string"
+            "type": "string",
+            "pattern": "^[A-Za-z0-9-_]{15}\\.[A-Za-z0-9-_]{20}\\.[A-Za-z0-9-_]{20}$"
           }
         },
         "required": [
@@ -806,10 +1468,12 @@
             "$ref": "#/components/schemas/UserOutputDTO"
           },
           "accessToken": {
-            "type": "string"
+            "type": "string",
+            "pattern": "^[A-Za-z0-9-_]{15}\\.[A-Za-z0-9-_]{20}\\.[A-Za-z0-9-_]{20}$"
           },
           "refreshToken": {
-            "type": "string"
+            "type": "string",
+            "pattern": "^[A-Za-z0-9-_]{15}\\.[A-Za-z0-9-_]{20}\\.[A-Za-z0-9-_]{20}$"
           }
         },
         "required": [
@@ -825,10 +1489,12 @@
             "$ref": "#/components/schemas/UserOutputDTO"
           },
           "accessToken": {
-            "type": "string"
+            "type": "string",
+            "pattern": "^[A-Za-z0-9-_]{15}\\.[A-Za-z0-9-_]{20}\\.[A-Za-z0-9-_]{20}$"
           },
           "refreshToken": {
-            "type": "string"
+            "type": "string",
+            "pattern": "^[A-Za-z0-9-_]{15}\\.[A-Za-z0-9-_]{20}\\.[A-Za-z0-9-_]{20}$"
           }
         },
         "required": [
@@ -856,7 +1522,8 @@
             "type": "number"
           },
           "image": {
-            "type": "string"
+            "type": "string",
+            "format": "uri"
           }
         },
         "required": [
@@ -872,7 +1539,8 @@
         "type": "object",
         "properties": {
           "id": {
-            "type": "string"
+            "type": "string",
+            "format": "uuid"
           },
           "receivedAt": {
             "format": "date-time",
@@ -892,7 +1560,8 @@
         "type": "object",
         "properties": {
           "id": {
-            "type": "string"
+            "type": "string",
+            "format": "uuid"
           },
           "receivedAt": {
             "format": "date-time",
@@ -917,7 +1586,8 @@
         "type": "object",
         "properties": {
           "id": {
-            "type": "string"
+            "type": "string",
+            "format": "uuid"
           },
           "name": {
             "type": "string"
@@ -929,7 +1599,8 @@
             "type": "number"
           },
           "image": {
-            "type": "string"
+            "type": "string",
+            "format": "uri"
           }
         },
         "required": [
@@ -940,12 +1611,9 @@
           "image"
         ]
       },
-      "PackWithPokemonsOutputDTO": {
+      "CreatePackInputDTO": {
         "type": "object",
         "properties": {
-          "id": {
-            "type": "string"
-          },
           "name": {
             "type": "string"
           },
@@ -956,29 +1624,30 @@
             "type": "number"
           },
           "image": {
-            "type": "string"
+            "type": "string",
+            "format": "uri"
           },
-          "pokemons": {
+          "pokemonIds": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/PokemonOutputDTO"
+              "type": "number"
             }
           }
         },
         "required": [
-          "id",
           "name",
           "description",
           "price",
           "image",
-          "pokemons"
+          "pokemonIds"
         ]
       },
       "OpenedPackOutputDTO": {
         "type": "object",
         "properties": {
           "id": {
-            "type": "string"
+            "type": "string",
+            "format": "uuid"
           },
           "openedAt": {
             "format": "date-time",
@@ -1002,22 +1671,129 @@
           "pokemon"
         ]
       },
+      "UpdatePackByIdInputDTO": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "price": {
+            "type": "number"
+          },
+          "image": {
+            "type": "string",
+            "format": "uri"
+          },
+          "pokemonIds": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          }
+        }
+      },
+      "UpdatePackByIdOutputDTO": {
+        "type": "object",
+        "properties": {
+          "pack": {
+            "$ref": "#/components/schemas/PackOutputDTO"
+          },
+          "pokemons": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PokemonOutputDTO"
+            }
+          }
+        },
+        "required": [
+          "pack"
+        ]
+      },
+      "DeletePackByIdOutputDTO": {
+        "type": "object",
+        "properties": {
+          "pack": {
+            "$ref": "#/components/schemas/PackOutputDTO"
+          },
+          "pokemons": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PokemonOutputDTO"
+            }
+          }
+        },
+        "required": [
+          "pack",
+          "pokemons"
+        ]
+      },
+      "TradeOutputDTO": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "CANCELLED",
+              "ACCEPTED",
+              "REJECTED"
+            ]
+          },
+          "statusedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "sender": {
+            "$ref": "#/components/schemas/UserOutputDTO"
+          },
+          "receiver": {
+            "$ref": "#/components/schemas/UserOutputDTO"
+          }
+        },
+        "required": [
+          "id",
+          "createdAt",
+          "updatedAt",
+          "status",
+          "statusedAt",
+          "sender",
+          "receiver"
+        ]
+      },
       "CreatePendingTradeInputDTO": {
         "type": "object",
         "properties": {
           "senderItemIds": {
             "type": "array",
             "items": {
-              "type": "string"
+              "type": "string",
+              "format": "uuid"
             }
           },
           "receiverId": {
-            "type": "string"
+            "type": "string",
+            "format": "uuid"
           },
           "receiverItemIds": {
             "type": "array",
             "items": {
-              "type": "string"
+              "type": "string",
+              "format": "uuid"
             }
           }
         },
@@ -1031,7 +1807,8 @@
         "type": "object",
         "properties": {
           "id": {
-            "type": "string"
+            "type": "string",
+            "format": "uuid"
           },
           "createdAt": {
             "format": "date-time",
@@ -1052,7 +1829,10 @@
             "$ref": "#/components/schemas/UserOutputDTO"
           },
           "status": {
-            "type": "string"
+            "type": "string",
+            "enum": [
+              "PENDING"
+            ]
           }
         },
         "required": [
@@ -1065,11 +1845,37 @@
           "status"
         ]
       },
+      "CreatePendingTradeOutputDTO": {
+        "type": "object",
+        "properties": {
+          "pendingTrade": {
+            "$ref": "#/components/schemas/PendingTradeOutputDTO"
+          },
+          "senderItems": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UserItemOutputDTO"
+            }
+          },
+          "receiverItems": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UserItemOutputDTO"
+            }
+          }
+        },
+        "required": [
+          "pendingTrade",
+          "senderItems",
+          "receiverItems"
+        ]
+      },
       "CancelledTradeOuputDTO": {
         "type": "object",
         "properties": {
           "id": {
-            "type": "string"
+            "type": "string",
+            "format": "uuid"
           },
           "createdAt": {
             "format": "date-time",
@@ -1090,7 +1896,10 @@
             "$ref": "#/components/schemas/UserOutputDTO"
           },
           "status": {
-            "type": "string"
+            "type": "string",
+            "enum": [
+              "CANCELLED"
+            ]
           }
         },
         "required": [
@@ -1107,7 +1916,8 @@
         "type": "object",
         "properties": {
           "id": {
-            "type": "string"
+            "type": "string",
+            "format": "uuid"
           },
           "createdAt": {
             "format": "date-time",
@@ -1128,7 +1938,10 @@
             "$ref": "#/components/schemas/UserOutputDTO"
           },
           "status": {
-            "type": "string"
+            "type": "string",
+            "enum": [
+              "ACCEPTED"
+            ]
           }
         },
         "required": [
@@ -1145,7 +1958,8 @@
         "type": "object",
         "properties": {
           "id": {
-            "type": "string"
+            "type": "string",
+            "format": "uuid"
           },
           "createdAt": {
             "format": "date-time",
@@ -1166,7 +1980,10 @@
             "$ref": "#/components/schemas/UserOutputDTO"
           },
           "status": {
-            "type": "string"
+            "type": "string",
+            "enum": [
+              "REJECTED"
+            ]
           }
         },
         "required": [
@@ -1183,7 +2000,8 @@
         "type": "object",
         "properties": {
           "connectionToken": {
-            "type": "string"
+            "type": "string",
+            "pattern": "^[A-Za-z0-9-_]{15}\\.[A-Za-z0-9-_]{20}\\.[A-Za-z0-9-_]{20}$"
           }
         },
         "required": [
@@ -1194,7 +2012,8 @@
         "type": "object",
         "properties": {
           "subscriptionToken": {
-            "type": "string"
+            "type": "string",
+            "pattern": "^[A-Za-z0-9-_]{15}\\.[A-Za-z0-9-_]{20}\\.[A-Za-z0-9-_]{20}$"
           }
         },
         "required": [

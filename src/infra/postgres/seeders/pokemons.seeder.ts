@@ -7,7 +7,6 @@ export class PokemonsSeeder implements Seeder {
   constructor(private readonly pokemonsRepository: IPokemonsRepository) {}
 
   async seed() {
-    // TODO: Maybe i can do that with a single request? Research on that
     const requests = [...Array(152).keys()]
       .map((i) => fetch(`https://pokeapi.co/api/v2/pokemon/${i + 1}`));
 

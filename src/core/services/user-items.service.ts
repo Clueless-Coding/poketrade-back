@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { PaginationInputDTO } from 'src/api/dtos/pagination.input.dto';
+import { PaginationOptionsInputDTO } from 'src/api/dtos/pagination.input.dto';
 import { PaginatedArray, UUIDv4 } from 'src/common/types';
 import { Database, Transaction } from 'src/infra/postgres/types';
 import { QuickSoldUserItemEntity } from '../entities/quick-sold-user-item.entity';
@@ -24,12 +24,21 @@ export class UserItemsService {
 
   public async getUserItemsWithPaginationByUser(
     user: UserEntity,
-    paginationDTO: PaginationInputDTO,
+    paginationOptionsDTO: PaginationOptionsInputDTO,
   ): Promise<PaginatedArray<UserItemEntity>> {
     return this.userItemsRepository.findUserItemsWithPagination({
-      paginationOptions: paginationDTO,
+      paginationOptions: paginationOptionsDTO,
       where: { userId: user.id },
     });
+  }
+
+  public async getUserItemsWithPaginationByUserId(
+    userId: UUIDv4,
+    paginationOptionsDTO: PaginationOptionsInputDTO,
+  ): Promise<PaginatedArray<UserItemEntity>> {
+    const user = await this.usersRepository.findUserById({ id: userId });
+
+    return this.getUserItemsWithPaginationByUser(user, paginationOptionsDTO);
   }
 
   private async _quickSellUserItemById(

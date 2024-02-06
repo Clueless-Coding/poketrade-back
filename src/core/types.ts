@@ -1,4 +1,4 @@
-import { PaginationOptions, UUIDv4 } from 'src/common/types';
+import { PaginationOptions } from 'src/common/types';
 
 export type FindEntitiesOptions<TWhere extends Record<string, unknown>> = Partial<{
   where: TWhere,
@@ -8,16 +8,16 @@ export type FindEntityOptions<TWhere extends Record<string, unknown>> = FindEnti
   notFoundErrorMessage: string,
 }>;
 
-export type FindEntityByIdOptions = {
-  id: UUIDv4,
+export type FindEntityByIdOptions<TId> = {
+  id: TId,
 } & Partial<{
-  notFoundErrorMessageFn: (id: UUIDv4) => string,
+  notFoundErrorMessageFn: (id: TId) => string,
 }>;
 
-export type FindEntitiesByIdsOptions =  {
-  ids: Array<UUIDv4>,
+export type FindEntitiesByIdsOptions<TId> =  {
+  ids: Array<TId>,
 } & Partial<{
-  notFoundErrorMessageFn: (id: UUIDv4) => string,
+  notFoundErrorMessageFn: (id: TId) => string,
 }>;
 
 export type FindEntitiesWithPaginationOptions<TWhere extends Record<string, unknown>> = FindEntitiesOptions<TWhere> & {

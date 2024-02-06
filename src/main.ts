@@ -14,15 +14,12 @@ const PUBLIC_PATH = './public';
 function initializeSwaggerDocumentation(app: INestApplication) {
   const swaggerDocs = new DocumentBuilder()
     .setTitle('Poketrade API')
-    .addSecurity('AccessToken', {
+    .addBearerAuth(undefined, 'AccessToken')
+    .addBearerAuth(undefined, 'RefreshToken')
+    .addSecurity('AdminApiKey', {
       type: 'apiKey',
       in: 'header',
-      name: 'x-access-token',
-    })
-    .addSecurity('RefreshToken', {
-      type: 'apiKey',
-      in: 'header',
-      name: 'x-refresh-token',
+      name: 'x-api-key',
     })
     .build();
 

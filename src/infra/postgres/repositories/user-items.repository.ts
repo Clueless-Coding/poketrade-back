@@ -17,6 +17,9 @@ import {
   FindEntitiesByIdsOptions,
 } from 'src/core/types';
 import { FindUserItemsWhere, IUserItemsRepository } from 'src/core/repositories/user-items.repository';
+import { transformPaginationOptions } from 'src/common/helpers/transform-pagination-options.helper';
+import { calculateOffsetFromPaginationOptions } from 'src/common/helpers/calculate-offset-from-pagination-options.helper';
+import { getTotalPaginationMeta } from 'src/common/helpers/get-total-pagination-meta.helper';
 
 export const mapUserItemsRowToEntity = (
   row: Record<'user_items' | 'users' | 'pokemons', any>,
@@ -74,7 +77,7 @@ export class UserItemsRepository implements IUserItemsRepository {
   }
 
   public async findUserItemsByIds(
-    options: FindEntitiesByIdsOptions,
+    options: FindEntitiesByIdsOptions<UUIDv4>,
   ): Promise<Array<UserItemEntity>> {
     const {
       ids,
@@ -101,10 +104,21 @@ export class UserItemsRepository implements IUserItemsRepository {
     options: FindEntitiesWithPaginationOptions<FindUserItemsWhere>,
   ): Promise<PaginatedArray<UserItemEntity>> {
     const {
-      paginationOptions: { page, limit },
+      paginationOptions,
+      where = {},
     } = options;
-    // TODO: check for boundaries
-    const offset = (page - 1) * limit;
+
+    const transformedPaginationOptions = transformPaginationOptions(paginationOptions);
+
+    const { page, limit } = transformedPaginationOptions;
+    const offset = calculateOffsetFromPaginationOptions(transformedPaginationOptions);
+
+    const { totalItems, totalPages } = await getTotalPaginationMeta({
+      db: this.db,
+      table: userItemsTable,
+      whereSQL: this.mapWhereToSQL(where),
+      limit,
+    });
 
     return this
       .baseSelectBuilder(options)
@@ -112,7 +126,7 @@ export class UserItemsRepository implements IUserItemsRepository {
       .limit(limit)
       .then((rows) => mapArrayToPaginatedArray(
         rows.map((row) => mapUserItemsRowToEntity(row)),
-        { page, limit },
+        { page, limit, totalItems, totalPages },
       ));
   }
 
@@ -138,7 +152,7 @@ export class UserItemsRepository implements IUserItemsRepository {
   }
 
   public async findUserItemById(
-    options: FindEntityByIdOptions,
+    options: FindEntityByIdOptions<UUIDv4>,
   ): Promise<UserItemEntity> {
     const {
       id,

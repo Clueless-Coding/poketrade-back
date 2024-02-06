@@ -26,7 +26,7 @@ export abstract class IUserItemsRepository {
   ): Promise<Array<UserItemEntity>>;
 
   public abstract findUserItemsByIds(
-    options: FindEntitiesByIdsOptions,
+    options: FindEntitiesByIdsOptions<UUIDv4>,
   ): Promise<Array<UserItemEntity>>;
 
   public abstract findUserItemsWithPagination(
@@ -38,7 +38,7 @@ export abstract class IUserItemsRepository {
   ): Promise<UserItemEntity>;
 
   public abstract findUserItemById(
-    options: FindEntityByIdOptions,
+    options: FindEntityByIdOptions<UUIDv4>,
   ): Promise<UserItemEntity>;
 
   public abstract createUserItem(

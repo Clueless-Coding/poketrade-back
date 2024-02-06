@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { RegisterUserInputDTO } from 'src/api/dtos/auth/register-user.input.dto';
-import { JWT } from 'src/common/types';
+import { JWT, Nullable } from 'src/common/types';
 import { UserEntity } from '../entities/user.entity';
 import { IUserRefreshTokensRepository } from '../repositories/user-refresh-tokens.repository';
 import ms from 'ms';
@@ -9,7 +9,9 @@ import { addMilliseconds } from 'date-fns';
 import { ConfigService } from '@nestjs/config';
 import { EnvVariables } from 'src/infra/config/env.config';
 import { IUsersRepository } from '../repositories/users.repository';
-import { AppConflictException, AppValidationException } from '../exceptions';
+import { AppAuthException, AppConflictException, AppEntityNotFoundException, AppValidationException } from '../exceptions';
+import { LoginUserInputDTO } from 'src/api/dtos/auth/login-user.input.dto';
+import * as bcrypt from 'bcrypt';
 
 type AuthTokens = { accessToken: JWT, refreshToken: JWT };
 
@@ -65,13 +67,32 @@ export class AuthService {
   }
 
   public async loginUser(
-    user: UserEntity,
-  ): Promise<AuthTokens> {
-    return this.generateTokens(user);
+    dto: LoginUserInputDTO,
+  ): Promise<{ user: UserEntity } & AuthTokens> {
+    const { username, password } = dto;
+    let user: Nullable<UserEntity> = null;
+
+    try {
+      user = await this.usersRepository.findUser({ where: { name: username } });
+    } catch (error) {
+      if (error instanceof AppEntityNotFoundException) {
+        throw new AppAuthException('Wrong username');
+      }
+
+      throw error;
+    }
+
+    if (!(await bcrypt.compare(password, user.hashedPassword))) {
+      throw new AppAuthException('Wrong password');
+    }
+
+    const tokens = await this.generateTokens(user);
+
+    return { user, ...tokens };
   }
 
   public async registerUser(
-    dto: RegisterUserInputDTO
+    dto: RegisterUserInputDTO,
   ): Promise<{ user: UserEntity } & AuthTokens> {
     const { username, password, confirmPassword } = dto;
 

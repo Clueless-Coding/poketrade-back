@@ -1,18 +1,19 @@
 import { Mapper } from '@automapper/core';
 import { InjectMapper } from '@automapper/nestjs';
-import { Body, Controller, Param, ParseUUIDPipe, Post, UseGuards } from '@nestjs/common';
-import { ApiCreatedResponse, ApiSecurity, ApiTags } from '@nestjs/swagger';
-import { UUIDv4 } from 'src/common/types';
-import { PendingTradesService } from 'src/core/services/pending-trades.service';
-import { AcceptedTradeEntity, CancelledTradeEntity, PendingTradeEntity, RejectedTradeEntity} from 'src/core/entities/trade.entity';
-import { UserEntity } from 'src/core/entities/user.entity';
-import { User } from '../decorators/user.decorator';
-import { AcceptedTradeOutputDTO } from '../dtos/accepted-trades/accepted-trade.output.dto';
-import { CancelledTradeOuputDTO } from '../dtos/cancelled-trades/cancelled-trade.output.dto';
-import { CreatePendingTradeInputDTO } from '../dtos/pending-trades/create-pending-trade.input.dto';
-import { PendingTradeOutputDTO } from '../dtos/pending-trades/pending-trade.output.dto';
-import { RejectedTradeOutputDTO } from '../dtos/rejected-trades/rejected-trade.output.dto';
+import { Controller, Get, Query, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth, ApiOkResponse, ApiTags } from '@nestjs/swagger';
+import { ApiOkResponseWithPagination } from '../decorators/api-ok-response-with-pagination.decorator';
+import { TradeOutputDTO } from '../dtos/trades/trade.output.dto';
 import { AccessTokenAuthGuard } from '../guards/access-token-auth.guard';
+import { PaginatedArray, UUIDv4 } from 'src/common/types';
+import { TradesService } from 'src/core/services/trades.service';
+import { PaginationOptionsInputDTO } from '../dtos/pagination.input.dto';
+import { mapPaginatedArray } from 'src/common/helpers/map-paginated-array.helper';
+import { TradeEntity } from 'src/core/entities/trade.entity';
+import { UUIDv4Param } from '../decorators/uuidv4-param.decorator';
+import { TradesToUserItemsService } from 'src/core/services/trades-to-user-items.service';
+import { TradeToReceiverItemEntity, TradeToSenderItemEntity } from 'src/core/entities/trade-to-user-item.entity';
+import { UserItemOutputDTO } from '../dtos/user-items/user-item.output.dto';
 
 @ApiTags('Trades')
 @Controller('trades')
@@ -21,74 +22,67 @@ export class TradesController {
     @InjectMapper()
     private readonly mapper: Mapper,
 
-    private readonly pendingTradesService: PendingTradesService,
+    private readonly tradesService: TradesService,
+    private readonly tradesToUserItemsService: TradesToUserItemsService,
   ) {}
 
-  @ApiCreatedResponse({ type: PendingTradeOutputDTO })
-  @ApiSecurity('AccessToken')
-  @Post()
+  @ApiOkResponseWithPagination({ type: TradeOutputDTO })
+  @ApiBearerAuth('AccessToken')
+  @Get()
   @UseGuards(AccessTokenAuthGuard)
-  public async createPendingTrade(
-    @User() user: UserEntity,
-    @Body() dto: CreatePendingTradeInputDTO,
-  ): Promise<PendingTradeOutputDTO> {
-    const pendingTrade = await this.pendingTradesService.createPendingTrade(user, dto);
+  public async getTradesWithPagination(
+    @Query() paginationOptionsDTO: PaginationOptionsInputDTO,
+  ): Promise<PaginatedArray<TradeOutputDTO>> {
+    const trades = await this.tradesService.getTradesWithPagination(paginationOptionsDTO);
 
-    return this.mapper.map(
-      pendingTrade,
-      PendingTradeEntity,
-      PendingTradeOutputDTO,
+    return mapPaginatedArray(this.mapper, trades, TradeEntity, TradeOutputDTO);
+  }
+
+  @ApiOkResponse({ type: TradeOutputDTO })
+  @ApiBearerAuth('AccessToken')
+  @Get(':id')
+  @UseGuards(AccessTokenAuthGuard)
+  public async getTradeById(
+    @UUIDv4Param('id') id: UUIDv4,
+  ): Promise<TradeOutputDTO> {
+    const trade = await this.tradesService.getTradeById(id);
+
+    return this.mapper.map(trade, TradeEntity, TradeOutputDTO);
+  }
+
+  @ApiOkResponseWithPagination({ type: UserItemOutputDTO })
+  @ApiBearerAuth('AccessToken')
+  @Get(':id/sender-items')
+  @UseGuards(AccessTokenAuthGuard)
+  public async getTradeSenderItemsWithPaginationByTradeId(
+    @UUIDv4Param('id') id: UUIDv4,
+    @Query() paginationOptionsDTO: PaginationOptionsInputDTO,
+  ): Promise<PaginatedArray<UserItemOutputDTO>> {
+    const tradesToSenderItems = await this.tradesToUserItemsService.getTradesToSenderItemsWithPaginationByTradeId(id, paginationOptionsDTO);
+
+    return mapPaginatedArray(
+      this.mapper,
+      tradesToSenderItems,
+      TradeToSenderItemEntity,
+      UserItemOutputDTO,
     );
   }
 
-  @ApiCreatedResponse({ type: CancelledTradeOuputDTO })
-  @ApiSecurity('AccessToken')
-  @Post(':id/cancel')
+  @ApiOkResponseWithPagination({ type: UserItemOutputDTO })
+  @ApiBearerAuth('AccessToken')
+  @Get(':id/receiver-items')
   @UseGuards(AccessTokenAuthGuard)
-  public async cancelPendingTradeById(
-    @User() user: UserEntity,
-    @Param('id', new ParseUUIDPipe({ version: '4' })) id: UUIDv4,
-  ) {
-    const cancelledTrade = await this.pendingTradesService.cancelPendingTradeById(user, id)
+  public async getTradeReceiverItemsWithPaginationByTradeId(
+    @UUIDv4Param('id') id: UUIDv4,
+    @Query() paginationOptionsDTO: PaginationOptionsInputDTO,
+  ): Promise<PaginatedArray<UserItemOutputDTO>> {
+    const tradesToReceiverItems = await this.tradesToUserItemsService.getTradesToReceiverItemsWithPaginationByTradeId(id, paginationOptionsDTO);
 
-    return this.mapper.map(
-      cancelledTrade,
-      CancelledTradeEntity,
-      CancelledTradeOuputDTO,
-    );
-  }
-
-  @ApiCreatedResponse({ type: AcceptedTradeOutputDTO })
-  @ApiSecurity('AccessToken')
-  @Post(':id/accept')
-  @UseGuards(AccessTokenAuthGuard)
-  public async acceptPendingTradeById(
-    @User() user: UserEntity,
-    @Param('id', new ParseUUIDPipe({ version: '4' })) id: UUIDv4,
-  ) {
-    const acceptedTrade = await this.pendingTradesService.acceptPendingTradeById(user, id);
-
-    return this.mapper.map(
-      acceptedTrade,
-      AcceptedTradeEntity,
-      AcceptedTradeOutputDTO,
-    );
-  }
-
-  @ApiCreatedResponse({ type: RejectedTradeOutputDTO })
-  @ApiSecurity('AccessToken')
-  @Post(':id/reject')
-  @UseGuards(AccessTokenAuthGuard)
-  public async rejectPendingTradeById(
-    @User() user: UserEntity,
-    @Param('id', new ParseUUIDPipe({ version: '4' })) id: UUIDv4,
-  ) {
-    const rejectedTrade = await this.pendingTradesService.rejectPendingTradeById(user, id);
-
-    return this.mapper.map(
-      rejectedTrade,
-      RejectedTradeEntity,
-      RejectedTradeOutputDTO,
+    return mapPaginatedArray(
+      this.mapper,
+      tradesToReceiverItems,
+      TradeToReceiverItemEntity,
+      UserItemOutputDTO,
     );
   }
 }

@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Database, Transaction } from 'src/infra/postgres/types';
 import { InjectDatabase } from 'src/infra/ioc/decorators/inject-database.decorator';
-import { Nullable, Optional, PaginatedArray } from 'src/common/types';
+import { Nullable, Optional, PaginatedArray, UUIDv4 } from 'src/common/types';
 import { usersTable } from 'src/infra/postgres/tables';
 import { CreateUserEntityValues, UpdateUserEntityValues, UserEntity } from 'src/core/entities/user.entity';
 import { and, eq, inArray, like, SQL } from 'drizzle-orm';
@@ -10,6 +10,9 @@ import { AppEntityNotFoundException } from 'src/core/exceptions';
 import { FindEntitiesOptions, FindEntitiesWithPaginationOptions, FindEntityByIdOptions, FindEntityOptions } from 'src/core/types';
 import { FindUsersWhere, IUsersRepository } from 'src/core/repositories/users.repository';
 import { hashUserPassword } from 'src/common/helpers/hash-user-password.helper';
+import { transformPaginationOptions } from 'src/common/helpers/transform-pagination-options.helper';
+import { calculateOffsetFromPaginationOptions } from 'src/common/helpers/calculate-offset-from-pagination-options.helper';
+import { getTotalPaginationMeta } from 'src/common/helpers/get-total-pagination-meta.helper';
 
 @Injectable()
 export class UsersRepository implements IUsersRepository {
@@ -50,26 +53,27 @@ export class UsersRepository implements IUsersRepository {
     options: FindEntitiesWithPaginationOptions<FindUsersWhere>,
   ): Promise<PaginatedArray<UserEntity>> {
     const {
-      paginationOptions: { page, limit },
+      paginationOptions,
+      where = {},
     } = options;
-    // TODO: check for boundaries
-    const offset = (page - 1) * limit;
 
-    // TODO: Pass these values to `mapArrayToPaginatedArray`
-    // const totalItems = await this.db
-    //   .select({
-    //     totalItems: count(),
-    //   })
-    //   .from(usersTable)
-    //   .where(this.mapWhereToSQL(where))
-    //   .then(([row]) => row!.totalItems);
-    // const totalPages = Math.ceil(totalItems / offset);
+    const transformedPaginationOptions = transformPaginationOptions(paginationOptions);
+
+    const { page, limit } = transformedPaginationOptions;
+    const offset = calculateOffsetFromPaginationOptions(transformedPaginationOptions);
+
+    const { totalItems, totalPages } = await getTotalPaginationMeta({
+      db: this.db,
+      table: usersTable,
+      whereSQL: this.mapWhereToSQL(where),
+      limit,
+    });
 
     return this
       .baseSelectBuilder(options)
       .offset(offset)
       .limit(limit)
-      .then((users) => mapArrayToPaginatedArray(users, { page, limit }));
+      .then((users) => mapArrayToPaginatedArray(users, { page, limit, totalItems, totalPages }));
   }
 
   public async findUser(
@@ -109,7 +113,7 @@ export class UsersRepository implements IUsersRepository {
   }
 
   public async findUserById(
-    options: FindEntityByIdOptions,
+    options: FindEntityByIdOptions<UUIDv4>,
   ): Promise<UserEntity> {
     const {
       id,

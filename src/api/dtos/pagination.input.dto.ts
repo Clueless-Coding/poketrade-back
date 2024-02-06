@@ -3,7 +3,7 @@ import { Type } from 'class-transformer';
 import { IsOptional } from 'class-validator';
 import { IsPositiveInt } from 'src/common/decorators/is-positive-int.decorator';
 
-export class PaginationInputDTO {
+export class PaginationOptionsInputDTO {
   @ApiPropertyOptional({ default: 1 })
   @Type(() => Number)
   @IsPositiveInt()

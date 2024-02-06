@@ -1,16 +1,16 @@
-import { UUIDv4 } from 'src/common/types';
+import { UUIDv4, UnionToArray } from 'src/common/types';
 import { UserEntity } from './user.entity';
 import { UserItemEntity } from './user-item.entity';
 import { AutoMap } from '@automapper/classes';
 
-export const tradeStatusEnumValues = [
-  'PENDING',
-  'CANCELLED',
-  'ACCEPTED',
-  'REJECTED',
-] as const;
+export enum TradeStatus {
+  PENDING = 'PENDING',
+  CANCELLED = 'CANCELLED',
+  ACCEPTED = 'ACCEPTED',
+  REJECTED = 'REJECTED',
+}
 
-export type TradeStatus = typeof tradeStatusEnumValues[number];
+export const tradeStatusEnumValues = Object.keys(TradeStatus) as UnionToArray<keyof typeof TradeStatus>;
 
 export class TradeEntity {
   @AutoMap()
@@ -31,22 +31,22 @@ export class TradeEntity {
 
 export class PendingTradeEntity extends TradeEntity {
   @AutoMap()
-  public readonly status: 'PENDING';
+  public readonly status: TradeStatus.PENDING;
 }
 
 export class CancelledTradeEntity extends TradeEntity {
   @AutoMap()
-  public readonly status: 'CANCELLED';
+  public readonly status: TradeStatus.CANCELLED;
 }
 
 export class AcceptedTradeEntity extends TradeEntity {
   @AutoMap()
-  public readonly status: 'ACCEPTED';
+  public readonly status: TradeStatus.ACCEPTED;
 }
 
 export class RejectedTradeEntity extends TradeEntity {
   @AutoMap()
-  public readonly status: 'REJECTED';
+  public readonly status: TradeStatus.REJECTED;
 }
 
 export type CreatePendingTradeEntityValues = Omit<PendingTradeEntity,

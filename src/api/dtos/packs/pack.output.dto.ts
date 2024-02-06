@@ -1,9 +1,10 @@
 import { AutoMap } from "@automapper/classes";
 import { ApiProperty } from "@nestjs/swagger";
+import { ApiPropertyUUIDv4 } from "src/api/decorators/api-property-uuid-v4.decorator";
 import { UUIDv4 } from "src/common/types";
 
 export class PackOutputDTO {
-  @ApiProperty()
+  @ApiPropertyUUIDv4()
   @AutoMap()
   public readonly id: UUIDv4;
 
@@ -19,8 +20,7 @@ export class PackOutputDTO {
   @AutoMap()
   public readonly price: number;
 
-  // NOTE: URL
-  @ApiProperty()
+  @ApiProperty({ format: 'uri' })
   @AutoMap()
   public readonly image: string;
 }

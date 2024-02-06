@@ -1,7 +1,7 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiPropertyJWT } from 'src/api/decorators/api-property-jwt.decorator';
 import { JWT } from 'src/common/types';
 
 export class GenerateCentrifugoSubscriptionTokenOutputDTO {
-  @ApiProperty()
+  @ApiPropertyJWT()
   subscriptionToken: JWT;
 }

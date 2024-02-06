@@ -12,6 +12,7 @@ import { IUsersRepository } from '../repositories/users.repository';
 import { IUserItemsRepository } from '../repositories/user-items.repository';
 import { AppConflictException, AppValidationException } from '../exceptions';
 import { InjectDatabase } from 'src/infra/ioc/decorators/inject-database.decorator';
+import { TradeToReceiverItemEntity, TradeToSenderItemEntity } from '../entities/trade-to-user-item.entity';
 
 @Injectable()
 export class PendingTradesService {
@@ -29,7 +30,11 @@ export class PendingTradesService {
     sender: UserEntity,
     dto: CreatePendingTradeInputDTO,
     tx: Transaction,
-  ): Promise<PendingTradeEntity> {
+  ): Promise<{
+    pendingTrade: PendingTradeEntity,
+    tradesToSenderItems: Array<TradeToSenderItemEntity>,
+    tradesToReceiverItems: Array<TradeToReceiverItemEntity>,
+  }> {
     if (!dto.senderItemIds.length && !dto.receiverItemIds.length) {
       throw new AppValidationException(
         '`senderItemIds` and `receiverItemIds` cannot be empty simultaneously',
@@ -78,16 +83,20 @@ export class PendingTradesService {
         receiver,
         receiverItems,
       }, tx)
-      .then(({ pendingTrade }) => {
-        this.eventEmitter.emit(PENDING_TRADE_CREATED_EVENT, pendingTrade);
-        return pendingTrade;
+      .then((createPendingTradeResult) => {
+        this.eventEmitter.emit(PENDING_TRADE_CREATED_EVENT, createPendingTradeResult.pendingTrade);
+        return createPendingTradeResult;
       });
   }
 
   public async createPendingTrade(
     sender: UserEntity,
     dto: CreatePendingTradeInputDTO,
-  ): Promise<PendingTradeEntity> {
+  ): Promise<{
+    pendingTrade: PendingTradeEntity,
+    tradesToSenderItems: Array<TradeToSenderItemEntity>,
+    tradesToReceiverItems: Array<TradeToReceiverItemEntity>,
+  }> {
     return this.db.transaction(async (tx) => (
       this._createPendingTrade(sender, dto, tx)
     ));

@@ -28,7 +28,7 @@ export abstract class IUsersRepository {
   ): Promise<boolean>;
 
   public abstract findUserById(
-    options: FindEntityByIdOptions,
+    options: FindEntityByIdOptions<UUIDv4>,
   ): Promise<UserEntity>;
 
   public abstract createUser(

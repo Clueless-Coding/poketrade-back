@@ -3,7 +3,6 @@ import { UUIDv4 } from 'src/common/types';
 import { usersTable } from './users.table';
 import { relations } from 'drizzle-orm';
 
-// TODO: Create trigger in sql migration
 export const userRefreshTokensTable = pgTable('user_refresh_tokens', {
   userId: uuid('user_id')
     .$type<UUIDv4>()

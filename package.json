@@ -16,7 +16,8 @@
     "seeders:run": "node ./dist/infra/postgres/seeders/run.js",
     "seeders:refresh": "pnpm seeders:run --refresh",
     "drizzle:studio": "drizzle-kit studio --config ./src/infra/config/drizzle.config.ts",
-    "test": "jest"
+    "test": "jest",
+    "asdf": "node ./dist/asdf.js"
   },
   "dependencies": {
     "@automapper/classes": "8.8.1",

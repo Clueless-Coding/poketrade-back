@@ -6,10 +6,8 @@ export const mapPaginatedArray = <TSource extends Dictionary<TSource>, TDestinat
   sourcePaginatedArray: PaginatedArray<TSource>,
   sourceIdentifier: ModelIdentifier<TSource>,
   destinationIdentifier: ModelIdentifier<TDestination>,
-): PaginatedArray<TDestination> => {
-  return {
-    ...sourcePaginatedArray,
-    items: mapper.mapArray(sourcePaginatedArray.items, sourceIdentifier, destinationIdentifier),
-  };
-}
+): PaginatedArray<TDestination> => ({
+  ...sourcePaginatedArray,
+  items: mapper.mapArray(sourcePaginatedArray.items, sourceIdentifier, destinationIdentifier),
+});
 

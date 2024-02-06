@@ -8,3 +8,5 @@ export class PackToPokemonEntity {
   @AutoMap(() => PokemonEntity)
   public readonly pokemon: PokemonEntity;
 }
+
+export type CreatePackToPokemonEntityValues = PackToPokemonEntity;

@@ -3,9 +3,10 @@ import { UUIDv4 } from 'src/common/types';
 import { TradeStatus } from 'src/core/entities/trade.entity';
 import { UserOutputDTO } from '../users/user.output.dto';
 import { AutoMap } from '@automapper/classes';
+import { ApiPropertyUUIDv4 } from 'src/api/decorators/api-property-uuid-v4.decorator';
 
 export class TradeOutputDTO {
-  @ApiProperty()
+  @ApiPropertyUUIDv4()
   @AutoMap()
   public readonly id: UUIDv4;
 
@@ -17,7 +18,7 @@ export class TradeOutputDTO {
   @AutoMap()
   public readonly updatedAt: Date;
 
-  @ApiProperty()
+  @ApiProperty({ enum: TradeStatus })
   @AutoMap()
   public readonly status: TradeStatus;
 

@@ -1,12 +1,11 @@
-import { Body, Controller, Headers, HttpCode, HttpStatus, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, HttpCode, HttpStatus, Post, UseGuards } from '@nestjs/common';
 import { AuthService } from 'src/core/services/auth.service';
-import { LocalAuthGuard } from '../guards/local-auth.guard';
 import { User } from '../decorators/user.decorator';
 import { LoginUserOutputDTO } from '../dtos/auth/login-user.output.dto';
 import { LoginUserInputDTO } from '../dtos/auth/login-user.input.dto';
 import { RegisterUserInputDTO } from '../dtos/auth/register-user.input.dto';
 import { RegisterUserOutputDTO } from '../dtos/auth/register-user.output.dto';
-import { ApiCreatedResponse, ApiOkResponse, ApiSecurity, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { UserEntity } from 'src/core/entities/user.entity';
 import { InjectMapper } from '@automapper/nestjs';
 import { Mapper } from '@automapper/core';
@@ -14,6 +13,7 @@ import { UserOutputDTO } from '../dtos/users/user.output.dto';
 import { RefreshTokenAuthGuard } from '../guards/refresh-token-auth.guard';
 import { JWT } from 'src/common/types';
 import { RefreshTokensOutputDTO } from '../dtos/auth/refresh-tokens-output.dto';
+import { RefreshTokenHeader } from '../decorators/refresh-token-header.decorator';
 
 @ApiTags('Authorization')
 @Controller('auth')
@@ -24,16 +24,13 @@ export class AuthController {
     private readonly authService: AuthService,
   ) {}
 
-  // TODO: For some reason body validation doesn't work. Fix it.
   @ApiOkResponse({ type: LoginUserOutputDTO })
   @Post('login')
   @HttpCode(HttpStatus.OK)
-  @UseGuards(LocalAuthGuard)
   public async loginUser(
-    @Body() _dto: LoginUserInputDTO,
-    @User() user: UserEntity,
+    @Body() dto: LoginUserInputDTO,
   ): Promise<LoginUserOutputDTO> {
-    const { accessToken, refreshToken } = await this.authService.loginUser(user);
+    const { user, accessToken, refreshToken } = await this.authService.loginUser(dto);
 
     return {
       user: this.mapper.map(user, UserEntity, UserOutputDTO),
@@ -57,24 +54,24 @@ export class AuthController {
   }
 
   @ApiOkResponse()
-  @ApiSecurity('RefreshToken')
+  @ApiBearerAuth('RefreshToken')
   @HttpCode(HttpStatus.OK)
   @UseGuards(RefreshTokenAuthGuard)
   @Post('logout')
   public async logoutUser(
     @User() user: UserEntity,
-    @Headers('x-refresh-token') refreshToken: JWT,
+    @RefreshTokenHeader() refreshToken: JWT,
   ): Promise<void> {
     return this.authService.logoutUser(user, refreshToken);
   }
 
   @ApiCreatedResponse({ type: RefreshTokensOutputDTO })
-  @ApiSecurity('RefreshToken')
+  @ApiBearerAuth('RefreshToken')
   @UseGuards(RefreshTokenAuthGuard)
   @Post('refresh')
   public async refreshTokens(
     @User() user: UserEntity,
-    @Headers('x-refresh-token') oldRefreshToken: JWT,
+    @RefreshTokenHeader() oldRefreshToken: JWT,
   ) {
     const {
       accessToken,

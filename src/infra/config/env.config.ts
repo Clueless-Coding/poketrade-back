@@ -49,6 +49,9 @@ export class EnvVariables {
   JWT_REFRESH_EXPIRES_IN: string;
 
   @IsString()
+  ADMIN_API_KEY: string;
+
+  @IsString()
   CENTRIFUGO_API_URL: string;
 
   @IsString()

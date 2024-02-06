@@ -22,7 +22,7 @@ export class PokemonOutputDTO {
   @AutoMap()
   public readonly weight: number;
 
-  @ApiProperty()
+  @ApiProperty({ format: 'uri' })
   @AutoMap()
   public readonly image: string;
 }

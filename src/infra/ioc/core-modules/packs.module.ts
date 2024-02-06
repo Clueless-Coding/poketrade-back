@@ -8,6 +8,9 @@ import { IOpenedPacksRepository } from 'src/core/repositories/opened-packs.repos
 import { UserItemsModule } from './user-items.module';
 import { OpenedPacksRepository } from 'src/infra/postgres/repositories/opened-pack.repository';
 import { PacksRepository } from 'src/infra/postgres/repositories/packs.repository';
+import { PacksToPokemonsService } from 'src/core/services/packs-to-pokemons.service';
+import { IPacksToPokemonsRepository } from 'src/core/repositories/packs-to-pokemons.repository';
+import { PacksToPokemonsRepository } from 'src/infra/postgres/repositories/packs-to-pokemons.repository';
 
 @Module({
   imports: [
@@ -18,6 +21,7 @@ import { PacksRepository } from 'src/infra/postgres/repositories/packs.repositor
   ],
   providers: [
     PacksService,
+    PacksToPokemonsService,
     {
       provide: IPacksRepository,
       useClass: PacksRepository,
@@ -26,7 +30,17 @@ import { PacksRepository } from 'src/infra/postgres/repositories/packs.repositor
       provide: IOpenedPacksRepository,
       useClass: OpenedPacksRepository,
     },
+    {
+      provide: IPacksToPokemonsRepository,
+      useClass: PacksToPokemonsRepository,
+    },
   ],
-  exports: [PacksService, IPacksRepository, IOpenedPacksRepository],
+  exports: [
+    PacksService,
+    PacksToPokemonsService,
+    IPacksRepository,
+    IOpenedPacksRepository,
+    IPacksToPokemonsRepository,
+  ],
 })
 export class PacksModule {}

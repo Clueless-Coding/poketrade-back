@@ -4,9 +4,10 @@ import { PokemonOutputDTO } from '../pokemons/pokemon.output.dto';
 import { UserOutputDTO } from '../users/user.output.dto';
 import { PackOutputDTO } from './pack.output.dto';
 import { AutoMap } from '@automapper/classes';
+import { ApiPropertyUUIDv4 } from 'src/api/decorators/api-property-uuid-v4.decorator';
 
 export class OpenedPackOutputDTO {
-  @ApiProperty()
+  @ApiPropertyUUIDv4()
   @AutoMap()
   public readonly id: UUIDv4;
 

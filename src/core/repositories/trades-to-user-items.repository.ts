@@ -1,5 +1,5 @@
-import { UUIDv4 } from 'src/common/types';
-import { FindEntitiesOptions } from '../types';
+import { PaginatedArray, UUIDv4 } from 'src/common/types';
+import { FindEntitiesOptions, FindEntitiesWithPaginationOptions } from '../types';
 import {
   CreateTradeToReceiverItemEntityValues,
   CreateTradeToSenderItemEntityValues,
@@ -30,6 +30,18 @@ export abstract class ITradesToUserItemsRepository {
   public abstract findTradesToReceiverItems(
     options: FindEntitiesOptions<FindTradesToReceiverItemsWhere>,
   ): Promise<Array<TradeToReceiverItemEntity>>;
+
+  public abstract findTradesToUserItemsWithPagination(
+    options: FindEntitiesWithPaginationOptions<FindTradesToUserItemsWhere>,
+  ): Promise<PaginatedArray<TradeToUserItemEntity>>;
+
+  public abstract findTradesToSenderItemsWithPagination(
+    options: FindEntitiesWithPaginationOptions<FindTradesToSenderItemsWhere>,
+  ): Promise<PaginatedArray<TradeToSenderItemEntity>>;
+
+  public abstract findTradesToReceiverItemsWithPagination(
+    options: FindEntitiesWithPaginationOptions<FindTradesToReceiverItemsWhere>,
+  ): Promise<PaginatedArray<TradeToReceiverItemEntity>>;
 
   public abstract createTradesToSenderItems(
     valuesArray: Array<CreateTradeToSenderItemEntityValues>,

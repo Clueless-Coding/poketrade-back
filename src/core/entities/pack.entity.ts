@@ -1,5 +1,6 @@
 import { AutoMap } from '@automapper/classes';
 import { UUIDv4 } from 'src/common/types';
+import { PokemonEntity } from './pokemon.entity';
 
 export class PackEntity {
   @AutoMap()
@@ -22,6 +23,8 @@ export type CreatePackEntityValues = Omit<PackEntity,
   | 'id'
   | 'createdAt'
   | 'updatedAt'
->;
+> & {
+  pokemons: Array<PokemonEntity>,
+};
 
 export type UpdatePackEntityValues = Partial<CreatePackEntityValues>;

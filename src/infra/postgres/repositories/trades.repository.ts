@@ -11,6 +11,7 @@ import {
   AcceptedTradeEntity,
   RejectedTradeEntity,
   CreatePendingTradeEntityValues,
+  TradeStatus,
 } from 'src/core/entities/trade.entity'
 import {
   TradeToSenderItemEntity,
@@ -18,12 +19,16 @@ import {
 } from 'src/core/entities/trade-to-user-item.entity'
 import { InjectDatabase } from 'src/infra/ioc/decorators/inject-database.decorator';
 import { and, eq, inArray, sql, SQL } from 'drizzle-orm';
-import { Optional } from 'src/common/types';
+import { Optional, PaginatedArray, UUIDv4 } from 'src/common/types';
 import { alias } from 'drizzle-orm/pg-core';
 import { AppEntityNotFoundException } from 'src/core/exceptions';
-import { FindEntitiesOptions, FindEntityByIdOptions, FindEntityOptions } from 'src/core/types';
+import { FindEntitiesOptions, FindEntitiesWithPaginationOptions, FindEntityByIdOptions, FindEntityOptions } from 'src/core/types';
 import { FindPendingTradesWhere, FindTradesWhere, ITradesRepository } from 'src/core/repositories/trades.repository';
 import { ITradesToUserItemsRepository } from 'src/core/repositories/trades-to-user-items.repository';
+import { mapArrayToPaginatedArray } from 'src/common/helpers/map-array-to-paginated-array.helper';
+import { transformPaginationOptions } from 'src/common/helpers/transform-pagination-options.helper';
+import { calculateOffsetFromPaginationOptions } from 'src/common/helpers/calculate-offset-from-pagination-options.helper';
+import { getTotalPaginationMeta } from 'src/common/helpers/get-total-pagination-meta.helper';
 
 export const mapTradesRowToEntity = (
   row: Record<'trades' | 'senders' | 'receivers', any>,
@@ -70,6 +75,36 @@ export class TradesRepository implements ITradesRepository {
       .where(this.mapWhereToSQL(where));
   }
 
+  public async findTradesWithPagination(
+    options: FindEntitiesWithPaginationOptions<FindTradesWhere>,
+  ): Promise<PaginatedArray<TradeEntity>> {
+    const {
+      paginationOptions,
+      where = {},
+    } = options;
+
+    const transformedPaginationOptions = transformPaginationOptions(paginationOptions);
+
+    const { page, limit } = transformedPaginationOptions;
+    const offset = calculateOffsetFromPaginationOptions(transformedPaginationOptions);
+
+    const { totalItems, totalPages } = await getTotalPaginationMeta({
+      db: this.db,
+      table: tradesTable,
+      whereSQL: this.mapWhereToSQL(where),
+      limit,
+    });
+
+    return this
+      .baseSelectBuilder(options)
+      .offset(offset)
+      .limit(limit)
+      .then((rows) => mapArrayToPaginatedArray(
+        rows.map((row) => mapTradesRowToEntity(row)),
+        { page, limit, totalItems, totalPages },
+      ));
+  }
+
   public async findTrade(
     options: FindEntityOptions<FindTradesWhere>,
   ): Promise<TradeEntity> {
@@ -93,13 +128,25 @@ export class TradesRepository implements ITradesRepository {
     return trade;
   }
 
+  public findTradeById(options: FindEntityByIdOptions<UUIDv4>): Promise<TradeEntity> {
+    const {
+      id,
+      notFoundErrorMessageFn = (id) => `Trade (\`${id}\`) not found`,
+    } = options;
+
+    return this.findTrade({
+      where: { id },
+      notFoundErrorMessage: notFoundErrorMessageFn(id),
+    });
+  }
+
   public async findPendingTrade(
     options: FindEntityOptions<FindPendingTradesWhere>,
   ): Promise<PendingTradeEntity> {
     const {
       notFoundErrorMessage = 'Pending trade not found',
     } = options;
-    const status = 'PENDING';
+    const status = TradeStatus.PENDING;
 
     return this
       .findTrade({
@@ -117,7 +164,7 @@ export class TradesRepository implements ITradesRepository {
   }
 
   public async findPendingTradeById(
-    options: FindEntityByIdOptions,
+    options: FindEntityByIdOptions<UUIDv4>,
   ): Promise<PendingTradeEntity> {
     const {
       id,
@@ -138,7 +185,7 @@ export class TradesRepository implements ITradesRepository {
     tradesToSenderItems: Array<TradeToSenderItemEntity>,
     tradesToReceiverItems: Array<TradeToReceiverItemEntity>,
   }> {
-    const status = 'PENDING';
+    const status = TradeStatus.PENDING;
     const { sender, senderItems, receiver, receiverItems } = values;
 
     const pendingTrade = await (tx ?? this.db)
@@ -186,7 +233,7 @@ export class TradesRepository implements ITradesRepository {
     pendingTrade: PendingTradeEntity,
     tx?: Transaction,
   ): Promise<CancelledTradeEntity> {
-    const status = 'CANCELLED';
+    const status = TradeStatus.CANCELLED;
     const { sender, receiver } = pendingTrade;
 
     return (tx ?? this.db)
@@ -208,7 +255,7 @@ export class TradesRepository implements ITradesRepository {
     pendingTrade: PendingTradeEntity,
     tx?: Transaction,
   ): Promise<AcceptedTradeEntity> {
-    const status = 'ACCEPTED';
+    const status = TradeStatus.ACCEPTED;
     const { sender, receiver } = pendingTrade;
 
     return (tx ?? this.db)
@@ -230,7 +277,7 @@ export class TradesRepository implements ITradesRepository {
     pendingTrade: PendingTradeEntity,
     tx?: Transaction,
   ): Promise<RejectedTradeEntity> {
-    const status = 'REJECTED';
+    const status = TradeStatus.REJECTED;
     const { sender, receiver } = pendingTrade;
 
     return (tx ?? this.db)

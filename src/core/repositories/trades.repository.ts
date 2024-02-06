@@ -8,8 +8,8 @@ import {
   RejectedTradeEntity,
 } from '../entities/trade.entity';
 import { TradeToSenderItemEntity, TradeToReceiverItemEntity, } from '../entities/trade-to-user-item.entity'
-import { UUIDv4 } from 'src/common/types';
-import { FindEntityByIdOptions, FindEntityOptions } from '../types';
+import { PaginatedArray, UUIDv4 } from 'src/common/types';
+import { FindEntitiesWithPaginationOptions, FindEntityByIdOptions, FindEntityOptions } from '../types';
 
 export type FindTradesWhere = Partial<{
   id: UUIDv4,
@@ -24,12 +24,20 @@ export abstract class ITradesRepository {
     options: FindEntityOptions<FindTradesWhere>,
   ): Promise<TradeEntity>;
 
+  public abstract findTradeById(
+    options: FindEntityByIdOptions<UUIDv4>,
+  ): Promise<TradeEntity>;
+
+  public abstract findTradesWithPagination(
+    options: FindEntitiesWithPaginationOptions<FindTradesWhere>,
+  ): Promise<PaginatedArray<TradeEntity>>;
+
   public abstract findPendingTrade(
     options: FindEntityOptions<FindPendingTradesWhere>,
   ): Promise<PendingTradeEntity>;
 
   public abstract findPendingTradeById(
-    options: FindEntityByIdOptions,
+    options: FindEntityByIdOptions<UUIDv4>,
   ): Promise<PendingTradeEntity>;
 
   public abstract createPendingTrade(
