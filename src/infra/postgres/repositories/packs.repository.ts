@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Nullable, Optional, PaginatedArray, UUIDv4 } from 'src/common/types';
+import { Optional, PaginatedArray, UUIDv4 } from 'src/common/types';
 import { packsTable, packsToPokemonsTable, pokemonsTable } from 'src/infra/postgres/tables';
 import { CreatePackEntityValues, PackEntity, UpdatePackEntityValues } from 'src/core/entities/pack.entity';
 import { PokemonEntity } from 'src/core/entities/pokemon.entity';

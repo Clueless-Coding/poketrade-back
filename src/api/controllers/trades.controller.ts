@@ -11,9 +11,9 @@ import { PaginationOptionsInputDTO } from '../dtos/pagination.input.dto';
 import { mapPaginatedArray } from 'src/common/helpers/map-paginated-array.helper';
 import { TradeEntity } from 'src/core/entities/trade.entity';
 import { UUIDv4Param } from '../decorators/uuidv4-param.decorator';
-import { TradesToUserItemsService } from 'src/core/services/trades-to-user-items.service';
-import { TradeToReceiverItemEntity, TradeToSenderItemEntity } from 'src/core/entities/trade-to-user-item.entity';
-import { UserItemOutputDTO } from '../dtos/user-items/user-item.output.dto';
+import { TradesToItemsService } from 'src/core/services/trades-to-items.service';
+import { TradeToReceiverItemEntity, TradeToSenderItemEntity } from 'src/core/entities/trade-to-item.entity';
+import { ItemOutputDTO } from '../dtos/items/item.output.dto';
 
 @ApiTags('Trades')
 @Controller('trades')
@@ -23,7 +23,7 @@ export class TradesController {
     private readonly mapper: Mapper,
 
     private readonly tradesService: TradesService,
-    private readonly tradesToUserItemsService: TradesToUserItemsService,
+    private readonly tradesToItemsService: TradesToItemsService,
   ) {}
 
   @ApiOkResponseWithPagination({ type: TradeOutputDTO })
@@ -50,39 +50,39 @@ export class TradesController {
     return this.mapper.map(trade, TradeEntity, TradeOutputDTO);
   }
 
-  @ApiOkResponseWithPagination({ type: UserItemOutputDTO })
+  @ApiOkResponseWithPagination({ type: ItemOutputDTO })
   @ApiBearerAuth('AccessToken')
   @Get(':id/sender-items')
   @UseGuards(AccessTokenAuthGuard)
   public async getTradeSenderItemsWithPaginationByTradeId(
     @UUIDv4Param('id') id: UUIDv4,
     @Query() paginationOptionsDTO: PaginationOptionsInputDTO,
-  ): Promise<PaginatedArray<UserItemOutputDTO>> {
-    const tradesToSenderItems = await this.tradesToUserItemsService.getTradesToSenderItemsWithPaginationByTradeId(id, paginationOptionsDTO);
+  ): Promise<PaginatedArray<ItemOutputDTO>> {
+    const tradesToSenderItems = await this.tradesToItemsService.getTradesToSenderItemsWithPaginationByTradeId(id, paginationOptionsDTO);
 
     return mapPaginatedArray(
       this.mapper,
       tradesToSenderItems,
       TradeToSenderItemEntity,
-      UserItemOutputDTO,
+      ItemOutputDTO,
     );
   }
 
-  @ApiOkResponseWithPagination({ type: UserItemOutputDTO })
+  @ApiOkResponseWithPagination({ type: ItemOutputDTO })
   @ApiBearerAuth('AccessToken')
   @Get(':id/receiver-items')
   @UseGuards(AccessTokenAuthGuard)
   public async getTradeReceiverItemsWithPaginationByTradeId(
     @UUIDv4Param('id') id: UUIDv4,
     @Query() paginationOptionsDTO: PaginationOptionsInputDTO,
-  ): Promise<PaginatedArray<UserItemOutputDTO>> {
-    const tradesToReceiverItems = await this.tradesToUserItemsService.getTradesToReceiverItemsWithPaginationByTradeId(id, paginationOptionsDTO);
+  ): Promise<PaginatedArray<ItemOutputDTO>> {
+    const tradesToReceiverItems = await this.tradesToItemsService.getTradesToReceiverItemsWithPaginationByTradeId(id, paginationOptionsDTO);
 
     return mapPaginatedArray(
       this.mapper,
       tradesToReceiverItems,
       TradeToReceiverItemEntity,
-      UserItemOutputDTO,
+      ItemOutputDTO,
     );
   }
 }

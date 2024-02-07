@@ -5,22 +5,24 @@ import { Database, Transaction } from 'src/infra/postgres/types';
 import { AcceptedTradeEntity, CancelledTradeEntity, PendingTradeEntity, RejectedTradeEntity } from '../entities/trade.entity';
 import { UserEntity } from '../entities/user.entity';
 import { ITradesRepository } from '../repositories/trades.repository';
-import { ITradesToUserItemsRepository } from '../repositories/trades-to-user-items.repository';
+import { ITradesToItemsRepository } from '../repositories/trades-to-items.repository';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { PENDING_TRADE_ACCEPTED_EVENT, PENDING_TRADE_CREATED_EVENT } from '../events';
 import { IUsersRepository } from '../repositories/users.repository';
 import { IUserItemsRepository } from '../repositories/user-items.repository';
 import { AppConflictException, AppValidationException } from '../exceptions';
 import { InjectDatabase } from 'src/infra/ioc/decorators/inject-database.decorator';
-import { TradeToReceiverItemEntity, TradeToSenderItemEntity } from '../entities/trade-to-user-item.entity';
+import { TradeToReceiverItemEntity, TradeToSenderItemEntity } from '../entities/trade-to-item.entity';
+import { IItemsRepository } from '../repositories/items.repository';
 
 @Injectable()
 export class PendingTradesService {
   public constructor(
     private readonly tradesRepository: ITradesRepository,
-    private readonly tradesToUserItemsRepository: ITradesToUserItemsRepository,
+    private readonly tradesToItemsRepository: ITradesToItemsRepository,
     private readonly userItemsRepository: IUserItemsRepository,
     private readonly usersRepository: IUsersRepository,
+    private readonly itemsRepository: IItemsRepository,
     private readonly eventEmitter: EventEmitter2,
     @InjectDatabase()
     private readonly db: Database,
@@ -42,7 +44,7 @@ export class PendingTradesService {
     }
 
     const [senderItems, receiver, receiverItems] = await Promise.all([
-      this.userItemsRepository.findUserItemsByIds({
+      this.userItemsRepository.findUserItemsByItemIds({
         ids: dto.senderItemIds,
         notFoundErrorMessageFn: (id) => `Trade sender item (\`${id}\`) not found`,
       }),
@@ -50,7 +52,7 @@ export class PendingTradesService {
         id: dto.receiverId,
         notFoundErrorMessageFn: (id) => `Trade receiver (\`${id}\`) not found`,
       }),
-      this.userItemsRepository.findUserItemsByIds({
+      this.userItemsRepository.findUserItemsByItemIds({
         ids: dto.receiverItemIds,
         notFoundErrorMessageFn: (id) => `Trade receiver item (\`${id}\`) not found`,
       }),
@@ -63,7 +65,7 @@ export class PendingTradesService {
     for (const senderItem of senderItems) {
       if (senderItem.user.id !== sender.id) {
         throw new AppConflictException(
-          `Trade sender item (\`${senderItem.id}\`) does not belong to you`,
+          `Trade sender item (\`${senderItem.item.id}\`) does not belong to you`,
         );
       }
     }
@@ -71,7 +73,7 @@ export class PendingTradesService {
     for (const receiverItem of receiverItems) {
       if (receiverItem.user.id !== receiver.id) {
         throw new AppConflictException(
-          `Trade receiver item (\`${receiverItem.id}\`) does not belong to them`,
+          `Trade receiver item (\`${receiverItem.item.id}\`) does not belong to them`,
         );
       }
     }
@@ -142,26 +144,35 @@ export class PendingTradesService {
     }
 
     const [tradesToSenderItems, tradesToReceiverItems] = await Promise.all([
-      this.tradesToUserItemsRepository.findTradesToSenderItems({
+      this.tradesToItemsRepository.findTradesToSenderItems({
         where: {
           tradeId: pendingTrade.id,
         },
       }),
-      this.tradesToUserItemsRepository.findTradesToReceiverItems({
+      this.tradesToItemsRepository.findTradesToReceiverItems({
         where: {
           tradeId: pendingTrade.id,
         },
       }),
     ]);
 
+    const [senderUserItems, receiverUserItems] = await Promise.all([
+      this.itemsRepository.convertItemsToUserItems(
+        tradesToSenderItems.map(({ senderItem }) => senderItem),
+      ),
+      this.itemsRepository.convertItemsToUserItems(
+        tradesToReceiverItems.map(({ receiverItem }) => receiverItem),
+      )
+    ]);
+
     await Promise.all([
       this.userItemsRepository.transferUserItemsToAnotherUser(
-        tradesToSenderItems.map(({ senderItem }) => senderItem),
+        senderUserItems,
         receiver,
         tx,
       ),
       this.userItemsRepository.transferUserItemsToAnotherUser(
-        tradesToReceiverItems.map(({ receiverItem }) => receiverItem),
+        receiverUserItems,
         sender,
         tx,
       ),

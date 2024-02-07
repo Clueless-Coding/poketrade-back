@@ -10,14 +10,11 @@ import {
 } from '../types';
 
 export type FindUserItemsWhere = Partial<{
-  id: UUIDv4,
-  ids: Array<UUIDv4>,
   userId: UUIDv4,
-  pokemonId: number,
+  itemId: UUIDv4,
+  itemIds: Array<UUIDv4>,
   userName: string,
   userNameLike: string,
-  pokemonName: string,
-  pokemonNameLike: string,
 }>;
 
 export abstract class IUserItemsRepository {
@@ -25,7 +22,7 @@ export abstract class IUserItemsRepository {
     findUserItemsOptions: FindEntitiesOptions<FindUserItemsWhere>
   ): Promise<Array<UserItemEntity>>;
 
-  public abstract findUserItemsByIds(
+  public abstract findUserItemsByItemIds(
     options: FindEntitiesByIdsOptions<UUIDv4>,
   ): Promise<Array<UserItemEntity>>;
 
@@ -37,7 +34,7 @@ export abstract class IUserItemsRepository {
     options: FindEntityOptions<FindUserItemsWhere>,
   ): Promise<UserItemEntity>;
 
-  public abstract findUserItemById(
+  public abstract findUserItemByItemId(
     options: FindEntityByIdOptions<UUIDv4>,
   ): Promise<UserItemEntity>;
 

@@ -16,7 +16,7 @@ import {
 import {
   TradeToSenderItemEntity,
   TradeToReceiverItemEntity,
-} from 'src/core/entities/trade-to-user-item.entity'
+} from 'src/core/entities/trade-to-item.entity'
 import { InjectDatabase } from 'src/infra/ioc/decorators/inject-database.decorator';
 import { and, eq, inArray, sql, SQL } from 'drizzle-orm';
 import { Optional, PaginatedArray, UUIDv4 } from 'src/common/types';
@@ -24,7 +24,7 @@ import { alias } from 'drizzle-orm/pg-core';
 import { AppEntityNotFoundException } from 'src/core/exceptions';
 import { FindEntitiesOptions, FindEntitiesWithPaginationOptions, FindEntityByIdOptions, FindEntityOptions } from 'src/core/types';
 import { FindPendingTradesWhere, FindTradesWhere, ITradesRepository } from 'src/core/repositories/trades.repository';
-import { ITradesToUserItemsRepository } from 'src/core/repositories/trades-to-user-items.repository';
+import { ITradesToItemsRepository } from 'src/core/repositories/trades-to-items.repository';
 import { mapArrayToPaginatedArray } from 'src/common/helpers/map-array-to-paginated-array.helper';
 import { transformPaginationOptions } from 'src/common/helpers/transform-pagination-options.helper';
 import { calculateOffsetFromPaginationOptions } from 'src/common/helpers/calculate-offset-from-pagination-options.helper';
@@ -46,7 +46,7 @@ export class TradesRepository implements ITradesRepository {
     @InjectDatabase()
     private readonly db: Database,
 
-    private readonly tradesToUserItemsRepository: ITradesToUserItemsRepository,
+    private readonly tradesToItemsRepository: ITradesToItemsRepository,
   ) {}
 
   private mapWhereToSQL(
@@ -206,17 +206,17 @@ export class TradesRepository implements ITradesRepository {
       }));
 
     const [tradesToSenderItems, tradesToReceiverItems] = await Promise.all([
-      this.tradesToUserItemsRepository.createTradesToSenderItems(
+      this.tradesToItemsRepository.createTradesToSenderItems(
         senderItems.map((senderItem) => ({
           trade: pendingTrade,
-          senderItem,
+          senderItem: senderItem.item,
         })),
         tx,
       ),
-      this.tradesToUserItemsRepository.createTradesToReceiverItems(
+      this.tradesToItemsRepository.createTradesToReceiverItems(
         receiverItems.map((receiverItem) => ({
           trade: pendingTrade,
-          receiverItem,
+          receiverItem: receiverItem.item,
         })),
         tx,
       ),

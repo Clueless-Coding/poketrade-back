@@ -1,33 +1,33 @@
-import { uuid, integer, pgTable, timestamp } from 'drizzle-orm/pg-core';
-import { baseIdColumn } from '../base-columns';
+import { uuid, pgTable, timestamp, index } from 'drizzle-orm/pg-core';
 import { usersTable } from './users.table';
-import { pokemonsTable } from './pokemons.table';
 import { UUIDv4 } from 'src/common/types';
 import { relations } from 'drizzle-orm';
+import { itemsTable } from './items.table';
 
-export const userItemsTableColumns = {
-  ...baseIdColumn,
-  receivedAt: timestamp('received_at', { withTimezone: true })
+export const userItemsTable = pgTable('user_items', {
+  itemId: uuid('item_id')
     .notNull()
-    .defaultNow(),
+    .primaryKey()
+    .$type<UUIDv4>()
+    .references(() => itemsTable.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
   userId: uuid('user_id')
     .$type<UUIDv4>()
     .notNull()
     .references(() => usersTable.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
-  pokemonId: integer('pokemon_id')
+  receivedAt: timestamp('received_at', { withTimezone: true })
     .notNull()
-    .references(() => pokemonsTable.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
-}
-
-export const userItemsTable = pgTable('user_items', userItemsTableColumns);
+    .defaultNow(),
+}, (table) => ({
+    userIdIdx: index().on(table.userId),
+}));
 
 export const userItemsTableRelations = relations(userItemsTable, ({ one }) => ({
   user: one(usersTable, {
     fields: [userItemsTable.userId],
     references: [usersTable.id],
   }),
-  pokemon: one(pokemonsTable, {
-    fields: [userItemsTable.pokemonId],
-    references: [pokemonsTable.id],
+  item: one(itemsTable, {
+    fields: [userItemsTable.itemId],
+    references: [itemsTable.id],
   }),
 }));

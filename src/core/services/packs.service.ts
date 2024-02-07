@@ -16,6 +16,7 @@ import { CreatePackInputDTO } from 'src/api/dtos/packs/create-pack.input.dto';
 import { PackToPokemonEntity } from '../entities/pack-to-pokemon.entity';
 import { IPokemonsRepository } from '../repositories/pokemons.repository';
 import { UpdatePackByIdInputDTO } from 'src/api/dtos/packs/update-pack-by-id.input.dto';
+import { IItemsRepository } from '../repositories/items.repository';
 
 @Injectable()
 export class PacksService {
@@ -25,6 +26,7 @@ export class PacksService {
     private readonly pokemonsRepository: IPokemonsRepository,
     private readonly usersRepository: IUsersRepository,
     private readonly userItemsRepository: IUserItemsRepository,
+    private readonly itemsRepository: IItemsRepository,
 
     @InjectDatabase()
     private readonly db: Database,
@@ -63,12 +65,13 @@ export class PacksService {
     const pokemon = awaitedPromises[0];
     user = awaitedPromises[1];
 
-    const userItem = await this.userItemsRepository.createUserItem({ user, pokemon });
+    const item = await this.itemsRepository.createItem({ pokemon });
+    const userItem = await this.userItemsRepository.createUserItem({ user, item });
 
     return this.openedPacksRepository.createOpenedPack({
       user: userItem.user,
       pack,
-      pokemon: userItem.pokemon,
+      item: userItem.item,
     }, tx);
   }
 

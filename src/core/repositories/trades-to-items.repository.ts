@@ -5,23 +5,23 @@ import {
   CreateTradeToSenderItemEntityValues,
   TradeToReceiverItemEntity,
   TradeToSenderItemEntity,
-  TradeToUserItemEntity,
-  TradeToUserItemUserType,
-} from '../entities/trade-to-user-item.entity';
+  TradeToItemEntity,
+  TradeToItemUserType,
+} from '../entities/trade-to-item.entity';
 
-export type FindTradesToUserItemsWhere = Partial<{
+export type FindTradesToItemsWhere = Partial<{
   tradeId: UUIDv4,
-  userType: TradeToUserItemUserType,
-  userItemId: UUIDv4,
+  userType: TradeToItemUserType,
+  itemId: UUIDv4,
 }>;
 
-export type FindTradesToSenderItemsWhere = Omit<FindTradesToUserItemsWhere, 'userType'>;
-export type FindTradesToReceiverItemsWhere = Omit<FindTradesToUserItemsWhere, 'userType'>;
+export type FindTradesToSenderItemsWhere = Omit<FindTradesToItemsWhere, 'userType'>;
+export type FindTradesToReceiverItemsWhere = Omit<FindTradesToItemsWhere, 'userType'>;
 
-export abstract class ITradesToUserItemsRepository {
-  public abstract findTradesToUserItems(
-    options: FindEntitiesOptions<FindTradesToUserItemsWhere>,
-  ): Promise<Array<TradeToUserItemEntity>>;
+export abstract class ITradesToItemsRepository {
+  public abstract findTradesToItems(
+    options: FindEntitiesOptions<FindTradesToItemsWhere>,
+  ): Promise<Array<TradeToItemEntity>>;
 
   public abstract findTradesToSenderItems(
     options: FindEntitiesOptions<FindTradesToSenderItemsWhere>,
@@ -31,9 +31,9 @@ export abstract class ITradesToUserItemsRepository {
     options: FindEntitiesOptions<FindTradesToReceiverItemsWhere>,
   ): Promise<Array<TradeToReceiverItemEntity>>;
 
-  public abstract findTradesToUserItemsWithPagination(
-    options: FindEntitiesWithPaginationOptions<FindTradesToUserItemsWhere>,
-  ): Promise<PaginatedArray<TradeToUserItemEntity>>;
+  public abstract findTradesToItemsWithPagination(
+    options: FindEntitiesWithPaginationOptions<FindTradesToItemsWhere>,
+  ): Promise<PaginatedArray<TradeToItemEntity>>;
 
   public abstract findTradesToSenderItemsWithPagination(
     options: FindEntitiesWithPaginationOptions<FindTradesToSenderItemsWhere>,

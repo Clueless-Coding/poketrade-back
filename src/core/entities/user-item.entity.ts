@@ -1,17 +1,14 @@
-import { UUIDv4 } from 'src/common/types';
 import { UserEntity } from './user.entity';
-import { PokemonEntity } from './pokemon.entity';
 import { AutoMap } from '@automapper/classes';
+import { ItemEntity } from './item.entity';
 
 export class UserItemEntity {
-  @AutoMap()
-  public readonly id: UUIDv4;
   @AutoMap()
   public readonly receivedAt: Date;
   @AutoMap(() => UserEntity)
   public readonly user: UserEntity;
-  @AutoMap(() => PokemonEntity)
-  public readonly pokemon: PokemonEntity;
+  @AutoMap(() => ItemEntity)
+  public readonly item: ItemEntity;
 }
 
 export type CreateUserItemEntityValues = Omit<UserItemEntity,

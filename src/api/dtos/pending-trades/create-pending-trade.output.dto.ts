@@ -1,18 +1,18 @@
 import { PendingTradeOutputDTO } from './pending-trade.output.dto';
 import { AutoMap } from '@automapper/classes';
-import { UserItemOutputDTO } from '../user-items/user-item.output.dto';
 import { ApiProperty } from '@nestjs/swagger';
+import { ItemOutputDTO } from '../items/item.output.dto';
 
 export class CreatePendingTradeOutputDTO {
   @ApiProperty({ type: PendingTradeOutputDTO })
   @AutoMap(() => PendingTradeOutputDTO)
   public readonly pendingTrade: PendingTradeOutputDTO;
 
-  @ApiProperty({ type: UserItemOutputDTO, isArray: true })
-  @AutoMap(() => [UserItemOutputDTO])
-  public readonly senderItems: Array<UserItemOutputDTO>;
+  @ApiProperty({ type: ItemOutputDTO, isArray: true })
+  @AutoMap(() => [ItemOutputDTO])
+  public readonly senderItems: Array<ItemOutputDTO>;
 
-  @ApiProperty({ type: UserItemOutputDTO, isArray: true })
-  @AutoMap(() => [UserItemOutputDTO])
-  public readonly receiverItems: Array<UserItemOutputDTO>;
+  @ApiProperty({ type: ItemOutputDTO, isArray: true })
+  @AutoMap(() => [ItemOutputDTO])
+  public readonly receiverItems: Array<ItemOutputDTO>;
 }

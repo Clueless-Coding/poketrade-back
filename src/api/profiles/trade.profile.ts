@@ -13,9 +13,9 @@ import { CancelledTradeOuputDTO } from '../dtos/cancelled-trades/cancelled-trade
 import { PendingTradeOutputDTO } from '../dtos/pending-trades/pending-trade.output.dto';
 import { RejectedTradeOutputDTO } from '../dtos/rejected-trades/rejected-trade.output.dto';
 import { TradeOutputDTO } from '../dtos/trades/trade.output.dto';
-import { TradeToReceiverItemEntity, TradeToSenderItemEntity } from 'src/core/entities/trade-to-user-item.entity';
-import { UserItemEntity } from 'src/core/entities/user-item.entity';
+import { TradeToReceiverItemEntity, TradeToSenderItemEntity } from 'src/core/entities/trade-to-item.entity';
 import { UserItemOutputDTO } from '../dtos/user-items/user-item.output.dto';
+import { ItemOutputDTO } from '../dtos/items/item.output.dto';
 
 @Injectable()
 export class TradeProfile extends AutomapperProfile {
@@ -53,14 +53,14 @@ export class TradeProfile extends AutomapperProfile {
       createMap(
         mapper,
         TradeToSenderItemEntity,
-        UserItemOutputDTO,
-        forSelf(UserItemOutputDTO, (source) => source.senderItem),
+        ItemOutputDTO,
+        forSelf(ItemOutputDTO, (source) => source.senderItem),
       );
       createMap(
         mapper,
         TradeToReceiverItemEntity,
-        UserItemOutputDTO,
-        forSelf(UserItemOutputDTO, (source) => source.receiverItem),
+        ItemOutputDTO,
+        forSelf(ItemOutputDTO, (source) => source.receiverItem),
       )
     };
   }

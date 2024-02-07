@@ -1,10 +1,10 @@
-import { uuid, pgTable, integer, timestamp } from 'drizzle-orm/pg-core';
+import { uuid, pgTable, timestamp } from 'drizzle-orm/pg-core';
 import { baseIdColumn } from '../base-columns';
 import { usersTable } from './users.table';
 import { packsTable } from './packs.table';
-import { pokemonsTable } from './pokemons.table';
 import { UUIDv4 } from 'src/common/types';
 import { relations } from 'drizzle-orm';
+import { itemsTable } from './items.table';
 
 export const openedPacksTable = pgTable('opened_packs', {
   ...baseIdColumn,
@@ -19,9 +19,10 @@ export const openedPacksTable = pgTable('opened_packs', {
     .$type<UUIDv4>()
     .notNull()
     .references(() => packsTable.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
-  pokemonId: integer('pokemon_id')
+  itemId: uuid('item_id')
+    .$type<UUIDv4>()
     .notNull()
-    .references(() => pokemonsTable.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
+    .references(() => itemsTable.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
 })
 
 export const openedPacksTableRelations = relations(openedPacksTable, ({ one }) => ({
@@ -33,8 +34,8 @@ export const openedPacksTableRelations = relations(openedPacksTable, ({ one }) =
     fields: [openedPacksTable.packId],
     references: [packsTable.id],
   }),
-  pokemon: one(pokemonsTable, {
-    fields: [openedPacksTable.pokemonId],
-    references: [pokemonsTable.id],
+  item: one(itemsTable, {
+    fields: [openedPacksTable.itemId],
+    references: [itemsTable.id],
   }),
 }));

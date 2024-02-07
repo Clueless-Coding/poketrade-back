@@ -5,36 +5,38 @@ import { PostgresModule } from '../../postgres/postgres.module';
 import { UsersModule } from './users.module';
 import { UserItemsModule } from './user-items.module';
 import { PendingTradesService } from 'src/core/services/pending-trades.service';
-import { ITradesToUserItemsRepository } from 'src/core/repositories/trades-to-user-items.repository';
+import { ITradesToItemsRepository } from 'src/core/repositories/trades-to-items.repository';
 import { TradesRepository } from 'src/infra/postgres/repositories/trades.repository';
-import { TradesToUserItemsRepository } from 'src/infra/postgres/repositories/trades-to-user-items.repository';
-import { TradesToUserItemsService } from 'src/core/services/trades-to-user-items.service';
+import { TradesToItemsRepository } from 'src/infra/postgres/repositories/trades-to-items.repository';
+import { TradesToItemsService } from 'src/core/services/trades-to-items.service';
+import { ItemsModule } from './items.module';
 
 @Module({
   imports: [
     PostgresModule,
     UsersModule,
     UserItemsModule,
+    ItemsModule,
   ],
   providers: [
     TradesService,
     PendingTradesService,
-    TradesToUserItemsService,
+    TradesToItemsService,
     {
       provide: ITradesRepository,
       useClass: TradesRepository,
     },
     {
-      provide: ITradesToUserItemsRepository,
-      useClass: TradesToUserItemsRepository,
+      provide: ITradesToItemsRepository,
+      useClass: TradesToItemsRepository,
     },
   ],
   exports: [
     TradesService,
     PendingTradesService,
-    TradesToUserItemsService,
+    TradesToItemsService,
     ITradesRepository,
-    ITradesToUserItemsRepository,
+    ITradesToItemsRepository,
   ],
 })
 export class TradesModule {}

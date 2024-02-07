@@ -7,7 +7,7 @@ import {
   AcceptedTradeEntity,
   RejectedTradeEntity,
 } from '../entities/trade.entity';
-import { TradeToSenderItemEntity, TradeToReceiverItemEntity, } from '../entities/trade-to-user-item.entity'
+import { TradeToSenderItemEntity, TradeToReceiverItemEntity, } from '../entities/trade-to-item.entity'
 import { PaginatedArray, UUIDv4 } from 'src/common/types';
 import { FindEntitiesWithPaginationOptions, FindEntityByIdOptions, FindEntityOptions } from '../types';
 

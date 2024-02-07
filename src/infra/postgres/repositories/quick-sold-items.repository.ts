@@ -1,14 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { Database, Transaction } from 'src/infra/postgres/types';
 import { InjectDatabase } from 'src/infra/ioc/decorators/inject-database.decorator';
-import { quickSoldUserItemsTable } from 'src/infra/postgres/tables';
-import { QuickSoldUserItemEntity } from 'src/core/entities/quick-sold-user-item.entity';
+import { quickSoldItemsTable } from 'src/infra/postgres/tables';
+import { QuickSoldItemEntity } from 'src/core/entities/quick-sold-item.entity';
 import { UserItemEntity } from 'src/core/entities/user-item.entity';
 import { IUserItemsRepository } from 'src/core/repositories/user-items.repository';
-import { IQuickSoldUserItemsRepository } from 'src/core/repositories/quick-sold-user-items.repository';
+import { IQuickSoldItemsRepository } from 'src/core/repositories/quick-sold-items.repository';
 
 @Injectable()
-export class QuickSoldUserItemsRepository implements IQuickSoldUserItemsRepository {
+export class QuickSoldItemsRepository implements IQuickSoldItemsRepository {
   public constructor(
     @InjectDatabase()
     private readonly db: Database,
@@ -16,29 +16,29 @@ export class QuickSoldUserItemsRepository implements IQuickSoldUserItemsReposito
     private readonly userItemsRepository: IUserItemsRepository,
   ) {}
 
-  public async createQuickSoldUserItem(
+  public async createQuickSoldItem(
     userItem: UserItemEntity,
     tx?: Transaction,
-  ): Promise<QuickSoldUserItemEntity> {
-    const { user, pokemon } = userItem;
+  ): Promise<QuickSoldItemEntity> {
+    const { user, item } = userItem;
 
-    const [quickSoldUserItem] = await Promise.all([
+    const [quickSoldItem] = await Promise.all([
       (tx ?? this.db)
-        .insert(quickSoldUserItemsTable)
+        .insert(quickSoldItemsTable)
         .values({
           ...userItem,
           userId: userItem.user.id,
-          pokemonId: userItem.pokemon.id,
+          itemId: userItem.item.id,
         })
       .returning()
-        .then(([quickSoldUserItem]) => ({
-          ...quickSoldUserItem!,
+        .then(([quickSoldItem]) => ({
+          ...quickSoldItem!,
           user,
-          pokemon,
+          item,
         })),
       this.userItemsRepository.deleteUserItem(userItem, tx),
     ]);
 
-    return quickSoldUserItem;
+    return quickSoldItem;
   }
 }

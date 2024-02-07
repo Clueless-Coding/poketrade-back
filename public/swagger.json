@@ -329,7 +329,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/QuickSoldUserItemOutputDTO"
+                  "$ref": "#/components/schemas/QuickSoldItemOutputDTO"
                 }
               }
             }
@@ -1023,7 +1023,7 @@
                     "items": {
                       "type": "array",
                       "items": {
-                        "$ref": "#/components/schemas/UserItemOutputDTO"
+                        "$ref": "#/components/schemas/ItemOutputDTO"
                       }
                     },
                     "meta": {
@@ -1115,7 +1115,7 @@
                     "items": {
                       "type": "array",
                       "items": {
-                        "$ref": "#/components/schemas/UserItemOutputDTO"
+                        "$ref": "#/components/schemas/ItemOutputDTO"
                       }
                     },
                     "meta": {
@@ -1556,29 +1556,15 @@
           "pokemon"
         ]
       },
-      "QuickSoldUserItemOutputDTO": {
+      "QuickSoldItemOutputDTO": {
         "type": "object",
         "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "receivedAt": {
-            "format": "date-time",
-            "type": "string"
-          },
-          "pokemon": {
-            "$ref": "#/components/schemas/PokemonOutputDTO"
-          },
           "soldAt": {
             "format": "date-time",
             "type": "string"
           }
         },
         "required": [
-          "id",
-          "receivedAt",
-          "pokemon",
           "soldAt"
         ]
       },
@@ -1775,6 +1761,30 @@
           "receiver"
         ]
       },
+      "ItemOutputDTO": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "pokemon": {
+            "$ref": "#/components/schemas/PokemonOutputDTO"
+          },
+          "owner": {
+            "$ref": "#/components/schemas/UserOutputDTO"
+          }
+        },
+        "required": [
+          "id",
+          "createdAt",
+          "pokemon"
+        ]
+      },
       "CreatePendingTradeInputDTO": {
         "type": "object",
         "properties": {
@@ -1854,13 +1864,13 @@
           "senderItems": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/UserItemOutputDTO"
+              "$ref": "#/components/schemas/ItemOutputDTO"
             }
           },
           "receiverItems": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/UserItemOutputDTO"
+              "$ref": "#/components/schemas/ItemOutputDTO"
             }
           }
         },

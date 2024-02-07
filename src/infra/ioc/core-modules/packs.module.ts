@@ -11,6 +11,7 @@ import { PacksRepository } from 'src/infra/postgres/repositories/packs.repositor
 import { PacksToPokemonsService } from 'src/core/services/packs-to-pokemons.service';
 import { IPacksToPokemonsRepository } from 'src/core/repositories/packs-to-pokemons.repository';
 import { PacksToPokemonsRepository } from 'src/infra/postgres/repositories/packs-to-pokemons.repository';
+import { ItemsModule } from './items.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { PacksToPokemonsRepository } from 'src/infra/postgres/repositories/packs
     PokemonsModule,
     UsersModule,
     UserItemsModule,
+    ItemsModule,
   ],
   providers: [
     PacksService,

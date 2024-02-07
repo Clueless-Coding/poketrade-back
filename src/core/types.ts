@@ -8,10 +8,10 @@ export type FindEntityOptions<TWhere extends Record<string, unknown>> = FindEnti
   notFoundErrorMessage: string,
 }>;
 
-export type FindEntityByIdOptions<TId> = {
-  id: TId,
+export type FindEntityByIdOptions<TIdPropertyType> = {
+  id: TIdPropertyType,
 } & Partial<{
-  notFoundErrorMessageFn: (id: TId) => string,
+  notFoundErrorMessageFn: (id: TIdPropertyType) => string,
 }>;
 
 export type FindEntitiesByIdsOptions<TId> =  {

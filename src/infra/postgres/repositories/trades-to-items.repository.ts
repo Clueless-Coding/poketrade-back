@@ -2,72 +2,73 @@ import { Injectable } from '@nestjs/common';
 import { and, eq, SQL } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
 import { zip } from 'lodash';
-import { Optional, PaginatedArray } from 'src/common/types';
+import { Nullable, Optional, PaginatedArray } from 'src/common/types';
 import { FindEntitiesOptions, FindEntitiesWithPaginationOptions } from 'src/core/types';
 import { InjectDatabase } from 'src/infra/ioc/decorators/inject-database.decorator';
 import { Database, Transaction } from 'src/infra/postgres/types';
 import {
   pokemonsTable,
   tradesTable,
-  tradesToUserItemsTable,
+  tradesToItemsTable,
   userItemsTable,
   usersTable,
 } from 'src/infra/postgres/tables';
 import {
   TradeToReceiverItemEntity,
   TradeToSenderItemEntity,
-  TradeToUserItemEntity,
+  TradeToItemEntity,
   CreateTradeToReceiverItemEntityValues,
   CreateTradeToSenderItemEntityValues,
-  CreateTradeToUserItemEntityValues,
-  TradeToUserItemUserType,
-} from 'src/core/entities/trade-to-user-item.entity';
+  CreateTradeToItemEntityValues,
+  TradeToItemUserType,
+} from 'src/core/entities/trade-to-item.entity';
 import { mapTradesRowToEntity } from './trades.repository';
-import { mapUserItemsRowToEntity } from './user-items.repository';
-import { FindTradesToReceiverItemsWhere, FindTradesToSenderItemsWhere, FindTradesToUserItemsWhere, ITradesToUserItemsRepository } from 'src/core/repositories/trades-to-user-items.repository';
+import { FindTradesToReceiverItemsWhere, FindTradesToSenderItemsWhere, FindTradesToItemsWhere, ITradesToItemsRepository } from 'src/core/repositories/trades-to-items.repository';
 import { transformPaginationOptions } from 'src/common/helpers/transform-pagination-options.helper';
 import { calculateOffsetFromPaginationOptions } from 'src/common/helpers/calculate-offset-from-pagination-options.helper';
 import { getTotalPaginationMeta } from 'src/common/helpers/get-total-pagination-meta.helper';
 import { mapArrayToPaginatedArray } from 'src/common/helpers/map-array-to-paginated-array.helper';
+import { itemsTable } from '../tables/items.table';
+import { mapItemsRowToEntity } from 'src/core/repositories/items.repository';
 
-export const mapTradesToUserItemsRowToEntity = (
-  row: Record<
-    | 'trades_to_user_items'
-    | 'trades'
-    | 'senders'
-    | 'receivers'
-    | 'user_items'
-    | 'users'
-    | 'pokemons',
-    any>,
-): TradeToUserItemEntity => {
+export const mapTradesToItemsRowToEntity = (
+  row: {
+    trades_to_items: typeof tradesToItemsTable['$inferSelect'],
+    trades: typeof tradesTable['$inferSelect'],
+    senders: typeof usersTable['$inferSelect'],
+    receivers: typeof usersTable['$inferSelect'],
+    items: typeof itemsTable['$inferSelect'],
+    pokemons: typeof pokemonsTable['$inferSelect'],
+    users: Nullable<typeof usersTable['$inferSelect']>,
+  }
+): TradeToItemEntity => {
   return {
-    ...row.trades_to_user_items,
+    ...row.trades_to_items,
     trade: mapTradesRowToEntity(row),
-    userItem: mapUserItemsRowToEntity(row),
+    item: mapItemsRowToEntity(row),
   }
 }
 
 
 @Injectable()
-export class TradesToUserItemsRepository implements ITradesToUserItemsRepository {
+export class TradesToItemsRepository implements ITradesToItemsRepository {
   public constructor(
     @InjectDatabase()
     private readonly db: Database,
   ) {}
 
   private mapWhereToSQL(
-    where: FindTradesToUserItemsWhere,
+    where: FindTradesToItemsWhere,
   ): Optional<SQL> {
     return and(
-      where.tradeId !== undefined ? eq(tradesToUserItemsTable.tradeId, where.tradeId) : undefined,
-      where.userType !== undefined ? eq(tradesToUserItemsTable.userType, where.userType) : undefined,
-      where.userItemId !== undefined ? eq(tradesToUserItemsTable.userItemId, where.userItemId) : undefined,
+      where.tradeId !== undefined ? eq(tradesToItemsTable.tradeId, where.tradeId) : undefined,
+      where.userType !== undefined ? eq(tradesToItemsTable.userType, where.userType) : undefined,
+      where.itemId !== undefined ? eq(tradesToItemsTable.itemId, where.itemId) : undefined,
     );
   };
 
   private baseSelectBuilder(
-    options: FindEntitiesOptions<FindTradesToUserItemsWhere>,
+    options: FindEntitiesOptions<FindTradesToItemsWhere>,
   ) {
     const { where = {} } = options;
 
@@ -76,67 +77,68 @@ export class TradesToUserItemsRepository implements ITradesToUserItemsRepository
 
     return this.db
       .select()
-      .from(tradesToUserItemsTable)
-      .innerJoin(tradesTable, eq(tradesTable.id, tradesToUserItemsTable.tradeId))
+      .from(tradesToItemsTable)
+      .innerJoin(tradesTable, eq(tradesTable.id, tradesToItemsTable.tradeId))
       .innerJoin(sendersTable, eq(sendersTable.id, tradesTable.senderId))
       .innerJoin(receiversTable, eq(receiversTable.id, tradesTable.receiverId))
-      .innerJoin(userItemsTable, eq(userItemsTable.id, tradesToUserItemsTable.userItemId))
-      .innerJoin(usersTable, eq(usersTable.id, userItemsTable.userId))
-      .innerJoin(pokemonsTable, eq(pokemonsTable.id, userItemsTable.pokemonId))
+      .innerJoin(itemsTable, eq(itemsTable.id, tradesToItemsTable.itemId))
+      .innerJoin(pokemonsTable, eq(pokemonsTable.id, itemsTable.pokemonId))
+      .leftJoin(userItemsTable, eq(userItemsTable.itemId, itemsTable.id))
+      .leftJoin(usersTable, eq(usersTable.id, userItemsTable.userId))
       .where(this.mapWhereToSQL(where));
   }
 
-  public async findTradesToUserItems(
-    options: FindEntitiesOptions<FindTradesToUserItemsWhere>,
-  ): Promise<Array<TradeToUserItemEntity>> {
+  public async findTradesToItems(
+    options: FindEntitiesOptions<FindTradesToItemsWhere>,
+  ): Promise<Array<TradeToItemEntity>> {
     return this
       .baseSelectBuilder(options)
-      .then((rows) => rows.map((row) => mapTradesToUserItemsRowToEntity(row)));
+      .then((rows) => rows.map((row) => mapTradesToItemsRowToEntity(row)));
   }
 
   public async findTradesToSenderItems(
     options: FindEntitiesOptions<FindTradesToSenderItemsWhere>,
   ): Promise<Array<TradeToSenderItemEntity>> {
-    const userType = 'SENDER' satisfies TradeToUserItemUserType;
+    const userType = 'SENDER' satisfies TradeToItemUserType;
 
     return this
-      .findTradesToUserItems({
+      .findTradesToItems({
         ...options,
         where: {
           ...options.where,
           userType,
         }
       })
-      .then((tradesToUserItems) => tradesToUserItems.map((tradeToUserItem) => ({
-        ...tradeToUserItem,
+      .then((tradesToItems) => tradesToItems.map((tradeToItem) => ({
+        ...tradeToItem,
         userType,
-        senderItem: tradeToUserItem.userItem,
+        senderItem: tradeToItem.item,
       })));
   }
 
   public async findTradesToReceiverItems(
     options: FindEntitiesOptions<FindTradesToReceiverItemsWhere>,
   ): Promise<Array<TradeToReceiverItemEntity>> {
-    const userType = 'RECEIVER' satisfies TradeToUserItemUserType;
+    const userType = 'RECEIVER' satisfies TradeToItemUserType;
 
     return this
-      .findTradesToUserItems({
+      .findTradesToItems({
         ...options,
         where: {
           ...options.where,
           userType,
         }
       })
-      .then((tradesToUserItems) => tradesToUserItems.map((tradeToUserItem) => ({
-        ...tradeToUserItem,
+      .then((tradesToItems) => tradesToItems.map((tradeToItem) => ({
+        ...tradeToItem,
         userType,
-        receiverItem: tradeToUserItem.userItem,
+        receiverItem: tradeToItem.item,
       })));
   }
 
-  public async findTradesToUserItemsWithPagination(
-    options: FindEntitiesWithPaginationOptions<FindTradesToUserItemsWhere>,
-  ): Promise<PaginatedArray<TradeToUserItemEntity>> {
+  public async findTradesToItemsWithPagination(
+    options: FindEntitiesWithPaginationOptions<FindTradesToItemsWhere>,
+  ): Promise<PaginatedArray<TradeToItemEntity>> {
     const {
       paginationOptions,
       where = {},
@@ -149,7 +151,7 @@ export class TradesToUserItemsRepository implements ITradesToUserItemsRepository
 
     const { totalItems, totalPages } = await getTotalPaginationMeta({
       db: this.db,
-      table: tradesToUserItemsTable,
+      table: tradesToItemsTable,
       whereSQL: this.mapWhereToSQL(where),
       limit,
     });
@@ -159,7 +161,7 @@ export class TradesToUserItemsRepository implements ITradesToUserItemsRepository
       .offset(offset)
       .limit(limit)
       .then((rows) => mapArrayToPaginatedArray(
-        rows.map((row) => mapTradesToUserItemsRowToEntity(row)),
+        rows.map((row) => mapTradesToItemsRowToEntity(row)),
         { page, limit, totalItems, totalPages },
       ));
   }
@@ -167,9 +169,9 @@ export class TradesToUserItemsRepository implements ITradesToUserItemsRepository
   public async findTradesToSenderItemsWithPagination(
     options: FindEntitiesWithPaginationOptions<FindTradesToSenderItemsWhere>,
   ): Promise<PaginatedArray<TradeToSenderItemEntity>> {
-    const userType = 'SENDER' satisfies TradeToUserItemUserType;
+    const userType = 'SENDER' satisfies TradeToItemUserType;
 
-    return this.findTradesToUserItemsWithPagination({
+    return this.findTradesToItemsWithPagination({
       ...options,
       where: {
         ...options.where,
@@ -177,10 +179,10 @@ export class TradesToUserItemsRepository implements ITradesToUserItemsRepository
       },
     }).then((paginatedArray) => ({
       ...paginatedArray,
-      items: paginatedArray.items.map((tradeToUserItem) => ({
-        ...tradeToUserItem,
+      items: paginatedArray.items.map((tradeToItem) => ({
+        ...tradeToItem,
         userType,
-        senderItem: tradeToUserItem.userItem,
+        senderItem: tradeToItem.item,
       }))
     }));
   }
@@ -188,9 +190,9 @@ export class TradesToUserItemsRepository implements ITradesToUserItemsRepository
   public async findTradesToReceiverItemsWithPagination(
     options: FindEntitiesWithPaginationOptions<FindTradesToReceiverItemsWhere>,
   ): Promise<PaginatedArray<TradeToReceiverItemEntity>> {
-    const userType = 'RECEIVER' satisfies TradeToUserItemUserType;
+    const userType = 'RECEIVER' satisfies TradeToItemUserType;
 
-    return this.findTradesToUserItemsWithPagination({
+    return this.findTradesToItemsWithPagination({
       ...options,
       where: {
         ...options.where,
@@ -198,32 +200,32 @@ export class TradesToUserItemsRepository implements ITradesToUserItemsRepository
       },
     }).then((paginatedArray) => ({
       ...paginatedArray,
-      items: paginatedArray.items.map((tradeToUserItem) => ({
-        ...tradeToUserItem,
+      items: paginatedArray.items.map((tradeToItem) => ({
+        ...tradeToItem,
         userType,
-        receiverItem: tradeToUserItem.userItem,
+        receiverItem: tradeToItem.item,
       }))
     }));
   }
 
-  private async createTradesToUserItems(
-    valuesArray: Array<CreateTradeToUserItemEntityValues>,
+  private async createTradesToItems(
+    valuesArray: Array<CreateTradeToItemEntityValues>,
     tx?: Transaction,
-  ): Promise<Array<TradeToUserItemEntity>> {
+  ): Promise<Array<TradeToItemEntity>> {
     if (!valuesArray.length) return [];
 
     return (tx ?? this.db)
-      .insert(tradesToUserItemsTable)
+      .insert(tradesToItemsTable)
       .values(valuesArray.map((values) => ({
         ...values,
         tradeId: values.trade.id,
-        userItemId: values.userItem.id,
+        itemId: values.item.id,
       })))
       .returning()
-      .then((tradesToUserItems) => zip(valuesArray, tradesToUserItems).map(([values, tradeToUserItem]) => ({
-        ...tradeToUserItem!,
+      .then((tradesToItems) => zip(valuesArray, tradesToItems).map(([values, tradeToItem]) => ({
+        ...tradeToItem!,
         trade: values!.trade,
-        userItem: values!.userItem,
+        item: values!.item,
       })));
   }
 
@@ -231,21 +233,21 @@ export class TradesToUserItemsRepository implements ITradesToUserItemsRepository
     valuesArray: Array<CreateTradeToSenderItemEntityValues>,
     tx?: Transaction,
   ): Promise<Array<TradeToSenderItemEntity>> {
-    const userType = 'SENDER' satisfies TradeToUserItemUserType;
+    const userType = 'SENDER' satisfies TradeToItemUserType;
 
     return this
-      .createTradesToUserItems(
+      .createTradesToItems(
         valuesArray.map((values) => ({
           ...values,
           userType,
-          userItem: values.senderItem,
+          item: values.senderItem,
         })),
         tx,
       )
-      .then((tradesToUserItems) => tradesToUserItems.map((tradesToUserItem) => ({
-        ...tradesToUserItem,
+      .then((tradesToItems) => tradesToItems.map((tradesToItem) => ({
+        ...tradesToItem,
         userType,
-        senderItem: tradesToUserItem.userItem,
+        senderItem: tradesToItem.item,
       })));
   }
 
@@ -253,21 +255,21 @@ export class TradesToUserItemsRepository implements ITradesToUserItemsRepository
     valuesArray: Array<CreateTradeToReceiverItemEntityValues>,
     tx?: Transaction,
   ): Promise<Array<TradeToReceiverItemEntity>> {
-    const userType = 'RECEIVER' satisfies TradeToUserItemUserType;
+    const userType = 'RECEIVER' satisfies TradeToItemUserType;
 
     return this
-      .createTradesToUserItems(
+      .createTradesToItems(
         valuesArray.map((values) => ({
           ...values,
           userType,
-          userItem: values.receiverItem,
+          item: values.receiverItem,
         })),
         tx,
       )
-      .then((tradesToUserItems) => tradesToUserItems.map((tradesToUserItem) => ({
-        ...tradesToUserItem,
+      .then((tradesToItems) => tradesToItems.map((tradesToItem) => ({
+        ...tradesToItem,
         userType,
-        receiverItem: tradesToUserItem.userItem,
+        receiverItem: tradesToItem.item,
       })));
   }
 }

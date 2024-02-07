@@ -16,7 +16,7 @@ export class OpenedPacksRepository implements IOpenedPacksRepository {
     values: CreateOpenedPackEntityValues,
     tx?: Transaction,
   ): Promise<OpenedPackEntity> {
-    const { user, pack, pokemon } = values;
+    const { user, pack, item } = values;
 
     return (tx ?? this.db)
       .insert(openedPacksTable)
@@ -24,14 +24,14 @@ export class OpenedPacksRepository implements IOpenedPacksRepository {
         ...values,
         userId: user.id,
         packId: pack.id,
-        pokemonId: pokemon.id,
+        itemId: item.id,
       })
       .returning()
       .then(([openedPack]) => ({
         ...openedPack!,
         user,
         pack,
-        pokemon,
+        item,
       }));
   }
 }

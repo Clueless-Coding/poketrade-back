@@ -1,8 +1,8 @@
 import { UUIDv4 } from 'src/common/types';
 import { UserEntity } from './user.entity';
-import { PokemonEntity } from './pokemon.entity';
 import { PackEntity } from './pack.entity';
 import { AutoMap } from '@automapper/classes';
+import { ItemEntity } from './item.entity';
 
 export class OpenedPackEntity {
   @AutoMap()
@@ -13,8 +13,8 @@ export class OpenedPackEntity {
   public readonly user: UserEntity;
   @AutoMap(() => PackEntity)
   public readonly pack: PackEntity;
-  @AutoMap(() => PokemonEntity)
-  public readonly pokemon: PokemonEntity;
+  @AutoMap(() => ItemEntity)
+  public readonly item: ItemEntity;
 }
 
 export type CreateOpenedPackEntityValues = Omit<OpenedPackEntity,

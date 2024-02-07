@@ -15,8 +15,8 @@ import { RejectedTradeOutputDTO } from '../dtos/rejected-trades/rejected-trade.o
 import { AccessTokenAuthGuard } from '../guards/access-token-auth.guard';
 import { UUIDv4Param } from '../decorators/uuidv4-param.decorator';
 import { CreatePendingTradeOutputDTO } from '../dtos/pending-trades/create-pending-trade.output.dto';
-import { TradeToReceiverItemEntity, TradeToSenderItemEntity } from 'src/core/entities/trade-to-user-item.entity';
-import { UserItemOutputDTO } from '../dtos/user-items/user-item.output.dto';
+import { TradeToReceiverItemEntity, TradeToSenderItemEntity } from 'src/core/entities/trade-to-item.entity';
+import { ItemOutputDTO } from '../dtos/items/item.output.dto';
 
 @ApiTags('Pending Trades')
 @Controller('pending-trades')
@@ -40,8 +40,8 @@ export class PendingTradesController {
 
     return {
       pendingTrade: this.mapper.map(pendingTrade, PendingTradeEntity, PendingTradeOutputDTO),
-      senderItems: this.mapper.mapArray(tradesToSenderItems, TradeToSenderItemEntity, UserItemOutputDTO),
-      receiverItems: this.mapper.mapArray(tradesToReceiverItems, TradeToReceiverItemEntity, UserItemOutputDTO),
+      senderItems: this.mapper.mapArray(tradesToSenderItems, TradeToSenderItemEntity, ItemOutputDTO),
+      receiverItems: this.mapper.mapArray(tradesToReceiverItems, TradeToReceiverItemEntity, ItemOutputDTO),
     };
   }
 

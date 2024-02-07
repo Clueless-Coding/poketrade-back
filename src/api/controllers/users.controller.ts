@@ -13,8 +13,8 @@ import { PaginatedArray, UUIDv4 } from 'src/common/types';
 import { GetUsersInputDTO } from '../dtos/users/get-users.input.dto';
 import { UserItemsService } from 'src/core/services/user-items.service';
 import { UserItemOutputDTO } from '../dtos/user-items/user-item.output.dto';
-import { QuickSoldUserItemOutputDTO } from '../dtos/user-items/quick-sold-user-item.output.dto';
-import { QuickSoldUserItemEntity } from 'src/core/entities/quick-sold-user-item.entity';
+import { QuickSoldItemOutputDTO } from '../dtos/user-items/quick-sold-item.output.dto';
+import { QuickSoldItemEntity } from 'src/core/entities/quick-sold-item.entity';
 import { UserEntity } from 'src/core/entities/user.entity';
 import { UserItemEntity } from 'src/core/entities/user-item.entity';
 import { UUIDv4Param } from '../decorators/uuidv4-param.decorator';
@@ -69,20 +69,20 @@ export class UsersController {
     );
   }
 
-  @ApiCreatedResponse({ type: QuickSoldUserItemOutputDTO })
+  @ApiCreatedResponse({ type: QuickSoldItemOutputDTO })
   @ApiBearerAuth('AccessToken')
   @Post('@me/items/:id/quick-sell')
   @UseGuards(AccessTokenAuthGuard)
   public async quickSellMeItemById(
     @User() user: UserEntity,
     @UUIDv4Param('id') id: UUIDv4,
-  ): Promise<QuickSoldUserItemOutputDTO> {
-    const quickSoldUserItem = await this.userItemsService.quickSellUserItemById(user, id);
+  ): Promise<QuickSoldItemOutputDTO> {
+    const quickSoldItem = await this.userItemsService.quickSellUserItemByItemId(user, id);
 
     return this.mapper.map(
-      quickSoldUserItem,
-      QuickSoldUserItemEntity,
-      QuickSoldUserItemOutputDTO,
+      quickSoldItem,
+      QuickSoldItemEntity,
+      QuickSoldItemOutputDTO,
     );
   }
 

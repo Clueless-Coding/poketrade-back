@@ -3,7 +3,7 @@ import { FindPacksToPokemonsWhere, IPacksToPokemonsRepository } from 'src/core/r
 import { InjectDatabase } from 'src/infra/ioc/decorators/inject-database.decorator';
 import { Database, Transaction } from '../types';
 import { Optional, PaginatedArray } from 'src/common/types';
-import { SQL, and, eq, inArray, sql, getTableColumns } from 'drizzle-orm';
+import { SQL, and, eq, inArray } from 'drizzle-orm';
 import { packsTable, packsToPokemonsTable, pokemonsTable } from '../tables';
 import { FindEntitiesOptions, FindEntitiesWithPaginationOptions } from 'src/core/types';
 import { PackToPokemonEntity } from 'src/core/entities/pack-to-pokemon.entity';

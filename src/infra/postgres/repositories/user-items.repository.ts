@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Database, Transaction } from 'src/infra/postgres/types';
 import { InjectDatabase } from 'src/infra/ioc/decorators/inject-database.decorator';
 import { Optional, PaginatedArray, UUIDv4 } from 'src/common/types';
-import { pokemonsTable, userItemsTable, usersTable } from 'src/infra/postgres/tables';
+import { userItemsTable, usersTable } from 'src/infra/postgres/tables';
 import { UserItemEntity, CreateUserItemEntityValues, UpdateUserItemEntityValues} from 'src/core/entities/user-item.entity';
 import { UserEntity } from 'src/core/entities/user.entity';
 import { and, eq, inArray, like, SQL } from 'drizzle-orm';
@@ -20,14 +20,15 @@ import { FindUserItemsWhere, IUserItemsRepository } from 'src/core/repositories/
 import { transformPaginationOptions } from 'src/common/helpers/transform-pagination-options.helper';
 import { calculateOffsetFromPaginationOptions } from 'src/common/helpers/calculate-offset-from-pagination-options.helper';
 import { getTotalPaginationMeta } from 'src/common/helpers/get-total-pagination-meta.helper';
+import { itemsTable } from '../tables/items.table';
 
 export const mapUserItemsRowToEntity = (
-  row: Record<'user_items' | 'users' | 'pokemons', any>,
+  row: Record<'user_items' | 'users' | 'items', any>,
 ): UserItemEntity => {
   return {
     ...row.user_items,
     user: row.users,
-    pokemon: row.pokemons,
+    item: row.items,
   };
 };
 
@@ -42,16 +43,12 @@ export class UserItemsRepository implements IUserItemsRepository {
     where: FindUserItemsWhere,
   ): Optional<SQL> {
     return and(
-      where.id !== undefined ? eq(userItemsTable.id, where.id) : undefined,
-      where.ids !== undefined ? inArray(userItemsTable.id, where.ids) : undefined,
-
       where.userId !== undefined ? eq(userItemsTable.userId, where.userId) : undefined,
       where.userName !== undefined ? eq(usersTable.name, where.userName) : undefined,
       where.userNameLike !== undefined ? like(usersTable.name, `%${where.userNameLike}%`) : undefined,
 
-      where.pokemonId !== undefined ? eq(userItemsTable.pokemonId, where.pokemonId) : undefined,
-      where.pokemonName !== undefined ? eq(pokemonsTable.name, where.pokemonName) : undefined,
-      where.pokemonNameLike !== undefined ? like(pokemonsTable.name, `%${where.pokemonNameLike}%`) : undefined,
+      where.itemId !== undefined ? eq(userItemsTable.itemId, where.itemId) : undefined,
+      where.itemIds !== undefined ? inArray(userItemsTable.itemId, where.itemIds) : undefined,
     );
   };
 
@@ -64,7 +61,7 @@ export class UserItemsRepository implements IUserItemsRepository {
       .select()
       .from(userItemsTable)
       .innerJoin(usersTable, eq(userItemsTable.userId, usersTable.id))
-      .innerJoin(pokemonsTable, eq(userItemsTable.pokemonId, pokemonsTable.id))
+      .innerJoin(itemsTable, eq(userItemsTable.itemId, itemsTable.id))
       .where(this.mapWhereToSQL(where));
   }
 
@@ -76,24 +73,24 @@ export class UserItemsRepository implements IUserItemsRepository {
       .then((rows) => rows.map((row) => mapUserItemsRowToEntity(row)));
   }
 
-  public async findUserItemsByIds(
+  public async findUserItemsByItemIds(
     options: FindEntitiesByIdsOptions<UUIDv4>,
   ): Promise<Array<UserItemEntity>> {
     const {
-      ids,
+      ids: itemIds,
       notFoundErrorMessageFn = (id) => `User item (\`${id}\`) not found`,
     } = options;
-    if (!ids.length) return [];
+    if (!itemIds.length) return [];
 
     const userItems = await this.findUserItems({
-      where: { ids },
+      where: { itemIds },
     });
 
-    for (const id of ids) {
-      const userItem = userItems.some((userItem) => userItem.id === id);
+    for (const itemId of itemIds) {
+      const userItem = userItems.some((userItem) => userItem.item.id === itemId);
 
       if (!userItem) {
-        throw new AppEntityNotFoundException(notFoundErrorMessageFn(id));
+        throw new AppEntityNotFoundException(notFoundErrorMessageFn(itemId));
       }
     }
 
@@ -151,17 +148,17 @@ export class UserItemsRepository implements IUserItemsRepository {
     return userItem;
   }
 
-  public async findUserItemById(
+  public async findUserItemByItemId(
     options: FindEntityByIdOptions<UUIDv4>,
   ): Promise<UserItemEntity> {
     const {
-      id,
+      id: itemId,
       notFoundErrorMessageFn = (id) => `User item (\`${id}\`) not found`,
     } = options;
 
     return this.findUserItem({
-      where: { id },
-      notFoundErrorMessage: notFoundErrorMessageFn(id),
+      where: { itemId },
+      notFoundErrorMessage: notFoundErrorMessageFn(itemId),
     });
   }
 
@@ -169,20 +166,20 @@ export class UserItemsRepository implements IUserItemsRepository {
     values: CreateUserItemEntityValues,
     tx?: Transaction,
   ): Promise<UserItemEntity> {
-    const { user, pokemon } = values;
+    const { user, item } = values;
 
     return (tx ?? this.db)
       .insert(userItemsTable)
       .values({
         ...values,
         userId: user.id,
-        pokemonId: pokemon.id,
+        itemId: item.id,
       })
       .returning()
       .then(([userItem]) => ({
         ...userItem!,
         user,
-        pokemon,
+        item,
       }));
   }
 
@@ -193,21 +190,21 @@ export class UserItemsRepository implements IUserItemsRepository {
   ): Promise<Array<UserItemEntity>> {
     if (!userItems.length) return [];
 
-    const { user, pokemon, ...restValues } = values;
+    const { user, item, ...restValues } = values;
 
     return (tx ?? this.db)
       .update(userItemsTable)
       .set({
         ...restValues,
         userId: user?.id,
-        pokemonId: pokemon?.id,
+        itemId: item?.id,
       })
-      .where(inArray(userItemsTable.id, userItems.map(({ id }) => id)))
+      .where(inArray(userItemsTable.itemId, userItems.map(({ item }) => item.id)))
       .returning()
       .then((updatedUserItems) => zip(userItems, updatedUserItems).map(([userItem, updatedUserItem]) => ({
         ...updatedUserItem!,
         user: user ?? userItem!.user,
-        pokemon: pokemon ?? userItem!.pokemon,
+        item: item ?? userItem!.item,
       })));
   }
 
@@ -238,21 +235,23 @@ export class UserItemsRepository implements IUserItemsRepository {
   ): Promise<UserItemEntity> {
     return this
       .updateUserItems([userItem], values, tx)
-      .then(([userItem]) => userItem!);
+      .then(([updatedUserItem]) => updatedUserItem!);
   }
 
   public async deleteUserItem(
     userItem: UserItemEntity,
     tx?: Transaction,
   ): Promise<UserItemEntity> {
+    const { user, item } = userItem;
+
     return (tx ?? this.db)
       .delete(userItemsTable)
-      .where(eq(userItemsTable.id, userItem.id))
+      .where(eq(userItemsTable.itemId, userItem.item.id))
       .returning()
       .then(([deletedUserItem]) => ({
         ...deletedUserItem!,
-        user: userItem.user,
-        pokemon: userItem.pokemon,
-      }))
+        user,
+        item,
+      }));
   }
 }

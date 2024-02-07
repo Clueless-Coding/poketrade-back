@@ -2,10 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { PaginationOptionsInputDTO } from 'src/api/dtos/pagination.input.dto';
 import { PaginatedArray, UUIDv4 } from 'src/common/types';
 import { Database, Transaction } from 'src/infra/postgres/types';
-import { QuickSoldUserItemEntity } from '../entities/quick-sold-user-item.entity';
+import { QuickSoldItemEntity } from '../entities/quick-sold-item.entity';
 import { UserEntity } from '../entities/user.entity';
 import { UserItemEntity } from '../entities/user-item.entity';
-import { IQuickSoldUserItemsRepository } from '../repositories/quick-sold-user-items.repository';
+import { IQuickSoldItemsRepository } from '../repositories/quick-sold-items.repository';
 import { IUserItemsRepository } from '../repositories/user-items.repository';
 import { IUsersRepository } from '../repositories/users.repository';
 import { AppConflictException } from '../exceptions';
@@ -15,7 +15,7 @@ import { InjectDatabase } from 'src/infra/ioc/decorators/inject-database.decorat
 export class UserItemsService {
   public constructor(
     private readonly userItemsRepository: IUserItemsRepository,
-    private readonly quickSoldUserItemsRepository: IQuickSoldUserItemsRepository,
+    private readonly quickSoldItemsRepository: IQuickSoldItemsRepository,
     private readonly usersRepository: IUsersRepository,
 
     @InjectDatabase()
@@ -41,37 +41,35 @@ export class UserItemsService {
     return this.getUserItemsWithPaginationByUser(user, paginationOptionsDTO);
   }
 
-  private async _quickSellUserItemById(
+  private async _quickSellUserItemByItemId(
     user: UserEntity,
-    id: UUIDv4,
+    itemId: UUIDv4,
     tx: Transaction,
-  ): Promise<QuickSoldUserItemEntity> {
-    const userItem = await this.userItemsRepository.findUserItemById({ id });
-
-    if (user.id !== userItem.user.id) {
-      throw new AppConflictException('You cannot quick sell someone else\'s pokemon');
-    }
+  ): Promise<QuickSoldItemEntity> {
+    const userItem = await this.userItemsRepository.findUserItem({
+      where: { itemId, userId: user.id },
+    });
 
     const updatedUser = await this.usersRepository.replenishUserBalance(
       user,
-      userItem.pokemon.worth,
+      userItem.item.pokemon.worth,
       tx,
     );
 
-    return this.quickSoldUserItemsRepository
-      .createQuickSoldUserItem(userItem, tx)
-      .then((quickSoldUserItem) => ({
-        ...quickSoldUserItem,
+    return this.quickSoldItemsRepository
+      .createQuickSoldItem(userItem, tx)
+      .then((quickSoldItem) => ({
+        ...quickSoldItem,
         user: updatedUser,
       }));
   }
 
-  public async quickSellUserItemById(
+  public async quickSellUserItemByItemId(
     user: UserEntity,
     id: UUIDv4,
-  ): Promise<QuickSoldUserItemEntity> {
+  ): Promise<QuickSoldItemEntity> {
     return this.db.transaction(async (tx) => (
-      this._quickSellUserItemById(user, id, tx)
+      this._quickSellUserItemByItemId(user, id, tx)
     ));
   }
 }
