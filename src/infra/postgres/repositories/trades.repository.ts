@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Database, Transaction } from 'src/infra/postgres/types';
 import {
   tradesTable,
+  tradesToItemsTable,
   usersTable,
 } from 'src/infra/postgres/tables';
 import {
@@ -11,14 +12,14 @@ import {
   AcceptedTradeEntity,
   RejectedTradeEntity,
   CreatePendingTradeEntityValues,
-  TradeStatus,
 } from 'src/core/entities/trade.entity'
+import { TradeStatus } from 'src/core/enums/trade-status.enum';
 import {
   TradeToSenderItemEntity,
   TradeToReceiverItemEntity,
 } from 'src/core/entities/trade-to-item.entity'
 import { InjectDatabase } from 'src/infra/ioc/decorators/inject-database.decorator';
-import { and, eq, inArray, sql, SQL } from 'drizzle-orm';
+import { and, eq, getTableColumns, inArray, sql, SQL } from 'drizzle-orm';
 import { Optional, PaginatedArray, UUIDv4 } from 'src/common/types';
 import { alias } from 'drizzle-orm/pg-core';
 import { AppEntityNotFoundException } from 'src/core/exceptions';
@@ -39,6 +40,20 @@ export const mapTradesRowToEntity = (
     receiver: row.receivers,
   };
 };
+
+export class TradeEntityTest {
+  public constructor(
+    public readonly id: UUIDv4,
+    public readonly createdAt: Date,
+    public readonly updatedAt: Date,
+    public readonly status: TradeStatus,
+    public readonly senderId: UUIDv4,
+    public readonly receiverId: UUIDv4,
+    public readonly senderItemIds: Array<UUIDv4>,
+    public readonly receiverItemIds: Array<UUIDv4>,
+    public readonly statusedAt: Date,
+  ) {}
+}
 
 @Injectable()
 export class TradesRepository implements ITradesRepository {
@@ -82,6 +97,56 @@ export class TradesRepository implements ITradesRepository {
       paginationOptions,
       where = {},
     } = options;
+
+    const sendersTable = alias(usersTable, 'senders');
+    const receiversTable = alias(usersTable, 'receivers');
+
+    const senderItemsTable = alias(tradesToItemsTable, 'senderItems');
+    const receiverItemsTable = alias(tradesToItemsTable, 'receiverItems');
+
+    getTableColumns
+    const rows = await this.db
+      .select({
+        ...getTableColumns(tradesTable),
+        senderId: sendersTable.id,
+        receiverId: receiversTable.id,
+        senderItemId: senderItemsTable.itemId,
+        receiverItemId: receiverItemsTable.itemId,
+      })
+      .from(tradesTable)
+      .innerJoin(sendersTable, eq(sendersTable.id, tradesTable.senderId))
+      .innerJoin(receiversTable, eq(receiversTable.id, tradesTable.receiverId))
+      .innerJoin(senderItemsTable, and(
+        eq(senderItemsTable.tradeId, tradesTable.id),
+        eq(senderItemsTable.userType, 'SENDER'),
+      ))
+      .innerJoin(receiverItemsTable, and(
+        eq(senderItemsTable.tradeId, tradesTable.id),
+        eq(senderItemsTable.userType, 'RECEIVER'),
+      ));
+    const out: Record<UUIDv4, TradeEntityTest> = {};
+    for (const row of rows) {
+      out[row.id] ??= new TradeEntityTest(
+        row.id,
+        row.createdAt,
+        row.updatedAt,
+        TradeStatus[row.status],
+        row.senderId,
+        row.receiverId,
+        [],
+        [],
+        row.statusedAt,
+      );
+
+      if (row.senderItemId) {
+        out[row.id]!.senderItemIds.push(row.senderItemId);
+      }
+
+      if (row.receiverItemId) {
+        out[row.id]!.receiverItemIds.push(row.receiverItemId);
+      }
+    }
+    const trades = Object.values(out);
 
     const transformedPaginationOptions = transformPaginationOptions(paginationOptions);
 
@@ -159,7 +224,7 @@ export class TradesRepository implements ITradesRepository {
       })
       .then((trade) => ({
         ...trade,
-        status: status as typeof status,
+        status,
       }));
   }
 
@@ -185,7 +250,7 @@ export class TradesRepository implements ITradesRepository {
     tradesToSenderItems: Array<TradeToSenderItemEntity>,
     tradesToReceiverItems: Array<TradeToReceiverItemEntity>,
   }> {
-    const status = TradeStatus.PENDING;
+    const status: TradeStatus.PENDING = TradeStatus.PENDING;
     const { sender, senderItems, receiver, receiverItems } = values;
 
     const pendingTrade = await (tx ?? this.db)
@@ -200,7 +265,7 @@ export class TradesRepository implements ITradesRepository {
       .returning()
       .then(([trade]) => ({
         ...trade!,
-        status: trade!.status as typeof status,
+        status: status,
         sender,
         receiver,
       }));

@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { UUIDv4 } from 'src/common/types';
-import { TradeStatus } from 'src/core/entities/trade.entity';
+import { TradeStatus } from 'src/core/enums/trade-status.enum';
 import { UserOutputDTO } from '../users/user.output.dto';
 import { AutoMap } from '@automapper/classes';
 import { ApiPropertyUUIDv4 } from 'src/api/decorators/api-property-uuid-v4.decorator';

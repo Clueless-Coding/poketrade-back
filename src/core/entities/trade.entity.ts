@@ -1,16 +1,8 @@
-import { UUIDv4, UnionToArray } from 'src/common/types';
+import { UUIDv4 } from 'src/common/types';
 import { UserEntity } from './user.entity';
 import { UserItemEntity } from './user-item.entity';
 import { AutoMap } from '@automapper/classes';
-
-export enum TradeStatus {
-  PENDING = 'PENDING',
-  CANCELLED = 'CANCELLED',
-  ACCEPTED = 'ACCEPTED',
-  REJECTED = 'REJECTED',
-}
-
-export const tradeStatusEnumValues = Object.keys(TradeStatus) as UnionToArray<keyof typeof TradeStatus>;
+import { TradeStatus } from '../enums/trade-status.enum';
 
 export class TradeEntity {
   @AutoMap()

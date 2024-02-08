@@ -1,9 +1,7 @@
 import { TradeEntity } from './trade.entity';
 import { AutoMap } from '@automapper/classes';
 import { ItemEntity } from './item.entity';
-
-export const userTypeEnumValues = ['SENDER', 'RECEIVER'] as const;
-export type TradeToItemUserType = typeof userTypeEnumValues[number];
+import { TradeToItemUserType } from '../enums/trade-to-item-user-type.enum';
 
 class _TradeToItemEntity {
   @AutoMap(() => TradeEntity)
@@ -19,14 +17,14 @@ export class TradeToItemEntity extends _TradeToItemEntity {
 
 export class TradeToSenderItemEntity extends _TradeToItemEntity {
   @AutoMap()
-  public readonly userType: 'SENDER';
+  public readonly userType: TradeToItemUserType.SENDER;
   @AutoMap(() => ItemEntity)
   public readonly senderItem: ItemEntity;
 }
 
 export class TradeToReceiverItemEntity extends _TradeToItemEntity {
   @AutoMap()
-  public readonly userType: 'RECEIVER';
+  public readonly userType: TradeToItemUserType.RECEIVER;
   @AutoMap(() => ItemEntity)
   public readonly receiverItem: ItemEntity;
 }

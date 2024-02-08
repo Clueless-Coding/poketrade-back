@@ -1,10 +1,11 @@
 import { relations } from 'drizzle-orm';
 import { index, pgEnum, pgTable, primaryKey, uuid } from 'drizzle-orm/pg-core';
-import { UUIDv4 } from 'src/common/types';
+import { UUIDv4, UnionToArray } from 'src/common/types';
 import { tradesTable } from './trades.table';
-import { userTypeEnumValues } from 'src/core/entities/trade-to-item.entity';
+import { TradeToItemUserType } from 'src/core/enums/trade-to-item-user-type.enum';
 import { itemsTable } from './items.table';
 
+const userTypeEnumValues = Object.keys(TradeToItemUserType) as UnionToArray<keyof typeof TradeToItemUserType>;
 export const userTypeEnum = pgEnum('trades_to_items_user_type', userTypeEnumValues);
 
 export const tradesToItemsTable = pgTable('trades_to_items', {

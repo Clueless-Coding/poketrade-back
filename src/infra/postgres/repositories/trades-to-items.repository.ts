@@ -20,8 +20,8 @@ import {
   CreateTradeToReceiverItemEntityValues,
   CreateTradeToSenderItemEntityValues,
   CreateTradeToItemEntityValues,
-  TradeToItemUserType,
 } from 'src/core/entities/trade-to-item.entity';
+import { TradeToItemUserType } from 'src/core/enums/trade-to-item-user-type.enum';
 import { mapTradesRowToEntity } from './trades.repository';
 import { FindTradesToReceiverItemsWhere, FindTradesToSenderItemsWhere, FindTradesToItemsWhere, ITradesToItemsRepository } from 'src/core/repositories/trades-to-items.repository';
 import { transformPaginationOptions } from 'src/common/helpers/transform-pagination-options.helper';
@@ -32,15 +32,16 @@ import { itemsTable } from '../tables/items.table';
 import { mapItemsRowToEntity } from 'src/core/repositories/items.repository';
 
 export const mapTradesToItemsRowToEntity = (
-  row: {
-    trades_to_items: typeof tradesToItemsTable['$inferSelect'],
-    trades: typeof tradesTable['$inferSelect'],
-    senders: typeof usersTable['$inferSelect'],
-    receivers: typeof usersTable['$inferSelect'],
-    items: typeof itemsTable['$inferSelect'],
-    pokemons: typeof pokemonsTable['$inferSelect'],
-    users: Nullable<typeof usersTable['$inferSelect']>,
-  }
+  row: Record<
+    'trades_to_items' |
+    'trades' |
+    'senders' |
+    'receivers' |
+    'items' |
+    'pokemons' |
+    'users',
+    any
+  >
 ): TradeToItemEntity => {
   return {
     ...row.trades_to_items,
@@ -99,7 +100,7 @@ export class TradesToItemsRepository implements ITradesToItemsRepository {
   public async findTradesToSenderItems(
     options: FindEntitiesOptions<FindTradesToSenderItemsWhere>,
   ): Promise<Array<TradeToSenderItemEntity>> {
-    const userType = 'SENDER' satisfies TradeToItemUserType;
+    const userType = TradeToItemUserType.SENDER;
 
     return this
       .findTradesToItems({
@@ -119,7 +120,7 @@ export class TradesToItemsRepository implements ITradesToItemsRepository {
   public async findTradesToReceiverItems(
     options: FindEntitiesOptions<FindTradesToReceiverItemsWhere>,
   ): Promise<Array<TradeToReceiverItemEntity>> {
-    const userType = 'RECEIVER' satisfies TradeToItemUserType;
+    const userType = TradeToItemUserType.RECEIVER;
 
     return this
       .findTradesToItems({
@@ -169,7 +170,7 @@ export class TradesToItemsRepository implements ITradesToItemsRepository {
   public async findTradesToSenderItemsWithPagination(
     options: FindEntitiesWithPaginationOptions<FindTradesToSenderItemsWhere>,
   ): Promise<PaginatedArray<TradeToSenderItemEntity>> {
-    const userType = 'SENDER' satisfies TradeToItemUserType;
+    const userType = TradeToItemUserType.SENDER;
 
     return this.findTradesToItemsWithPagination({
       ...options,
@@ -190,7 +191,7 @@ export class TradesToItemsRepository implements ITradesToItemsRepository {
   public async findTradesToReceiverItemsWithPagination(
     options: FindEntitiesWithPaginationOptions<FindTradesToReceiverItemsWhere>,
   ): Promise<PaginatedArray<TradeToReceiverItemEntity>> {
-    const userType = 'RECEIVER' satisfies TradeToItemUserType;
+    const userType = TradeToItemUserType.RECEIVER;
 
     return this.findTradesToItemsWithPagination({
       ...options,
@@ -224,6 +225,7 @@ export class TradesToItemsRepository implements ITradesToItemsRepository {
       .returning()
       .then((tradesToItems) => zip(valuesArray, tradesToItems).map(([values, tradeToItem]) => ({
         ...tradeToItem!,
+        userType: TradeToItemUserType[tradeToItem!.userType],
         trade: values!.trade,
         item: values!.item,
       })));
@@ -233,7 +235,7 @@ export class TradesToItemsRepository implements ITradesToItemsRepository {
     valuesArray: Array<CreateTradeToSenderItemEntityValues>,
     tx?: Transaction,
   ): Promise<Array<TradeToSenderItemEntity>> {
-    const userType = 'SENDER' satisfies TradeToItemUserType;
+    const userType = TradeToItemUserType.SENDER;
 
     return this
       .createTradesToItems(
@@ -255,7 +257,7 @@ export class TradesToItemsRepository implements ITradesToItemsRepository {
     valuesArray: Array<CreateTradeToReceiverItemEntityValues>,
     tx?: Transaction,
   ): Promise<Array<TradeToReceiverItemEntity>> {
-    const userType = 'RECEIVER' satisfies TradeToItemUserType;
+    const userType = TradeToItemUserType.RECEIVER;
 
     return this
       .createTradesToItems(

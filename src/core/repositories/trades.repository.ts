@@ -1,12 +1,12 @@
 import {
   TradeEntity,
-  TradeStatus,
   PendingTradeEntity,
   CreatePendingTradeEntityValues,
   CancelledTradeEntity,
   AcceptedTradeEntity,
   RejectedTradeEntity,
 } from '../entities/trade.entity';
+import { TradeStatus } from '../enums/trade-status.enum';
 import { TradeToSenderItemEntity, TradeToReceiverItemEntity, } from '../entities/trade-to-item.entity'
 import { PaginatedArray, UUIDv4 } from 'src/common/types';
 import { FindEntitiesWithPaginationOptions, FindEntityByIdOptions, FindEntityOptions } from '../types';

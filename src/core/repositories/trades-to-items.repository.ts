@@ -6,8 +6,8 @@ import {
   TradeToReceiverItemEntity,
   TradeToSenderItemEntity,
   TradeToItemEntity,
-  TradeToItemUserType,
 } from '../entities/trade-to-item.entity';
+import { TradeToItemUserType } from '../enums/trade-to-item-user-type.enum';
 
 export type FindTradesToItemsWhere = Partial<{
   tradeId: UUIDv4,
